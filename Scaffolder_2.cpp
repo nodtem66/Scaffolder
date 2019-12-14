@@ -20,6 +20,7 @@ int main(int argc, const char* argv[])
     parser.add_argument("--border_offset", "default:2", false);
     parser.add_argument("--coff", "default:4*PI", false);
     parser.add_argument("--minimum_diameter", "used for removing small orphaned (between 0-1) [default: 0.25]", false);
+    parser.add_argument("--surface", "default: schwarzp", false);
     try {
         parser.parse(argc, argv);
     }
@@ -41,6 +42,7 @@ int main(int argc, const char* argv[])
     std::string filename = "out";
     std::string format = "ply";
     std::string input_file = parser.get<std::string>("input");
+    std::string surface = "schwarzp";
 
     // get optional parameters
     if (parser.exists("quiet")) verbose = parser.get<bool>("quiet");
@@ -51,6 +53,7 @@ int main(int argc, const char* argv[])
     if (parser.exists("border_offset")) border_offset = parser.get<uint16_t>("border_offset");
     if (parser.exists("coff")) coff = parser.get<double>("coff");
     if (parser.exists("minimum_diameter")) minimum_diameter = parser.get<double>("minimum_diameter");
+    if (parser.exists("surface")) surface = parser.get<std::string>("surface");
 
     // lowercase format
     to_lower(format);
@@ -95,7 +98,8 @@ int main(int argc, const char* argv[])
             grid_size += 2 * (size_t)(border_offset);
             // Create iso cuboid condition with boundary box
             //Iso_cuboid_condition condition(V1min(0), V1min(1), V1min(2), L(0), L(1), L(2));
-            Implicit_function fn(schwarzp, coff, thickness);
+            Function_3& isosurface = get_surface_function(surface);
+            Implicit_function fn(isosurface, coff, thickness);
             if (verbose) std::cout << "Bounding Box: " << V1min.format(CleanFmt) << ' ' << V1max.format(CleanFmt) << std::endl;
             if (verbose) std::cout << "Length: " << L << std::endl;
             if (verbose) std::cout << "[Generating grid] " << grid_size * grid_size * grid_size << " (" << grid_size << '*' << grid_size << '*' << grid_size << ") ";

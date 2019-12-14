@@ -16,8 +16,21 @@ const FT pi = 3.141592653589793238462643383279502884L;
 const FT esp = 1e-6;
 typedef FT(Function_3)(FT, FT, FT);
 
+
 inline FT schwarzp(FT x, FT y, FT z) {
 	return cos(x) + cos(y) + cos(z);
+}
+inline FT schwarzd(FT x, FT y, FT z) {
+	return sin(x) * sin(y) * sin(z) + sin(x) * cos(y) * cos(z) + cos(x) * sin(y) * cos(z) + cos(x) * cos(y) * sin(z);
+}
+inline FT gyroid(FT x, FT y, FT z) {
+	return sin(x) * cos(y) + sin(y) * cos(z) + sin(z) * cos(x);
+}
+inline FT lidinoid(FT x, FT y, FT z) {
+	return 0.5 * (sin(2 * x) * cos(y) * sin(z) + sin(2 * y) * cos(z) * sin(x) + sin(2 * z) * cos(x) * sin(y)) - 0.5 * (cos(2 * x) * cos(2 * y) + cos(2 * y) * cos(2 * z) + cos(2 * z) * cos(2 * x)) + 0.15;
+}
+inline FT scherk(FT x, FT y, FT z) {
+	return sinh(x) * sinh(y) - sin(z);
 }
 inline FT sphere(FT x, FT y, FT z, FT r) {
 	return x * x + y * y + z * z - r * r;
@@ -106,9 +119,26 @@ public:
 	}
 };
 
-void to_lower(std::string& s) {
+inline void to_lower(std::string& s) {
 	std::locale loc;
 	for (std::string::size_type i = 0; i < s.length(); ++i)
 		s[i] = std::tolower(s[i], loc);
+}
+
+inline Function_3& get_surface_function(std::string name) {
+	to_lower(name);
+	if (name == "schwarzd") {
+		return schwarzd;
+	}
+	else if (name == "scherk") {
+		return scherk;
+	}
+	else if (name == "lidinoid") {
+		return lidinoid;
+	}
+	else if (name == "gyroid") {
+		return gyroid;
+	}
+	return schwarzp;
 }
 #endif
