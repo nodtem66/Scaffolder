@@ -10,9 +10,11 @@ option(LIBIGL_WITH_OPENGL            "Use OpenGL"         ON)
 option(LIBIGL_WITH_OPENGL_GLFW       "Use GLFW"           ON)
 
 find_package(LIBIGL REQUIRED)
+find_package(VCG REQUIRED)
 
 # Add your project files
 file(GLOB SRCFILES *.cpp)
-add_executable(${PROJECT_NAME} ${SRCFILES})
-target_link_libraries(${PROJECT_NAME} PRIVATE igl::core igl::cgal igl::opengl_glfw)
 add_definitions(-DNOMINMAX -D_USE_MATH_DEFINES)
+add_executable(${PROJECT_NAME} ${SRCFILES} ${VCG_INCLUDE_DIR}/wrap/ply/plylib.cpp)
+target_include_directories(${PROJECT_NAME} PRIVATE ${VCG_INCLUDE_DIR})
+target_link_libraries(${PROJECT_NAME} PRIVATE igl::core)

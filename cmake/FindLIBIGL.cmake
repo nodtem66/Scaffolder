@@ -6,7 +6,6 @@
 if(LIBIGL_FOUND)
     return()
 endif()
-message(STATUS ${CMAKE_SOURCE_DIR})
 find_path(LIBIGL_INCLUDE_DIR igl/readOBJ.h
     HINTS
         ${LIBIGL_DIR}

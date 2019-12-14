@@ -2,12 +2,13 @@
 // or project specific include files.
 
 #pragma once
-#ifndef SCAFFOLDER_2_H
-#define SCAFFOLDER_2_H
+#ifndef IMPLICIT_FUNCTION_H
+#define IMPLICIT_FUNCTION_H
 
 #include <iostream>
 #include <cmath>
-#include <string.h>
+#include <string>
+#include <locale>
 #include <algorithm>
 
 typedef double FT;
@@ -87,15 +88,27 @@ private:
 	const Function_3& isosurface;
 	const double coff;
 	const double thickness;
-	Function& condition;
+	//Function& condition;
 public:
-	Implicit_function(Function& condition, const Function_3& isosurface, const double coff, const double thickness) :
-		condition(condition), isosurface(isosurface), coff(coff), thickness(thickness) {}
+	Implicit_function(const Function_3& isosurface, const double coff, const double thickness) :
+		isosurface(isosurface), coff(coff), thickness(thickness) {}
 	FT operator()(FT x, FT y, FT z) {
+		/*
 		if (condition(x, y, z) <= 0) {
 			return IsoThicken(isosurface, x * coff, y * coff, z * coff, thickness);
 		}
 		return 1.0;
+		*/
+		if (thickness <= esp) {
+			return isosurface(x * coff, y * coff, z * coff);
+		}
+		return IsoThicken(isosurface, x * coff, y * coff, z * coff, thickness);
 	}
 };
+
+void to_lower(std::string& s) {
+	std::locale loc;
+	for (std::string::size_type i = 0; i < s.length(); ++i)
+		s[i] = std::tolower(s[i], loc);
+}
 #endif
