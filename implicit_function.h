@@ -10,62 +10,118 @@
 #include <string>
 #include <locale>
 #include <algorithm>
+#include <functional>
 
 typedef double FT;
 const FT pi = 3.141592653589793238462643383279502884L;
-const FT esp = 1e-6;
-typedef FT(Function_3)(FT, FT, FT);
+const FT eps = 1e-6;
+const FT eps2 = 1e-2;
+//typedef FT(Function_3)(FT, FT, FT);
 
+class Function {
+public:
+	virtual FT operator()(FT, FT, FT) = 0;
+};
 
-inline FT schwarzp(FT x, FT y, FT z) {
-	return cos(x) + cos(y) + cos(z);
+/* Function return rectlinear style from slicer
+ * where coff is required to adjust the diameter filament
+ */
+class Rectlinear : public Function {
+private:
+	const FT coff;
+	const FT smooth_coff;
+public:
+	Rectlinear(FT coff = 1.0, FT smooth_coff = 0.05) : coff(coff), smooth_coff(smooth_coff) {}
+	FT operator()(FT x, FT y, FT z) {
+		return ((cos(x) + cos(y)) - 0.25 * coff) * ((cos(y + coff) + cos(z + coff)) - 0.25 * coff) - smooth_coff;
+	}
+};
+
+class Schwarzp : public Function {
+public:
+	Schwarzp() {}
+	FT operator ()(FT x, FT y, FT z) {
+		return cos(x) + cos(y) + cos(z);
+	}
+};
+
+class Schwarzd : public Function {
+public:
+	Schwarzd() {}
+	FT operator ()(FT x, FT y, FT z) {
+		return sin(x) * sin(y) * sin(z) + sin(x) * cos(y) * cos(z) + cos(x) * sin(y) * cos(z) + cos(x) * cos(y) * sin(z);
+	}
+};
+
+class Gyroid : public Function {
+public:
+	Gyroid() {}
+	FT operator ()(FT x, FT y, FT z) {
+		return sin(x) * cos(y) + sin(y) * cos(z) + sin(z) * cos(x);
+	}
+};
+
+class Lidinoid : public Function {
+public:
+	Lidinoid() {}
+	FT operator ()(FT x, FT y, FT z) {
+		return 0.5 * (sin(2 * x) * cos(y) * sin(z) + sin(2 * y) * cos(z) * sin(x) + sin(2 * z) * cos(x) * sin(y)) - 0.5 * (cos(2 * x) * cos(2 * y) + cos(2 * y) * cos(2 * z) + cos(2 * z) * cos(2 * x)) + 0.15;
+	}
+};
+
+class Neovius : public Function {
+public:
+	Neovius() {}
+	FT operator ()(FT x, FT y, FT z) {
+		return 3 * (cos(x) + cos(y) + cos(z)) + 4 * cos(x) * cos(y) * cos(z);
+	}
+};
+
+class Schoen_iwp : public Function {
+public:
+	Schoen_iwp() {}
+	FT operator ()(FT x, FT y, FT z) {
+		return cos(x) * cos(y) + cos(y) * cos(z) + cos(z) * cos(x) - cos(x) * cos(y) * cos(z);
+	}
+};
+class PWHybrid : public Function {
+public:
+	PWHybrid() {}
+	FT operator ()(FT x, FT y, FT z) {
+		return 4 * (cos(x) * cos(y) + cos(y) * cos(z) + cos(z) * cos(x)) - 3 * cos(x) * cos(y) * cos(z);
+	}
+};
+
+template<typename Function>
+inline FT DFx(Function& F, FT x, FT y, FT z) {
+	return (F(x + eps, y, z) - F(x, y, z)) / eps;
 }
-inline FT schwarzd(FT x, FT y, FT z) {
-	return sin(x) * sin(y) * sin(z) + sin(x) * cos(y) * cos(z) + cos(x) * sin(y) * cos(z) + cos(x) * cos(y) * sin(z);
+template<typename Function>
+inline FT DFy(Function& F, FT x, FT y, FT z) {
+	return (F(x, y + eps, z) - F(x, y, z)) / eps;
 }
-inline FT gyroid(FT x, FT y, FT z) {
-	return sin(x) * cos(y) + sin(y) * cos(z) + sin(z) * cos(x);
-}
-inline FT lidinoid(FT x, FT y, FT z) {
-	return 0.5 * (sin(2 * x) * cos(y) * sin(z) + sin(2 * y) * cos(z) * sin(x) + sin(2 * z) * cos(x) * sin(y)) - 0.5 * (cos(2 * x) * cos(2 * y) + cos(2 * y) * cos(2 * z) + cos(2 * z) * cos(2 * x)) + 0.15;
-}
-inline FT scherk(FT x, FT y, FT z) {
-	return sinh(x) * sinh(y) - sin(z);
-}
-inline FT sphere(FT x, FT y, FT z, FT r) {
-	return x * x + y * y + z * z - r * r;
-}
-inline FT DFx(Function_3 F, FT x, FT y, FT z) {
-	return (F(x + esp, y, z) - F(x, y, z)) / esp;
-}
-inline FT DFy(Function_3 F, FT x, FT y, FT z) {
-	return (F(x, y + esp, z) - F(x, y, z)) / esp;
-}
-inline FT DFz(Function_3 F, FT x, FT y, FT z) {
-	return (F(x, y, z + esp) - F(x, y, z)) / esp;
+template<typename Function>
+inline FT DFz(Function& F, FT x, FT y, FT z) {
+	return (F(x, y, z + eps) - F(x, y, z)) / eps;
 }
 inline FT DF(FT dx, FT dy, FT dz) {
 	return sqrt(dx * dx + dy * dy + dz * dz);
 }
-inline FT IsoThicken(Function_3 F, FT x, FT y, FT z, FT thickness = 1.0) {
-	FT dx = DFx(schwarzp, x, y, z), dy = DFy(schwarzp, x, y, z), dz = DFz(schwarzp, x, y, z);
+inline FT IsoThicken(Function& F, FT x, FT y, FT z, FT thickness = 1.0) {
+	FT dx = DFx(F, x, y, z), dy = DFy(F, x, y, z), dz = DFz(F, x, y, z);
 	FT const df = DF(dx, dy, dz);
 	dx *= 0.5 * thickness / df;
 	dy *= 0.5 * thickness / df;
 	dz *= 0.5 * thickness / df;
-	FT const iso1 = schwarzp(x + dx, y + dy, z + dz);
-	FT const iso2 = schwarzp(x - dx, y - dy, z - dz);
+	FT const iso1 = F(x + dx, y + dy, z + dz);
+	FT const iso2 = F(x - dx, y - dy, z - dz);
 	return iso1 * iso2;
 }
 inline FT max_3(FT a, FT b, FT c) {
 	return (std::max)((std::max)(a, b), c);
 }
 
-class Function {
-public:
-	virtual FT operator()(FT, FT, FT) = 0;
-};
-/* Function reture the isocuboid boundary
+/* Function return the isocuboid boundary
  * where minimum point origins at (origin_x, origin_y, origin_z) and 
  * maximum point is (origin_x+w, origin_y+h, origin_z+t)
  * return 0 if the point on the surface
@@ -93,28 +149,20 @@ public:
 		return -.001;
 	}
 };
-/* Function return schwarzp isosurface function with following parameters:
+/* Function return Implicit isosurface function with following parameters:
  * double thickness: adding the boundary by +-(thickness/2) to the isosurface function
  */
 class Implicit_function : public Function {
 private:
-	const Function_3& isosurface;
+	Function& isosurface;
 	const double coff;
 	const double thickness;
-	//Function& condition;
 public:
-	Implicit_function(const Function_3& isosurface, const double coff, const double thickness) :
-		isosurface(isosurface), coff(coff), thickness(thickness) {}
-	FT operator()(FT x, FT y, FT z) {
-		/*
-		if (condition(x, y, z) <= 0) {
-			return IsoThicken(isosurface, x * coff, y * coff, z * coff, thickness);
-		}
-		return 1.0;
-		*/
-		if (thickness <= esp) {
-			return isosurface(x * coff, y * coff, z * coff);
-		}
+	Implicit_function(Function* isosurface, const double coff, const double thickness):
+		isosurface(*isosurface), coff(coff), thickness(thickness) {}
+	FT operator ()(FT x, FT y, FT z) {
+		if (thickness <= eps)
+			return (isosurface)(x * coff, y * coff, z * coff);
 		return IsoThicken(isosurface, x * coff, y * coff, z * coff, thickness);
 	}
 };
@@ -125,20 +173,31 @@ inline void to_lower(std::string& s) {
 		s[i] = std::tolower(s[i], loc);
 }
 
-inline Function_3& get_surface_function(std::string name) {
-	to_lower(name);
-	if (name == "schwarzd") {
-		return schwarzd;
+Function* isosurface(std::string name, FT coff) {
+	if (name == "rectlinear") {
+		return new Rectlinear(coff);
 	}
-	else if (name == "scherk") {
-		return scherk;
+	else if (name == "schwarzd") {
+		return new Schwarzd();
 	}
 	else if (name == "lidinoid") {
-		return lidinoid;
+		return new Lidinoid();
 	}
 	else if (name == "gyroid") {
-		return gyroid;
+		return new Gyroid();
 	}
-	return schwarzp;
+	else if (name == "schwarzp") {
+		return new Schwarzp();
+	}
+	else if (name == "pwhybrid") {
+		return new PWHybrid();
+	}
+	else if (name == "neovius") {
+		return new Neovius();
+	}
+	else if (name == "schoen_iwp") {
+		return new Schoen_iwp();
+	}
+	throw std::runtime_error(name + " doesn't exist");
 }
 #endif

@@ -1,17 +1,28 @@
 # Scaffolder
 Generate scaffold from STL file with implicit function (Schwarz P/ Gyroid).
 ```
-Usage: Scaffolder_2 [options]
-Options:
-    -q, --quiet            Disable verbose output
-    -f, --format           Output format (OFF,PLY,STL,OBJ) [default: ply]
-    -i, --input            Input file (STL) (Required)
-    -o, --output           Output filename without extension [default: out]
-    -g, --grid             Grid size [default: 100]
-    --thickness            Thickness [default: 1.0]
-    --border_offset        default:2
-    --coff                 default:4*PI
-    --minimum_diameter     used for removing small orphaned (between 0-1) [default: 0.25]
+Scaffolder - generate 3D scaffold from STL file
+Usage:
+  Scaffolder [OPTION...] [option args]
+
+  -h, --help                    Print help
+  -q, --quiet                   Disable verbose output
+  -f, --format arg              Output format (OFF,PLY,STL,OBJ) [default:
+                                ply]
+  -i, --input FILE              Input file (STL)
+  -o, --output FILENAME         Output filename without extension [default:
+                                out]
+  -c, --coff DOUBLE             default:4*PI
+  -s, --shell INT               [default:0]
+  -n, --surface NAME            schwarzp, schwarzd, gyroid, lidinoid,
+                                schoen_iwp, neovius, pwhybrid [default: schwarzp]
+  -t, --thickness DOUBLE        Thickness [default: 1.0]
+  -g, --grid_size INT           Grid size [default: 100]
+      --grid_offset INT         [default:2]
+      --dirty                   Disable autoclean
+      --minimum_diameter DOUBLE
+                                used for removing small orphaned (between
+                                0-1) [default: 0.25]
 ```
 
 ## Dependencies
@@ -29,5 +40,5 @@ Options:
 
 ## Reference 
 - [dualmc](https://github.com/dominikwodniok/dualmc)
-- [argparse](https://github.com/jamolnng/argparse)
+- [cxxopts](https://github.com/jarro2783/cxxopts)
 - [Minimal surface Blog](https://minimalsurfaces.blog/)
