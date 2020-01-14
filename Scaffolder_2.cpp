@@ -89,7 +89,7 @@ int main(int argc, char* argv[])
             ("o,output", "Output filename without extension [default: out]", cxxopts::value<std::string>(), "FILENAME")
             ("c,coff", "default:4*PI", cxxopts::value<double>(), "DOUBLE")
             ("s,shell", "[default:0]", cxxopts::value<uint16_t>(), "INT")
-            ("n,surface", "rectlinear, schwarzp, schwarzd, gyroid, lidinoid, schoen_iwp, neovius, pwhybrid [default: schwarzp]", cxxopts::value<std::string>(), "NAME")
+            ("n,surface", "rectlinear, schwarzp, schwarzd, gyroid, double-p, double-d, double-gyroiod, lidinoid, schoen_iwp, neovius, bcc, tubular_g_ab, tubular_g_c [default: schwarzp]", cxxopts::value<std::string>(), "NAME")
             ("t,thickness", "Thickness [default: 1.0]", cxxopts::value<double>(), "DOUBLE")
             ("g,grid_size", "Grid size [default: 100]", cxxopts::value<size_t>(), "INT")
             ("grid_offset", "[default:2]", cxxopts::value<uint16_t>(), "INT")
@@ -155,6 +155,8 @@ int main(int argc, char* argv[])
 
     // Stage 1:
     TMesh mesh;
+    double volume1 = eps, volume2 = eps;
+    double area1 = eps, area2 = eps;
     {
         Eigen::MatrixXd V, Fxyz;
         Eigen::MatrixXi F;
@@ -164,8 +166,57 @@ int main(int argc, char* argv[])
             Eigen::MatrixXd V1;
             Eigen::MatrixXi F1;
             {
-                Eigen::MatrixXd N;
-                igl::readSTL(input_file, V1, F1, N);
+                TMesh stl;
+                int loadmark = 0;
+                vcg::tri::io::ImporterSTL<TMesh>::Open(stl, input_file.c_str(), loadmark);
+                if (!dirty) {
+                    vcg::tri::Clean<TMesh>::RemoveDuplicateFace(stl);
+                    vcg::tri::Clean<TMesh>::RemoveDuplicateVertex(stl);
+                    vcg::tri::Clean<TMesh>::RemoveUnreferencedVertex(stl);
+                    vcg::tri::UpdateTopology<TMesh>::FaceFace(stl);
+                    vcg::tri::Clean<TMesh>::RemoveZeroAreaFace(stl);
+                    vcg::tri::Clean<TMesh>::RemoveNonManifoldFace(stl);
+                    vcg::tri::Clean<TMesh>::RemoveUnreferencedVertex(stl);
+                    vcg::tri::UpdateTopology<TMesh>::FaceFace(stl);
+                }
+                // Report Volume and surface area
+                int edgeNum = 0, edgeBorderNum = 0, edgeNonManifNum = 0;
+                vcg::tri::Clean<TMesh>::CountEdgeNum(stl, edgeNum, edgeBorderNum, edgeNonManifNum);
+                bool watertight = (edgeBorderNum == 0) && (edgeNonManifNum == 0);
+                bool pointcloud = (stl.fn == 0 && stl.vn != 0);
+                if (!pointcloud && watertight) {
+                    area1 = vcg::tri::Stat<TMesh>::ComputeMeshArea(stl);
+                    volume1 = vcg::tri::Stat<TMesh>::ComputeMeshVolume(stl);
+                }
+                else {
+                    std::cout << "Error: Input file is not valid" << std::endl
+                        << "-- Watertight: " << watertight << (watertight ? "[Valid]" : "[Invalid]") << std::endl
+                        << "-- Point cloud: " << pointcloud << (!pointcloud ? "[Valid]" : "[Invalid]") << std::endl;
+                    return 1;
+                }
+                // Convert STL VCG::TMesh
+                // Vertices to Eigen matrixXd V1
+                V1.resize(stl.VN(), 3);
+                size_t i = 0;
+                std::vector<size_t> vertexId(stl.vert.size());
+                for (TMesh::VertexIterator it = stl.vert.begin(); it != stl.vert.end(); ++it) if (!it->IsD()) {
+                    vertexId[it - stl.vert.begin()] = i;
+                    vcg::Point3d point = it->P();
+                    V1(i, 0) = point[0];
+                    V1(i, 1) = point[1];
+                    V1(i, 2) = point[2];
+                    i++;
+                }
+                // Faces to Eigen matrixXi F1
+                i = 0;
+                F1.resize(stl.FN(), stl.face.begin()->VN());
+                std::cout << F1.size() << std::endl;
+                for (TMesh::FaceIterator it = stl.face.begin(); it != stl.face.end(); ++it) if (!it->IsD()) {
+                    for (int k = 0; k < it->VN(); k++) {
+                        F1(i, k) = vertexId[vcg::tri::Index(stl, it->V(k))];
+                    }
+                    i++;
+                }
             }
             // Calculate the grid size parameters
             const Eigen::RowVector3d V1min = V1.colwise().minCoeff();
@@ -175,7 +226,7 @@ int main(int argc, char* argv[])
             // Create border offset from the original box
             V1min1 = V1min - grid_offset * delta;
             grid_size += 2 * (size_t)(grid_offset);
-            Implicit_function fn(isosurface(surface, coff), coff, thickness);
+            Implicit_function fn(isosurface(surface, coff, thickness), coff);
             if (verbose) std::cout << "-- Bounding Box: " << V1min.format(CleanFmt) << ' ' << V1max.format(CleanFmt) << std::endl;
             if (verbose) std::cout << "-- Length: " << L << std::endl;
             if (verbose) std::cout << "[Generating grid] ";
@@ -324,6 +375,22 @@ int main(int argc, char* argv[])
                     << "-- IsWaterTight: " << vcg::tri::Clean<TMesh>::IsWaterTight(mesh) << std::endl
                     << "-- Minimum_diameter: " << minimum_diameter * mesh.bbox.Diag() << std::endl;
             }
+        }
+
+        // Report Volume and surface area
+        int edgeNum = 0, edgeBorderNum = 0, edgeNonManifNum = 0;
+        vcg::tri::Clean<TMesh>::CountEdgeNum(mesh, edgeNum, edgeBorderNum, edgeNonManifNum);
+        bool watertight = (edgeBorderNum == 0) && (edgeNonManifNum == 0);
+        bool pointcloud = (mesh.fn == 0 && mesh.vn != 0);
+        if (!pointcloud && watertight) {
+            area2 = vcg::tri::Stat<TMesh>::ComputeMeshArea(mesh);
+            volume2 = vcg::tri::Stat<TMesh>::ComputeMeshVolume(mesh);
+            if (verbose)
+                std::cout << "[STAT]" << std::endl
+                << "-- Volume: " << volume2 << std::endl
+                << "-- Surface Area: " << area2 << std::endl
+                << "-- Porosity: " << volume2 / volume1 << std::endl
+                << "-- Surface Area ratio: " << area2 / area1 << std::endl;
         }
         
         if (verbose) std::cout << "[Writing file] ";

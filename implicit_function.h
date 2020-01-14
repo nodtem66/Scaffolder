@@ -20,6 +20,7 @@ const FT eps2 = 1e-2;
 
 class Function {
 public:
+	Function() {}
 	virtual FT operator()(FT, FT, FT) = 0;
 };
 
@@ -37,58 +38,118 @@ public:
 	}
 };
 
+/*
+ * TPMS from http://www.msri.org/publications/sgp/jim/papers/morphbysymmetry/table/index.html
+ */
 class Schwarzp : public Function {
 public:
-	Schwarzp() {}
+	const FT t;
+	Schwarzp(FT t = 0) : t(t) {}
 	FT operator ()(FT x, FT y, FT z) {
-		return cos(x) + cos(y) + cos(z);
+		return cos(x) + cos(y) + cos(z) + t;
+	}
+};
+
+class DoubleP : public Function {
+public:
+	const FT t;
+	DoubleP(FT t = 0) : t(t) {}
+	FT operator ()(FT x, FT y, FT z) {
+		return cos(x) * cos(y) + cos(y) * cos(z) + cos(x) * cos(z) + 0.35 * (cos(2 * x) + cos(2 * y) + cos(2 * z)) + t;
 	}
 };
 
 class Schwarzd : public Function {
 public:
-	Schwarzd() {}
+	const FT t;
+	Schwarzd(FT t = 0) : t(t) {}
 	FT operator ()(FT x, FT y, FT z) {
-		return sin(x) * sin(y) * sin(z) + sin(x) * cos(y) * cos(z) + cos(x) * sin(y) * cos(z) + cos(x) * cos(y) * sin(z);
+		return sin(x) * sin(y) * sin(z) + sin(x) * cos(y) * cos(z) + cos(x) * sin(y) * cos(z) + cos(x) * cos(y) * sin(z) + t;
+	}
+};
+
+class DoubleD : public Function {
+public:
+	const FT t;
+	DoubleD(FT t = 0) : t(t) {}
+	FT operator ()(FT x, FT y, FT z) {
+		return -1 * (cos(x) * cos(y) + cos(y) * cos(z) + cos(x) * cos(z)) - 1 * (sin(x) * sin(y) * sin(z)) - t;
 	}
 };
 
 class Gyroid : public Function {
 public:
-	Gyroid() {}
+	const FT t = 0;
+	Gyroid(FT t = 0) : t(t) {}
 	FT operator ()(FT x, FT y, FT z) {
-		return sin(x) * cos(y) + sin(y) * cos(z) + sin(z) * cos(x);
+		return sin(x) * cos(y) + sin(y) * cos(z) + sin(z) * cos(x) + t;
+	}
+};
+
+class DoubleGyroid : public Function {
+public:
+	const FT t = 0;
+	DoubleGyroid(FT t = 0) : t(t) {}
+	FT operator ()(FT x, FT y, FT z) {
+		return -1 * (
+			2.75 * (sin(2 * x) * sin(z) * cos(y) + sin(2 * y) * sin(x) * cos(z) + sin(2 * z) * sin(y) * cos(x)) -
+			(cos(2 * x) * cos(2 * y) + cos(2 * y) * cos(2 * z) + cos(2 * x) * cos(2 * z))
+		) + t;
 	}
 };
 
 class Lidinoid : public Function {
 public:
-	Lidinoid() {}
+	const FT t = 0;
+	Lidinoid(FT t = 0) : t(t) {}
 	FT operator ()(FT x, FT y, FT z) {
-		return 0.5 * (sin(2 * x) * cos(y) * sin(z) + sin(2 * y) * cos(z) * sin(x) + sin(2 * z) * cos(x) * sin(y)) - 0.5 * (cos(2 * x) * cos(2 * y) + cos(2 * y) * cos(2 * z) + cos(2 * z) * cos(2 * x)) + 0.15;
+		return -1 * (
+			(sin(2 * x) * cos(y) * sin(z) + sin(2 * y) * cos(z) * sin(x) + sin(2 * z) * cos(x) * sin(y)) +
+			(cos(2 * x) * cos(2 * y) + cos(2 * y) * cos(2 * z) + cos(2 * z) * cos(2 * x))
+		) + t;
 	}
 };
 
 class Neovius : public Function {
 public:
-	Neovius() {}
+	const FT t;
+	Neovius(FT t = 0) : t(t) {}
 	FT operator ()(FT x, FT y, FT z) {
-		return 3 * (cos(x) + cos(y) + cos(z)) + 4 * cos(x) * cos(y) * cos(z);
+		return 3 * (cos(x) + cos(y) + cos(z)) + 4 * cos(x) * cos(y) * cos(z) + t;
 	}
 };
 
 class Schoen_iwp : public Function {
 public:
-	Schoen_iwp() {}
+	const FT t;
+	Schoen_iwp(FT t = 0) : t(t) {}
 	FT operator ()(FT x, FT y, FT z) {
-		return cos(x) * cos(y) + cos(y) * cos(z) + cos(z) * cos(x) - cos(x) * cos(y) * cos(z);
+		return cos(x) * cos(y) + cos(y) * cos(z) + cos(z) * cos(x) + t;
 	}
 };
-class PWHybrid : public Function {
+
+class BCC : public Function {
 public:
-	PWHybrid() {}
+	const FT t;
+	BCC(FT t = 0) : t(t) {}
 	FT operator ()(FT x, FT y, FT z) {
-		return 4 * (cos(x) * cos(y) + cos(y) * cos(z) + cos(z) * cos(x)) - 3 * cos(x) * cos(y) * cos(z);
+		return cos(x) + cos(y) + cos(z) - 2 * (cos(0.5 * x) * cos(0.5* y) + cos(0.5 * y) * cos(0.5 * z) + cos(0.5 * x) * cos(0.5 * z)) + t;
+	}
+};
+
+class TGab : public Function {
+public:
+	TGab() {}
+	FT operator ()(FT x, FT y, FT z) {
+		return 20 * (cos(x) * sin(y) + cos(y) * sin(z) + cos(z) * sin(x)) - 0.5 * (cos(2 * x) * cos(2 * y) + cos(2 * y) * cos(2 * z) + cos(2 * z) * cos(2 * x)) - 4;
+	}
+};
+
+class TGc : public Function {
+public:
+	TGc() {}
+	FT operator ()(FT x, FT y, FT z) {
+		return 10 * (cos(x) * sin(y) + cos(y) * sin(z) + cos(z) * sin(x)) - 2 * (cos(2 * x) * cos(2 * y) + cos(2 * y) * cos(2 * z) + cos(2 * z) * cos(2 * x)) - 12;
 	}
 };
 
@@ -158,7 +219,7 @@ private:
 	const double coff;
 	const double thickness;
 public:
-	Implicit_function(Function* isosurface, const double coff, const double thickness):
+	Implicit_function(Function* isosurface, const double coff, const double thickness = 0):
 		isosurface(*isosurface), coff(coff), thickness(thickness) {}
 	FT operator ()(FT x, FT y, FT z) {
 		if (thickness <= eps)
@@ -173,30 +234,45 @@ inline void to_lower(std::string& s) {
 		s[i] = std::tolower(s[i], loc);
 }
 
-Function* isosurface(std::string name, FT coff) {
+Function* isosurface(std::string name, FT coff, FT t) {
 	if (name == "rectlinear") {
 		return new Rectlinear(coff);
 	}
+	else if (name == "schwarzp") {
+		return new Schwarzp(t);
+	}
+	else if (name == "double-p") {
+		return new DoubleP(t);
+	}
 	else if (name == "schwarzd") {
-		return new Schwarzd();
+		return new Schwarzd(t);
+	}
+	else if (name == "double-d") {
+		return new DoubleD(t);
+	}
+	else if (name == "gyroid") {
+		return new Gyroid(t);
+	}
+	else if (name == "double-gyroid") {
+		return new DoubleGyroid(t);
 	}
 	else if (name == "lidinoid") {
 		return new Lidinoid();
 	}
-	else if (name == "gyroid") {
-		return new Gyroid();
-	}
-	else if (name == "schwarzp") {
-		return new Schwarzp();
-	}
-	else if (name == "pwhybrid") {
-		return new PWHybrid();
-	}
 	else if (name == "neovius") {
-		return new Neovius();
+		return new Neovius(t);
 	}
 	else if (name == "schoen_iwp") {
-		return new Schoen_iwp();
+		return new Schoen_iwp(t);
+	}
+	else if (name == "bcc") {
+		return new BCC(t);
+	}
+	else if (name == "tubular_g_ab") {
+		return new TGab();
+	}
+	else if (name == "tubular_g_c") {
+		return new TGc();
 	}
 	throw std::runtime_error(name + " doesn't exist");
 }
