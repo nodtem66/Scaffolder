@@ -29,12 +29,11 @@ public:
  */
 class Rectlinear : public Function {
 private:
-	const FT coff;
 	const FT smooth_coff;
 public:
-	Rectlinear(FT coff = 1.0, FT smooth_coff = 0.05) : coff(coff), smooth_coff(smooth_coff) {}
+	Rectlinear(FT smooth_coff = 0.05) : smooth_coff(smooth_coff) {}
 	FT operator()(FT x, FT y, FT z) {
-		return ((cos(x) + cos(y)) - 0.25 * coff) * ((cos(y + coff) + cos(z + coff)) - 0.25 * coff) - smooth_coff;
+		return ((cos(x) + cos(y)) - 1.2) * ((cos(y + pi) + cos(z + pi)) - 1.2) - smooth_coff;
 	}
 };
 
@@ -234,9 +233,9 @@ inline void to_lower(std::string& s) {
 		s[i] = std::tolower(s[i], loc);
 }
 
-Function* isosurface(std::string name, FT coff, FT t) {
+Function* isosurface(std::string name, FT t) {
 	if (name == "rectlinear") {
-		return new Rectlinear(coff);
+		return new Rectlinear();
 	}
 	else if (name == "schwarzp") {
 		return new Schwarzp(t);

@@ -30,5 +30,5 @@ find_package_handle_standard_args(VCG
     VCG_INCLUDE_DIR)
 mark_as_advanced(VCG_INCLUDE_DIR)
 
-message(STATUS "INCLUDE DIR: ${VCG_INCLUDE_DIR}/")
+message(STATUS "USE DIR: ${VCG_INCLUDE_DIR}/")
 # include(VCG)

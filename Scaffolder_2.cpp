@@ -1,73 +1,19 @@
-﻿#include <igl/writePLY.h>
-#include <igl/readSTL.h>
-#include <igl/copyleft/marching_cubes.h>
-#include <igl/fast_winding_number.h>
-#include <Eigen/Core>
-#include "Implicit_function.h"
-#include "cxxopts.hpp"
-#include "dualmc/dualmc.h"
-#include "Mesh.h"
-
-#define VERSION "v1.1"
-
-typedef struct index_type {
-    size_t x; size_t y; size_t z;
-} index_type;
-typedef std::map<size_t, bool> Queue_t;
-
-inline size_t indexFromIJK(size_t i, size_t j, size_t k, size_t grid_size) {
-    return i + grid_size * (j + grid_size * k);
-}
-
-inline void indexToIJK(size_t index, size_t grid_size, index_type& r) {
-    r.z = index / (grid_size*grid_size);
-    index -= r.z * grid_size * grid_size;
-    r.y = index / grid_size;
-    r.x = index % grid_size;
-}
-
-inline bool MarkAndSweepNeighbor(Eigen::VectorXd& W, index_type& index, Queue_t& queue, size_t grid_size, double value = 0.0, bool findAbove = false) {
-    bool isBorder = false;
-    for (int8_t di = -1; di <= 1; di++) {
-        for (int8_t dj = -1; dj <= 1; dj++) {
-            for (int8_t dk = -1; dk <= 1; dk++) {
-                if (di == 0 && dj == 0 && dk == 0) continue;
-                const size_t id = indexFromIJK(index.x + di, index.y + dj, index.z + dk, grid_size);
-                //std::cout << value << " " << W(id) << std::endl;
-                if ((findAbove && W(id) >= value - eps2) || (!findAbove && W(id) <= value + eps2)) {
-                    isBorder = true;
-                    break;
-                }
-            }
-            if (isBorder) break;
-        }
-        if (isBorder) break;
-    }
-    if (isBorder) {
-        for (int8_t di = -1; di <= 1; di++) {
-            for (int8_t dj = -1; dj <= 1; dj++) {
-                for (int8_t dk = -1; dk <= 1; dk++) {
-                    if (di == 0 && dj == 0 && dk == 0) continue;
-                    const size_t id = indexFromIJK(index.x + di, index.y + dj, index.z + dk, grid_size);
-                    if (W(id) >= 0.5 && W(id) < 1.1) {
-                        queue.insert({ id, true });
-                    }
-                }
-            }
-        }
-    }
-    return isBorder;
-}
+﻿#include "Scaffolder_2.h"
 
 int main(int argc, char* argv[])
 {
     // Define default parameters
     bool verbose = true;
     bool dirty = false;
+    bool is_analysis_microstructure = false;
+    bool is_export_microstructure = false;
+    bool is_export_hdf5 = false;
+    bool no_output = false;
     uint16_t grid_offset = 2;
     uint16_t shell = 0;
+    uint16_t smooth_step = 5;
     double thickness = 0.5;
-    size_t grid_size = 100;
+    size_t minimum_grid_size = 100;
     double coff = pi;
     double minimum_diameter = 0.25;
     Eigen::IOFormat CleanFmt(4, Eigen::DontAlignCols, ", ", "\n", "[", "]");
@@ -83,7 +29,9 @@ int main(int argc, char* argv[])
         options.positional_help("[option args]").show_positional_help();
         options.add_options()
             ("h,help", "Print help")
-            ("q,quiet", "Disable verbose output")
+            ("q,quiet", "Disable verbose output [default: false]")
+            ("m,microstructure", "Analysis microstructure [default: false]")
+            ("m2", "Export and analysis microstructure [default: false]")
             ("f,format", "Output format (OFF,PLY,STL,OBJ) [default: ply]", cxxopts::value<std::string>())
             ("i,input", "Input file (STL)", cxxopts::value<std::string>(), "FILE")
             ("o,output", "Output filename without extension [default: out]", cxxopts::value<std::string>(), "FILENAME")
@@ -93,6 +41,8 @@ int main(int argc, char* argv[])
             ("t,thickness", "Thickness [default: 1.0]", cxxopts::value<double>(), "DOUBLE")
             ("g,grid_size", "Grid size [default: 100]", cxxopts::value<size_t>(), "INT")
             ("grid_offset", "[default:2]", cxxopts::value<uint16_t>(), "INT")
+            ("smooth_step", "Smooth with laplacian (default: 5)", cxxopts::value<uint16_t>(), "INT")
+            ("hdf5", "export the result in hdf5 format [default: false]")
             ("dirty", "Disable autoclean")
             ("minimum_diameter", "used for removing small orphaned (between 0-1) [default: 0.25]", cxxopts::value<double>(), "DOUBLE");
         options.parse_positional({ "input", "output", "format" });
@@ -111,15 +61,31 @@ int main(int argc, char* argv[])
         // get optional parameters
         if (result.count("quiet")) verbose = !result["quiet"].as<bool>();
         if (result.count("dirty")) dirty = result["dirty"].as<bool>();
-        if (result.count("output")) filename = result["output"].as<std::string>();
+        if (result.count("microstructure")) {
+            is_analysis_microstructure = result["microstructure"].as<bool>();
+            no_output = true;
+        }
+        if (result.count("m2")) {
+            is_analysis_microstructure = result["m2"].as<bool>();
+            is_export_microstructure = result["m2"].as<bool>();
+            no_output = true;
+        }
+        if (result.count("hdf5")) {
+            is_export_hdf5 = result["hdf5"].as<bool>();
+        }
+        if (result.count("output")) {
+            filename = result["output"].as<std::string>();
+            no_output = false;
+        }
         if (result.count("format")) format = result["format"].as<std::string>();
         if (result.count("thickness")) thickness = result["thickness"].as<double>();
-        if (result.count("grid_size")) grid_size = result["grid_size"].as<size_t>();
+        if (result.count("grid_size")) minimum_grid_size = result["grid_size"].as<size_t>();
         if (result.count("grid_offset")) grid_offset = result["grid_offset"].as<uint16_t>();
         if (result.count("coff")) coff = result["coff"].as<double>();
         if (result.count("minimum_diameter")) minimum_diameter = result["minimum_diameter"].as<double>();
         if (result.count("surface")) surface = result["surface"].as<std::string>();
         if (result.count("shell")) shell = result["shell"].as<uint16_t>();
+        if (result.count("smooth_step")) smooth_step = result["smooth_step"].as<uint16_t>();
         
         to_lower(surface);
         to_lower(format);
@@ -147,20 +113,25 @@ int main(int argc, char* argv[])
             << "-- Coff: " << coff << std::endl
             << "-- shell: " << shell << std::endl
             << "-- Thickness: " << thickness << std::endl
-            << "-- Grid size: " << grid_size << std::endl
+            << "-- Grid size: " << minimum_grid_size << std::endl
             << "-- Grid offset: " << grid_offset << std::endl
+            << "-- Smooth step: " << smooth_step << std::endl
             << "-- Autoclean: " << (dirty ? "False" : "True") << std::endl
-            << "-- Minimum diameter: " << 100 * minimum_diameter << "%" << std::endl;
+            << "-- Minimum diameter: " << 100 * minimum_diameter << "%" << std::endl
+            << "-- Analysis microstructure: " << (is_analysis_microstructure || is_export_microstructure ? "True" : "False") << std::endl
+            << "-- Export HDF5: " << (is_export_hdf5 ? "True" : "False") << std::endl;
     }
 
     // Stage 1:
-    TMesh mesh;
+    TMesh mesh, inverse_mesh;
     double volume1 = eps, volume2 = eps;
     double area1 = eps, area2 = eps;
     {
-        Eigen::MatrixXd V, Fxyz;
+        Eigen::MatrixXd V, Fxyz, IFxyz;
         Eigen::MatrixXi F;
-        Eigen::RowVector3d V1min1, delta;
+        Eigen::RowVector3d V1min1;
+        Eigen::RowVector3i grid_size;
+        double grid_delta;
         try {
             // Read FROM STL
             Eigen::MatrixXd V1;
@@ -210,7 +181,6 @@ int main(int argc, char* argv[])
                 // Faces to Eigen matrixXi F1
                 i = 0;
                 F1.resize(stl.FN(), stl.face.begin()->VN());
-                std::cout << F1.size() << std::endl;
                 for (TMesh::FaceIterator it = stl.face.begin(); it != stl.face.end(); ++it) if (!it->IsD()) {
                     for (int k = 0; k < it->VN(); k++) {
                         F1(i, k) = vertexId[vcg::tri::Index(stl, it->V(k))];
@@ -218,26 +188,30 @@ int main(int argc, char* argv[])
                     i++;
                 }
             }
-            // Calculate the grid size parameters
-            const Eigen::RowVector3d V1min = V1.colwise().minCoeff();
-            const Eigen::RowVector3d V1max = V1.colwise().maxCoeff();
-            const Eigen::RowVector3d L = V1max - V1min;
-            delta = L / grid_size;
-            // Create border offset from the original box
-            V1min1 = V1min - grid_offset * delta;
-            grid_size += 2 * (size_t)(grid_offset);
-            Implicit_function fn(isosurface(surface, coff, thickness), coff);
-            if (verbose) std::cout << "-- Bounding Box: " << V1min.format(CleanFmt) << ' ' << V1max.format(CleanFmt) << std::endl;
-            if (verbose) std::cout << "-- Length: " << L << std::endl;
+
+            {
+                // Calculate the grid size parameters
+                const Eigen::RowVector3d V1min = V1.colwise().minCoeff();
+                const Eigen::RowVector3d V1max = V1.colwise().maxCoeff();
+                const Eigen::RowVector3d L = V1max - V1min;
+                const Eigen::RowVector3d delta = L / minimum_grid_size;
+                grid_delta = delta.minCoeff();
+                // Create border offset from the original box
+                V1min1 = V1min - grid_offset * grid_delta * Eigen::RowVector3d::Ones();
+                grid_size = (L / grid_delta).cast<int>() + 2 * grid_offset * Eigen::RowVector3i::Ones();
+                if (verbose) std::cout << "-- Bounding Box: " << V1min.format(CleanFmt) << ' ' << V1max.format(CleanFmt) << std::endl;
+                if (verbose) std::cout << "-- Length: " << L << std::endl;
+            }
+            Implicit_function fn(isosurface(surface, thickness), coff);
             if (verbose) std::cout << "[Generating grid] ";
-            Eigen::MatrixXd GV(grid_size * grid_size * grid_size, 3);
-            for (size_t k = 0; k < grid_size; k++) {
-                const double z = V1min1(2) + k * delta(2);
-                for (size_t j = 0; j < grid_size; j++) {
-                    const double y = V1min1(1) + j * delta(1);
-                    for (size_t i = 0; i < grid_size; i++) {
-                        const double x = V1min1(0) + i * delta(0);
-                        const size_t index = i + grid_size * (j + grid_size * k);
+            Eigen::MatrixXd GV(grid_size.prod(), 3);
+            for (size_t k = 0; k < grid_size(2); k++) {
+                const double z = V1min1(2) + k * grid_delta;
+                for (size_t j = 0; j < grid_size(1); j++) {
+                    const double y = V1min1(1) + j * grid_delta;
+                    for (size_t i = 0; i < grid_size(0); i++) {
+                        const double x = V1min1(0) + i * grid_delta;
+                        const size_t index = i + grid_size(0) * (j + grid_size(1) * k);
                         GV.row(index) = Eigen::RowVector3d(x, y, z);
                     }
                 }
@@ -245,7 +219,7 @@ int main(int argc, char* argv[])
             if (verbose) 
                 std::cout
                     << "OK" << std::endl
-                    << "-- Grid size: " << grid_size * grid_size * grid_size << " (" << grid_size << 'x' << grid_size << 'x' << grid_size << ") " << std::endl;
+                    << "-- Grid size: " << grid_size.prod() << grid_size.format(CleanFmt) << std::endl;
 
             if (verbose) std::cout << "[Calculating Winding number] ";
             Eigen::VectorXd W;
@@ -260,7 +234,8 @@ int main(int argc, char* argv[])
                 if (verbose) std::cout << "[Generate Shell] ";
                 Queue_t queue;
                 uint16_t shell_index = shell + 1;
-                for (size_t index = 0; index < grid_size * grid_size * grid_size; index++) {
+                size_t grid_size_total = grid_size.prod();
+                for (size_t index = 0; index < grid_size_total; index++) {
                     if (W(index) >= 0.8) {
                         index_type id;
                         indexToIJK(index, grid_size, id);
@@ -269,12 +244,10 @@ int main(int argc, char* argv[])
                         }
                     }
                 }
-                //if (verbose) std::cout << "-- [" << shell_index << "] " << queue.size() << std::endl;
                 shell_index--;
                 for (; shell_index > 1; shell_index--) {
                     Queue_t q(queue);
                     queue.clear();
-                    //if (verbose) std::cout << "-- [" << shell_index << "] " << q.size() << std::endl;
                     for (Queue_t::iterator it = q.begin(); it != q.end(); ++it) {
                         // every neighbor
                         index_type id;
@@ -288,125 +261,168 @@ int main(int argc, char* argv[])
             }
             
             if (verbose) std::cout << "[Generating isosurface Fxyz] ";
-            Fxyz.resize(grid_size * grid_size * grid_size, 1);
-            for (size_t k = 0; k < grid_size; k++) {
-                const double z = V1min1(2) + k * delta(2);
-                for (size_t j = 0; j < grid_size; j++) {
-                    const double y = V1min1(1) + j * delta(1);
-                    for (size_t i = 0; i < grid_size; i++) {
-                        const double x = V1min1(0) + i * delta(0);
-                        const size_t index = i + grid_size * (j + grid_size * k);
+            Fxyz.resize(grid_size.prod(), 1);
+            IFxyz.resize(grid_size.prod(), 1);
+            for (size_t k = 0; k < grid_size(2); k++) {
+                const double z = V1min1(2) + k * grid_delta;
+                for (size_t j = 0; j < grid_size(1); j++) {
+                    const double y = V1min1(1) + j * grid_delta;
+                    for (size_t i = 0; i < grid_size(0); i++) {
+                        const double x = V1min1(0) + i * grid_delta;
+                        const size_t index = i + grid_size(0) * (j + grid_size(1) * k);
                         const double w = W(index);
                         // Winding field
-                        // Fxyz(index) = W(index);
-                        if (w < 0.8) // Outside
+                        if (w < 0.8) {// Outside
                             Fxyz(index) = 1.0;
-                        else if (w >= 1.1) // Shell
-                            Fxyz(index) = -1;
-                        else  // Inside
+                            IFxyz(index) = 1.0;
+                        }
+                        else if (w >= 1.1) {// Shell
+                            Fxyz(index) = -1.0;
+                            IFxyz(index) = -1.0;
+                        }
+                        else {// Inside
                             Fxyz(index) = fn(x, y, z);
+                            IFxyz(index) = -Fxyz(index);
+                        }
                     }
                 }
             }
             if (verbose) std::cout << "OK" << std::endl;
+
+            // Evaluating pore size by create 2D slice 8-bit image (0-blacks're pores and 255-whites're grains)
+            // Then an 8-bit image become a binary image by image thresholding (value of 150)
+            // The binary imaege'll be labeled and finally evaluated the feret diameter by chain coding
+            if (is_analysis_microstructure) {
+                // init filename
+                std::string dir;
+                std::stringstream filename;
+                std::vector<dip::dfloat> minFeret;
+                std::vector<dip::dfloat> maxFeret;
+                if (is_export_microstructure) {
+                    size_t firstindex = input_file.find_last_of("/\\");
+                    firstindex = firstindex == string::npos ? 0 : firstindex + 1;
+                    size_t lastindex = input_file.find_last_of(".");
+                    dir = input_file.substr(firstindex, lastindex - firstindex) + "_slice";
+                    make_dir(dir);
+                }
+                // init progress bar
+                ProgressBar progress(grid_size.sum(), PROGRESS_BAR_COLUMN);
+                // init DIP MeasurementTool and DIP image
+                dip::MeasurementTool tool;
+                dip::Image img2d({ (dip::uint64)grid_size.maxCoeff(), (dip::uint64)grid_size.maxCoeff() }, 1, dip::DT_UINT8);
+                dip::uint8* data = static_cast<dip::uint8*>(img2d.Origin());
+                char axis = 'x';
+                for (uint8_t main_axis = 0; main_axis < 3; main_axis++) {
+                    // main_axis: 0 = x, 1 = y, 2 = z
+                    size_t index;
+                    uint8_t axis2 = (main_axis + 1) % 3;
+                    uint8_t axis3 = (main_axis + 2) % 3;
+                    for (size_t k = 0; k < grid_size(main_axis); k++) {
+                        img2d.Fill(255);
+                        for (size_t j = 0; j < grid_size(axis2); j++) {
+                            for (size_t i = 0; i < grid_size(axis3); i++) {
+                                if (main_axis == 0)
+                                    index = k + grid_size(0) * (j + grid_size(1) * i);
+                                else if (main_axis == 1)
+                                    index = i + grid_size(0) * (k + grid_size(1) * j);
+                                else
+                                    index = j + grid_size(0) * (i + grid_size(1) * k);
+                                if (W(index) >= 0.8) {// inside STL mesh
+                                    if (Fxyz(index) > eps2)
+                                        data[i + grid_size(axis3) * j] = 0;
+                                }
+                            }
+                        }
+                        // Measurement Feret diameter
+                        dip::Image label = dip::Label(img2d < 150, 2);
+                        dip::Measurement msr = tool.Measure(label, img2d, { "Feret" }, {}, 2);
+                        dip::Measurement::IteratorFeature it = msr["Feret"];
+                        dip::Measurement::IteratorFeature::Iterator feret = it.FirstObject();
+                        while (feret) {
+                            maxFeret.push_back(feret[0]*grid_delta);
+                            minFeret.push_back(feret[1]*grid_delta);
+                            ++feret;
+                        }
+                        if (is_export_microstructure) {
+                            filename.str(std::string());
+                            filename << dir << '/' << axis << '_' << k << ".jpg";
+                            dip::ImageWriteJPEG(img2d, filename.str());
+                        }
+                        ++progress;
+                        progress.display();
+                    }
+                    axis++;
+                }
+                progress.done();
+                if (verbose) {
+                    std::cout << "[Microstructure] " << std::endl
+                        << "-- Avg Min Feret: " << std::accumulate(minFeret.begin(), minFeret.end(), 0.0) / minFeret.size() << std::endl
+                        << "-- Avg Max Feret: " << std::accumulate(maxFeret.begin(), maxFeret.end(), 0.0) / maxFeret.size() << std::endl;
+                }
+            }
         }
         catch (const std::exception& ex) {
             std::cout << "Exception: " << ex.what() << std::endl;
-            return 1;
+            std::cout << strerror(errno) << endl;
+            return errno;
         }
 
-        {
-            if (verbose) std::cout << "[Marching Cube] ";
-            dualmc::DualMC<double> builder;
-            std::vector<dualmc::Vertex> mc_vertices;
-            std::vector<dualmc::Quad> mc_quads;
-            builder.build((double const*)Fxyz.data(), grid_size, grid_size, grid_size, 0, true, false, mc_vertices, mc_quads);
-            TMesh::VertexIterator vi = vcg::tri::Allocator<TMesh>::AddVertices(mesh, mc_vertices.size());
-            TMesh::FaceIterator fi = vcg::tri::Allocator<TMesh>::AddFaces(mesh, mc_quads.size()*2);
-            std::vector<TMesh::VertexPointer> vp(mc_vertices.size());
-            for (size_t i = 0, len = mc_vertices.size(); i < len; i++, ++vi) {
-                vp[i] = &(*vi);
-                vi->P() = TMesh::CoordType(
-                    V1min1(0) + mc_vertices[i].x * delta(0),
-                    V1min1(1) + mc_vertices[i].y * delta(1),
-                    V1min1(2) + mc_vertices[i].z * delta(2)
-                );
-            }
-            for (size_t i = 0, len = mc_quads.size(); i < len; i++, ++fi) {
-                fi->V(0) = vp[mc_quads[i].i0];
-                fi->V(1) = vp[mc_quads[i].i1];
-                fi->V(2) = vp[mc_quads[i].i2];
-                ++fi;
-                fi->V(0) = vp[mc_quads[i].i2];
-                fi->V(1) = vp[mc_quads[i].i3];
-                fi->V(2) = vp[mc_quads[i].i0];
-            }
-            if (!dirty) {
-                vcg::tri::Clean<TMesh>::RemoveDuplicateFace(mesh);
-                vcg::tri::Clean<TMesh>::RemoveDuplicateVertex(mesh);
-                vcg::tri::Clean<TMesh>::RemoveUnreferencedVertex(mesh);
-                vcg::tri::UpdateTopology<TMesh>::FaceFace(mesh);
-            }
-
-            if (verbose) std::cout << "OK" << std::endl;
-            if (verbose) std::cout << "-- Info: " << mc_vertices.size() << " vertices " << mc_quads.size() << " faces" << std::endl;
-        }
+        marching_cube(mesh, Fxyz, grid_size, V1min1, grid_delta, verbose, dirty);
+        marching_cube(inverse_mesh, IFxyz, grid_size, V1min1, grid_delta, false, false);
     }
 
     // Stage 2: Cleaning
     {
         if (!dirty) {
-            if (verbose) std::cout << "[libVCG Cleaning] ";
-            vcg::tri::Clean<TMesh>::RemoveZeroAreaFace(mesh);
-            vcg::tri::Clean<TMesh>::RemoveNonManifoldFace(mesh);
-            vcg::tri::Clean<TMesh>::RemoveUnreferencedVertex(mesh);
-            vcg::tri::UpdateTopology<TMesh>::FaceFace(mesh);
-            vcg::tri::UpdateBounding<TMesh>::Box(mesh);
-            vcg::tri::Clean<TMesh>::RemoveSmallConnectedComponentsDiameter(mesh, minimum_diameter * mesh.bbox.Diag());
-            vcg::tri::Clean<TMesh>::RemoveUnreferencedVertex(mesh);
-            vcg::tri::UpdateTopology<TMesh>::FaceFace(mesh);
-            if (mesh.fn > 0) {
-                vcg::tri::UpdateNormal<TMesh>::PerFaceNormalized(mesh);
-                vcg::tri::UpdateNormal<TMesh>::PerVertexAngleWeighted(mesh);
-            }
-            if (verbose) {
-                std::cout
-                    << "OK" << std::endl
-                    << "-- IsWaterTight: " << vcg::tri::Clean<TMesh>::IsWaterTight(mesh) << std::endl
-                    << "-- Minimum_diameter: " << minimum_diameter * mesh.bbox.Diag() << std::endl;
-            }
+            clean_mesh(mesh, minimum_diameter, smooth_step, verbose);
+            clean_mesh(inverse_mesh, minimum_diameter, smooth_step, false);
         }
 
         // Report Volume and surface area
         int edgeNum = 0, edgeBorderNum = 0, edgeNonManifNum = 0;
+        vcg::tri::Clean<TMesh>::CountEdgeNum(inverse_mesh, edgeNum, edgeBorderNum, edgeNonManifNum);
+
+        if (verbose)
+            std::cout << "[Pore connectivity]" << std::endl
+            << "-- #Edge Border: " << edgeBorderNum << std::endl
+            << "-- #Edge Non-manifold: " << edgeNonManifNum << std::endl;
+
         vcg::tri::Clean<TMesh>::CountEdgeNum(mesh, edgeNum, edgeBorderNum, edgeNonManifNum);
         bool watertight = (edgeBorderNum == 0) && (edgeNonManifNum == 0);
         bool pointcloud = (mesh.fn == 0 && mesh.vn != 0);
+        
         if (!pointcloud && watertight) {
             area2 = vcg::tri::Stat<TMesh>::ComputeMeshArea(mesh);
             volume2 = vcg::tri::Stat<TMesh>::ComputeMeshVolume(mesh);
             if (verbose)
-                std::cout << "[STAT]" << std::endl
+                std::cout 
                 << "-- Volume: " << volume2 << std::endl
                 << "-- Surface Area: " << area2 << std::endl
                 << "-- Porosity: " << volume2 / volume1 << std::endl
                 << "-- Surface Area ratio: " << area2 / area1 << std::endl;
         }
         
-        if (verbose) std::cout << "[Writing file] ";
-        filename.append(".");
-        filename.append(format);
-        if (format == "ply") {
-            vcg::tri::io::ExporterPLY<TMesh>::Save(mesh, filename.c_str(), false);
-        }
-        else if (format == "obj") {
-            vcg::tri::io::ExporterOBJ<TMesh>::Save(mesh, filename.c_str(), 0);
-        }
-        else if (format == "off") {
-            vcg::tri::io::ExporterOFF<TMesh>::Save(mesh, filename.c_str(), 0);
-        }
-        else if (format == "stl") {
-            vcg::tri::io::ExporterSTL<TMesh>::Save(mesh, filename.c_str(), 0);
+        if (!no_output) {
+            if (verbose) std::cout << "[Writing file] ";
+            std::string filename2 = filename;
+            filename.append("." + format);
+            filename2.append("_inverse." + format);
+            if (format == "ply") {
+                vcg::tri::io::ExporterPLY<TMesh>::Save(mesh, filename.c_str(), false);
+                vcg::tri::io::ExporterPLY<TMesh>::Save(inverse_mesh, filename2.c_str(), false);
+            }
+            else if (format == "obj") {
+                vcg::tri::io::ExporterOBJ<TMesh>::Save(mesh, filename.c_str(), 0);
+                vcg::tri::io::ExporterOBJ<TMesh>::Save(inverse_mesh, filename2.c_str(), 0);
+            }
+            else if (format == "off") {
+                vcg::tri::io::ExporterOFF<TMesh>::Save(mesh, filename.c_str(), 0);
+                vcg::tri::io::ExporterOFF<TMesh>::Save(inverse_mesh, filename2.c_str(), 0);
+            }
+            else if (format == "stl") {
+                vcg::tri::io::ExporterSTL<TMesh>::Save(mesh, filename.c_str(), 0);
+                vcg::tri::io::ExporterSTL<TMesh>::Save(inverse_mesh, filename2.c_str(), 0);
+            }
         }
         if (verbose) std::cout << "OK" << std::endl << "[Finished]" << std::endl;
     }
