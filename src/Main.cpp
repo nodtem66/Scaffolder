@@ -7,6 +7,7 @@ int main(int argc, char* argv[])
     bool dirty = false;
     bool is_analysis_microstructure = false;
     bool is_export_microstructure = false;
+    bool is_export_feret = false;
     bool is_export_hdf5 = false;
     bool no_output = false;
     uint16_t grid_offset = 2;
@@ -32,6 +33,7 @@ int main(int argc, char* argv[])
             ("q,quiet", "Disable verbose output [default: false]")
             ("m,microstructure", "Analysis microstructure [default: false]")
             ("m2", "Export and analysis microstructure [default: false]")
+            ("m3", "Export feret data")
             ("f,format", "Output format (OFF,PLY,STL,OBJ) [default: ply]", cxxopts::value<std::string>())
             ("i,input", "Input file (STL)", cxxopts::value<std::string>(), "FILE")
             ("o,output", "Output filename without extension [default: out]", cxxopts::value<std::string>(), "FILENAME")
@@ -69,6 +71,10 @@ int main(int argc, char* argv[])
             is_analysis_microstructure = result["m2"].as<bool>();
             is_export_microstructure = result["m2"].as<bool>();
             no_output = true;
+        }
+        if (result.count("m3")) {
+            is_export_feret = result["m3"].as<bool>();
+            is_analysis_microstructure = is_export_feret;
         }
         if (result.count("hdf5")) {
             is_export_hdf5 = result["hdf5"].as<bool>();
@@ -352,6 +358,12 @@ int main(int argc, char* argv[])
                         progress.display();
                     }
                     axis++;
+                }
+                if (is_export_feret) {
+                    std::string f = filename.str() + ".csv";
+                    std::ofstream fs(f.c_str(), std::ofstream::out);
+
+                    fs.close();
                 }
                 progress.done();
                 if (verbose) {

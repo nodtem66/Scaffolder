@@ -6,12 +6,12 @@
 #include <sstream>
 
 #include "cxxopts.hpp"
-#include "diplib/include/diplib.h"
-#include "diplib/include/diplib/file_io.h"
-#include "diplib/include/diplib/regions.h"
-#include "diplib/include/diplib/measurement.h"
+#include "diplib.h"
+#include "diplib/file_io.h"
+#include "diplib/regions.h"
+#include "diplib/measurement.h"
 #include "dualmc/dualmc.h"
-#include "H5Easy.hpp"
+//#include "H5Easy.hpp"
 #include "ProgressBar.hpp"
 
 #include "Implicit_function.h"

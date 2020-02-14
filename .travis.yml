@@ -1,0 +1,19 @@
+language: cpp
+branches:
+  only:
+  - master
+  - dev
+matrix:
+  include:
+    - os: linux
+      script: make travis
+    - os: osx
+      osx_image: xcode8
+      env:
+        - MATRIX_EVAL="brew install gcc && CC=gcc-7 && CXX=g++-7"
+      script: make travis
+    - os: windows
+      script:
+        - mkdir build && cd build
+        - cmake ..
+        - cmake --build .

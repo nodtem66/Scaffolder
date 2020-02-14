@@ -12,19 +12,12 @@ find_path(DIPlib_INCLUDE_DIR diplib.h
         ${DIPlib_DIR}
         ENV DIPlib_DIR
     PATHS
-        ${CMAKE_SOURCE_DIR}
-        ${CMAKE_SOURCE_DIR}/..
-        ${CMAKE_SOURCE_DIR}/../..
-        ${CMAKE_SOURCE_DIR}/diplib
-        ${CMAKE_SOURCE_DIR}/../diplib
-        ${CMAKE_SOURCE_DIR}/../../diplib        
-        /usr
-        /usr/local
-        /usr/local/diplib
+        ${CMAKE_SOURCE_DIR}/external/diplib    
     PATH_SUFFIXES include
 )
 # TODO: Rewrite this cmake to add the source without compiled lib
 set(DIPlib_LIB_DIR ${DIPlib_INCLUDE_DIR}/../lib)
+set(DIPlib_ROOT_DIR ${DIPlib_INCLUDE_DIR}/../)
 
 include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(DIPlib
@@ -32,4 +25,13 @@ find_package_handle_standard_args(DIPlib
     DIPlib_INCLUDE_DIR)
 mark_as_advanced(DIPlib_INCLUDE_DIR)
 
-message(STATUS "USE DIR: ${DIPlib_INCLUDE_DIR}/")
+set(DIP_BUILD_DIPIMAGE FALSE)
+set(DIP_BUILD_JAVAIO FALSE)
+set(DIP_BUILD_PYDIP FALSE)
+set(DIP_SHARED_LIBRARY FALSE)
+set(DIP_ENABLE_DOCTEST FALSE)
+set(DIP_ENABLE_STACK_TRACE FALSE)
+
+list(APPEND CMAKE_MODULE_PATH "${DIPlib_ROOT_DIR}")
+message(STATUS "USE DIR: ${DIPlib_ROOT_DIR}")
+add_subdirectory(${DIPlib_ROOT_DIR})
