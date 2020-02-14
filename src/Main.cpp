@@ -362,7 +362,16 @@ int main(int argc, char* argv[])
                 if (is_export_feret) {
                     std::string f = filename.str() + ".csv";
                     std::ofstream fs(f.c_str(), std::ofstream::out);
-
+                    fs << "MIN";
+                    for (std::vector<dip::dfloat>::iterator it = minFeret.begin(); it != minFeret.end(); it++) {
+                        fs << "," << *it;
+                    }
+                    fs << std::endl;
+                    fs << "MAX";
+                    for (std::vector<dip::dfloat>::iterator it = maxFeret.begin(); it != maxFeret.end(); it++) {
+                        fs << "," << *it;
+                    }
+                    fs << std::endl;
                     fs.close();
                 }
                 progress.done();
