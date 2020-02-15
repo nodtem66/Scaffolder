@@ -14,7 +14,7 @@
 //#include "H5Easy.hpp"
 #include "ProgressBar.hpp"
 
-#include "Implicit_function.h"
+#include "implicit_function.h"
 #include "Mesh.h"
 
 #define VERSION "v1.2"

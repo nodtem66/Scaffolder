@@ -1,7 +1,5 @@
 ﻿// Scaffolder_2.h : Include file for standard system include files,
 // or project specific include files.
-
-#pragma once
 #ifndef IMPLICIT_FUNCTION_H
 #define IMPLICIT_FUNCTION_H
 

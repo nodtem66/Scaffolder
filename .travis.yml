@@ -1,9 +1,10 @@
 language: cpp
+os: linux
 branches:
   only:
   - master
   - dev
-matrix:
+jobs:
   include:
     - os: linux
       script:
@@ -11,9 +12,7 @@ matrix:
         - cmake ..
         - make
     - os: osx
-      osx_image: xcode8
-      env:
-        - MATRIX_EVAL="brew install gcc cmake && CC=gcc-7 && CXX=g++-7"
+      osx_image: xcode10
       script:
         - mkdir build && cd build
         - cmake ..
