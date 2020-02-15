@@ -3,6 +3,7 @@
 #include <igl/copyleft/marching_cubes.h>
 #include <igl/fast_winding_number.h>
 #include <Eigen/Core>
+#include <string>
 #include <sstream>
 
 #include "cxxopts.hpp"
@@ -145,9 +146,8 @@ int make_dir(std::string& str) {
     mbstowcs(wc, str.c_str(), str.size());
     return _wmkdir(wc);
 #else
-    #include <sys/types.h>
-    #include <sys/stat.h>
-    mode_t mode = 0733;
-    return mkdir(str.c_str(), mode);
+    #include <stdio.h>
+    #include <io.h>
+    return mkdir(str.c_str(), 0733);
 #endif
 }
