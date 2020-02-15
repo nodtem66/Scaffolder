@@ -30,6 +30,7 @@ file(GLOB MAIN_SOURCES
 	"${PROJECT_SOURCE_DIR}/include/*/*.hpp"
 )
 update_deps_file("main_sources" "${MAIN_SOURCES}")
+
 add_definitions(-DNOMINMAX -D_USE_MATH_DEFINES -DDIP__IS_STATIC -DDIP__ENABLE_ASSERT -DDIP__HAS_JPEG -DDIP__EXCEPTIONS_RECORD_STACK_TRACE)
 add_executable(${PROJECT_NAME} ${MAIN_SOURCES} ${VCG_INCLUDE_DIR}/wrap/ply/plylib.cpp)
 target_include_directories(${PROJECT_NAME} PRIVATE "${PROJECT_SOURCE_DIR}/include" ${VCG_INCLUDE_DIR} ${DIPlib_INCLUDE_DIR})
