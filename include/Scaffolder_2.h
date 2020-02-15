@@ -146,8 +146,9 @@ int make_dir(std::string& str) {
     mbstowcs(wc, str.c_str(), str.size());
     return _wmkdir(wc);
 #else
-    #include <stdio.h>
-    #include <io.h>
+    #include <unistd.h>
+    #include <sys/types.h>
+    #include <sys/stat.h>
     return mkdir(str.c_str(), 0733);
 #endif
 }
