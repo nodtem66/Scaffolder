@@ -22,6 +22,14 @@ public:
 	virtual FT operator()(FT, FT, FT) = 0;
 };
 
+class Fixed : public Function {
+public:
+	const FT val;
+	Fixed(FT val) : val(val) {}
+	FT operator()(FT x, FT y, FT z) {
+		return val;
+	}
+};
 /* Function return rectlinear style from slicer
  * where coff is required to adjust the diameter filament
  */
@@ -232,7 +240,10 @@ inline void to_lower(std::string& s) {
 }
 
 Function* isosurface(std::string name, FT t) {
-	if (name == "rectlinear") {
+	if (name == "empty") {
+		return new Fixed(1);
+	}
+	else if (name == "rectlinear") {
 		return new Rectlinear();
 	}
 	else if (name == "schwarzp") {

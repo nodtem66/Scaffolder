@@ -1,4 +1,5 @@
-# Scaffolder [![Build Status](https://travis-ci.org/nodtem66/Scaffolder.svg?branch=master)](https://travis-ci.org/nodtem66/Scaffolder)
+# Scaffolder 
+[![Build Status](https://travis-ci.org/nodtem66/Scaffolder.svg?branch=master)](https://travis-ci.org/nodtem66/Scaffolder) [![Build Status](https://travis-ci.org/nodtem66/Scaffolder.svg?branch=dev)](https://travis-ci.org/nodtem66/Scaffolder)
 Generate scaffold from STL file with implicit function (Schwarz P/ Gyroid).
 ```
 Scaffolder - generate 3D scaffold from STL file

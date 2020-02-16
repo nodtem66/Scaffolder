@@ -8,7 +8,8 @@ int main(int argc, char* argv[])
     bool is_analysis_microstructure = false;
     bool is_export_microstructure = false;
     bool is_export_feret = false;
-    bool is_export_hdf5 = false;
+    bool is_export_inverse = false;
+    bool is_build_inverse = true;
     bool no_output = false;
     uint16_t grid_offset = 2;
     uint16_t shell = 0;
@@ -44,7 +45,8 @@ int main(int argc, char* argv[])
             ("g,grid_size", "Grid size [default: 100]", cxxopts::value<size_t>(), "INT")
             ("grid_offset", "[default:2]", cxxopts::value<uint16_t>(), "INT")
             ("smooth_step", "Smooth with laplacian (default: 5)", cxxopts::value<uint16_t>(), "INT")
-            ("hdf5", "export the result in hdf5 format [default: false]")
+            ("output_inverse", "additional output inverse scaffold")
+            ("inverse", "Enable build inverse 3D scaffold (for pore connectivity analysis)")
             ("dirty", "Disable autoclean")
             ("minimum_diameter", "used for removing small orphaned (between 0-1) [default: 0.25]", cxxopts::value<double>(), "DOUBLE");
         options.parse_positional({ "input", "output", "format" });
@@ -76,8 +78,8 @@ int main(int argc, char* argv[])
             is_export_feret = result["m3"].as<bool>();
             is_analysis_microstructure = is_export_feret;
         }
-        if (result.count("hdf5")) {
-            is_export_hdf5 = result["hdf5"].as<bool>();
+        if (result.count("output_inverse")) {
+            is_export_inverse = result["output_inverse"].as<bool>();
         }
         if (result.count("output")) {
             filename = result["output"].as<std::string>();
@@ -92,6 +94,7 @@ int main(int argc, char* argv[])
         if (result.count("surface")) surface = result["surface"].as<std::string>();
         if (result.count("shell")) shell = result["shell"].as<uint16_t>();
         if (result.count("smooth_step")) smooth_step = result["smooth_step"].as<uint16_t>();
+        if (result.count("inverse")) is_build_inverse = result["inverse"].as<bool>();
         
         to_lower(surface);
         to_lower(format);
@@ -111,6 +114,7 @@ int main(int argc, char* argv[])
     }
 
     // Print parameters
+    std::ofstream result;
     if (verbose) {
         std::cout << "[Scaffolder " << VERSION << "]" << std::endl
             << "-- Input file: " << input_file << std::endl
@@ -125,11 +129,30 @@ int main(int argc, char* argv[])
             << "-- Autoclean: " << (dirty ? "False" : "True") << std::endl
             << "-- Minimum diameter: " << 100 * minimum_diameter << "%" << std::endl
             << "-- Analysis microstructure: " << (is_analysis_microstructure || is_export_microstructure ? "True" : "False") << std::endl
-            << "-- Export HDF5: " << (is_export_hdf5 ? "True" : "False") << std::endl;
+            << "-- Build Inverse: " << (is_build_inverse ? "True" : "False") << std::endl
+            << "-- Export Inverse: " << (is_export_inverse ? "True" : "False") << std::endl;
+    }
+    else {
+        std::string _name(filename);
+        _name.append(".txt");
+        result.open(_name.c_str(), std::ofstream::out);
+        // Print header
+        result << "Surface,coff,shell,thickness,grid_size,grid_offset,smooth_step,input_file,avg_min_feret,avg_max_feret,"
+            << "min_min_feret,q1_min_feret,q2_min_feret,q3_min_feret,max_min_feret,"
+            << "min_max_feret,q1_max_feret,q2_max_feret,q3_max_feret,max_max_feret,"
+            << "vol,surface_area,porosity,surface_area_ratio,#vertices,#faces,"
+            << "min_square,q1_square,q2_square,q3_square,max_square,"
+            << "min_circle,q1_circle,q2_circle,q3_circle,max_circle,"
+            << "min_triangle,q1_triangle,q2_triangle,q3_triangle,max_triangle,"
+            << "min_ellipse,q1_ellipse,q2_ellipse,q3_ellipse,max_ellipse,"
+            << "min_elongation,q1_elongation,q2_elongation,q3_elongation,max_elongation" << std::endl;
+        result << surface << ',' << coff << ',' << shell << ',' << thickness << ',' << minimum_grid_size << ',' << grid_offset << ',' << smooth_step << ','
+            << input_file << ',';
     }
 
     // Stage 1:
     TMesh mesh, inverse_mesh;
+    uint64_t starttime, endtime;
     double volume1 = eps, volume2 = eps;
     double area1 = eps, area2 = eps;
     {
@@ -205,8 +228,11 @@ int main(int argc, char* argv[])
                 // Create border offset from the original box
                 V1min1 = V1min - grid_offset * grid_delta * Eigen::RowVector3d::Ones();
                 grid_size = (L / grid_delta).cast<int>() + 2 * grid_offset * Eigen::RowVector3i::Ones();
-                if (verbose) std::cout << "-- Bounding Box: " << V1min.format(CleanFmt) << ' ' << V1max.format(CleanFmt) << std::endl;
-                if (verbose) std::cout << "-- Length: " << L << std::endl;
+                if (verbose)
+                    std::cout << "-- Bounding Box: "
+                    << V1min.format(CleanFmt) << ' ' << V1max.format(CleanFmt) << std::endl
+                    << "-- Length: " << L.format(CleanFmt) << std::endl
+                    << "-- Grid delta: " << grid_delta << std::endl;
             }
             Implicit_function fn(isosurface(surface, thickness), coff);
             if (verbose) std::cout << "[Generating grid] ";
@@ -225,7 +251,7 @@ int main(int argc, char* argv[])
             if (verbose) 
                 std::cout
                     << "OK" << std::endl
-                    << "-- Grid size: " << grid_size.prod() << grid_size.format(CleanFmt) << std::endl;
+                    << "-- Grid size: " << grid_size.prod() << " " << grid_size.format(CleanFmt) << std::endl;
 
             if (verbose) std::cout << "[Calculating Winding number] ";
             Eigen::VectorXd W;
@@ -304,6 +330,7 @@ int main(int argc, char* argv[])
                 std::stringstream filename;
                 std::vector<dip::dfloat> minFeret;
                 std::vector<dip::dfloat> maxFeret;
+                std::vector<dip::dfloat> podczeckShapes[5];
                 if (is_export_microstructure) {
                     size_t firstindex = input_file.find_last_of("/\\");
                     firstindex = firstindex == string::npos ? 0 : firstindex + 1;
@@ -324,7 +351,7 @@ int main(int argc, char* argv[])
                     uint8_t axis2 = (main_axis + 1) % 3;
                     uint8_t axis3 = (main_axis + 2) % 3;
                     for (size_t k = 0; k < grid_size(main_axis); k++) {
-                        img2d.Fill(255);
+                        img2d.Fill(200);
                         for (size_t j = 0; j < grid_size(axis2); j++) {
                             for (size_t i = 0; i < grid_size(axis3); i++) {
                                 if (main_axis == 0)
@@ -340,14 +367,25 @@ int main(int argc, char* argv[])
                             }
                         }
                         // Measurement Feret diameter
-                        dip::Image label = dip::Label(img2d < 150, 2);
-                        dip::Measurement msr = tool.Measure(label, img2d, { "Feret" }, {}, 2);
+                        dip::Image label = dip::Label(img2d < 50, 2);
+                        dip::Measurement msr = tool.Measure(label, img2d, { "Feret", "PodczeckShapes" }, {}, 2);
                         dip::Measurement::IteratorFeature it = msr["Feret"];
                         dip::Measurement::IteratorFeature::Iterator feret = it.FirstObject();
                         while (feret) {
-                            maxFeret.push_back(feret[0]*grid_delta);
+                            // From ref: https://diplib.github.io/diplib-docs/features.html#size_features_Feret
+                            maxFeret.push_back(feret[2]*grid_delta);
                             minFeret.push_back(feret[1]*grid_delta);
                             ++feret;
+                        }
+                        it = msr["PodczeckShapes"];
+                        dip::Measurement::IteratorFeature::Iterator shape = it.FirstObject();
+                        while (shape) {
+                            podczeckShapes[0].push_back(shape[0]);
+                            podczeckShapes[1].push_back(shape[1]);
+                            podczeckShapes[2].push_back(shape[2]);
+                            podczeckShapes[3].push_back(shape[3]);
+                            podczeckShapes[4].push_back(shape[4]);
+                            ++shape;
                         }
                         if (is_export_microstructure) {
                             filename.str(std::string());
@@ -375,10 +413,37 @@ int main(int argc, char* argv[])
                     fs.close();
                 }
                 progress.done();
-                if (verbose) {
-                    std::cout << "[Microstructure] " << std::endl
-                        << "-- Avg Min Feret: " << std::accumulate(minFeret.begin(), minFeret.end(), 0.0) / minFeret.size() << std::endl
-                        << "-- Avg Max Feret: " << std::accumulate(maxFeret.begin(), maxFeret.end(), 0.0) / maxFeret.size() << std::endl;
+                if (minFeret.size() > 0 && maxFeret.size() > 0) {
+                    if (verbose) {
+                        std::sort(minFeret.begin(), minFeret.end());
+                        std::sort(maxFeret.begin(), maxFeret.end());
+                        std::sort(podczeckShapes[0].begin(), podczeckShapes[0].end());
+                        std::sort(podczeckShapes[1].begin(), podczeckShapes[1].end());
+                        std::sort(podczeckShapes[2].begin(), podczeckShapes[2].end());
+                        std::sort(podczeckShapes[3].begin(), podczeckShapes[3].end());
+                        std::sort(podczeckShapes[4].begin(), podczeckShapes[4].end());
+                        std::cout << "[Microstructure] " << std::endl
+                            << "-- Avg Min Feret: " << std::accumulate(minFeret.begin(), minFeret.end(), 0.0) / minFeret.size() << std::endl
+                            << "-- Avg Max Feret: " << std::accumulate(maxFeret.begin(), maxFeret.end(), 0.0) / maxFeret.size() << std::endl
+                            << "-- Min Feret: [" << minFeret.at(0) << " " << minFeret.at(minFeret.size() * 0.25) << " " << minFeret.at(minFeret.size() / 2) << " " << minFeret.at(minFeret.size() * 0.75) << " " << minFeret.at(minFeret.size() - 1) << "]" << std::endl
+                            << "-- Max Feret: [" << maxFeret.at(0) << " " << maxFeret.at(maxFeret.size() * 0.25) << " " << maxFeret.at(maxFeret.size() / 2) << " " << maxFeret.at(maxFeret.size() * 0.75) << " " << maxFeret.at(maxFeret.size() - 1) << "]" << std::endl
+                            << "-- Square Similarity: [" << podczeckShapes[0].at(0) << " " << podczeckShapes[0].at(podczeckShapes[0].size() * 0.25) << " " << podczeckShapes[0].at(podczeckShapes[0].size() / 2) << " " << podczeckShapes[0].at(podczeckShapes[0].size() * 0.75) << " " << podczeckShapes[0].at(podczeckShapes[0].size() - 1) << "]" << std::endl
+                            << "-- Circle Similarity: [" << podczeckShapes[1].at(0) << " " << podczeckShapes[1].at(podczeckShapes[1].size() * 0.25) << " " << podczeckShapes[1].at(podczeckShapes[1].size() / 2) << " " << podczeckShapes[1].at(podczeckShapes[1].size() * 0.75) << " " << podczeckShapes[1].at(podczeckShapes[1].size() - 1) << "]" << std::endl
+                            << "-- Triangle Similarity: [" << podczeckShapes[2].at(0) << " " << podczeckShapes[2].at(podczeckShapes[2].size() * 0.25) << " " << podczeckShapes[2].at(podczeckShapes[2].size() / 2) << " " << podczeckShapes[2].at(podczeckShapes[2].size() * 0.75) << " " << podczeckShapes[2].at(podczeckShapes[2].size() - 1) << "]" << std::endl
+                            << "-- Ellipse Similarity: [" << podczeckShapes[3].at(0) << " " << podczeckShapes[3].at(podczeckShapes[3].size() * 0.25) << " " << podczeckShapes[3].at(podczeckShapes[3].size() / 2) << " " << podczeckShapes[3].at(podczeckShapes[3].size() * 0.75) << " " << podczeckShapes[3].at(podczeckShapes[3].size() - 1) << "]" << std::endl
+                            << "-- Elongation Similarity: [" << podczeckShapes[4].at(0) << " " << podczeckShapes[4].at(podczeckShapes[4].size() * 0.25) << " " << podczeckShapes[4].at(podczeckShapes[4].size() / 2) << " " << podczeckShapes[4].at(podczeckShapes[4].size() * 0.75) << " " << podczeckShapes[4].at(podczeckShapes[4].size() - 1) << "]" << std::endl;
+                    }
+                    else {
+                        result << std::accumulate(minFeret.begin(), minFeret.end(), 0.0) / minFeret.size() << ','
+                            << std::accumulate(maxFeret.begin(), maxFeret.end(), 0.0) / maxFeret.size() << ','
+                            << minFeret.at(0) << ',' << minFeret.at(minFeret.size() * 0.25) << ',' << minFeret.at(minFeret.size() / 2) << ',' << minFeret.at(minFeret.size() * 0.75) << ',' << minFeret.at(minFeret.size() - 1) << ','
+                            << maxFeret.at(0) << ',' << maxFeret.at(maxFeret.size() * 0.25) << ',' << maxFeret.at(maxFeret.size() / 2) << ',' << maxFeret.at(maxFeret.size() * 0.75) << ',' << maxFeret.at(maxFeret.size() - 1) << ','
+                            << podczeckShapes[0].at(0) << ',' << podczeckShapes[0].at(podczeckShapes[0].size() * 0.25) << ',' << podczeckShapes[0].at(podczeckShapes[0].size() / 2) << ',' << podczeckShapes[0].at(podczeckShapes[0].size() * 0.75) << ',' << podczeckShapes[0].at(podczeckShapes[0].size() - 1) << ','
+                            << podczeckShapes[1].at(0) << ',' << podczeckShapes[1].at(podczeckShapes[1].size() * 0.25) << ',' << podczeckShapes[1].at(podczeckShapes[1].size() / 2) << ',' << podczeckShapes[1].at(podczeckShapes[1].size() * 0.75) << ',' << podczeckShapes[1].at(podczeckShapes[1].size() - 1) << ','
+                            << podczeckShapes[2].at(0) << ',' << podczeckShapes[2].at(podczeckShapes[2].size() * 0.25) << ',' << podczeckShapes[2].at(podczeckShapes[2].size() / 2) << ',' << podczeckShapes[2].at(podczeckShapes[2].size() * 0.75) << ',' << podczeckShapes[2].at(podczeckShapes[2].size() - 1) << ','
+                            << podczeckShapes[3].at(0) << ',' << podczeckShapes[3].at(podczeckShapes[3].size() * 0.25) << ',' << podczeckShapes[3].at(podczeckShapes[3].size() / 2) << ',' << podczeckShapes[3].at(podczeckShapes[3].size() * 0.75) << ',' << podczeckShapes[3].at(podczeckShapes[3].size() - 1) << ','
+                            << podczeckShapes[4].at(0) << ',' << podczeckShapes[4].at(podczeckShapes[4].size() * 0.25) << ',' << podczeckShapes[4].at(podczeckShapes[4].size() / 2) << ',' << podczeckShapes[4].at(podczeckShapes[4].size() * 0.75) << ',' << podczeckShapes[4].at(podczeckShapes[4].size() - 1) << ',';
+                    }
                 }
             }
         }
@@ -389,24 +454,28 @@ int main(int argc, char* argv[])
         }
 
         marching_cube(mesh, Fxyz, grid_size, V1min1, grid_delta, verbose, dirty);
-        marching_cube(inverse_mesh, IFxyz, grid_size, V1min1, grid_delta, false, false);
+        if(is_build_inverse) marching_cube(inverse_mesh, IFxyz, grid_size, V1min1, grid_delta, false, false);
     }
 
     // Stage 2: Cleaning
     {
         if (!dirty) {
             clean_mesh(mesh, minimum_diameter, smooth_step, verbose);
-            clean_mesh(inverse_mesh, minimum_diameter, smooth_step, false);
+            if (is_build_inverse) clean_mesh(inverse_mesh, minimum_diameter, smooth_step, false);
         }
 
         // Report Volume and surface area
         int edgeNum = 0, edgeBorderNum = 0, edgeNonManifNum = 0;
-        vcg::tri::Clean<TMesh>::CountEdgeNum(inverse_mesh, edgeNum, edgeBorderNum, edgeNonManifNum);
-
-        if (verbose)
-            std::cout << "[Pore connectivity]" << std::endl
-            << "-- #Edge Border: " << edgeBorderNum << std::endl
-            << "-- #Edge Non-manifold: " << edgeNonManifNum << std::endl;
+        if (is_build_inverse) {
+            vcg::tri::Clean<TMesh>::CountEdgeNum(inverse_mesh, edgeNum, edgeBorderNum, edgeNonManifNum);
+            if (verbose)
+                std::cout << "[Pore connectivity]" << std::endl
+                << "-- #Edge Border: " << edgeBorderNum << std::endl
+                << "-- #Edge Non-manifold: " << edgeNonManifNum << std::endl;
+            bool watertight = (edgeBorderNum == 0) && (edgeNonManifNum == 0);
+            bool pointcloud = (mesh.fn == 0 && mesh.vn != 0);
+            if (!watertight || pointcloud) std::cout << "[Warning] Pore isn't conencted" << std::endl;
+        }
 
         vcg::tri::Clean<TMesh>::CountEdgeNum(mesh, edgeNum, edgeBorderNum, edgeNonManifNum);
         bool watertight = (edgeBorderNum == 0) && (edgeNonManifNum == 0);
@@ -416,11 +485,15 @@ int main(int argc, char* argv[])
             area2 = vcg::tri::Stat<TMesh>::ComputeMeshArea(mesh);
             volume2 = vcg::tri::Stat<TMesh>::ComputeMeshVolume(mesh);
             if (verbose)
-                std::cout 
-                << "-- Volume: " << volume2 << std::endl
+                std::cout
+                << "-- Volume: " << abs(volume2) << std::endl
                 << "-- Surface Area: " << area2 << std::endl
-                << "-- Porosity: " << volume2 / volume1 << std::endl
+                << "-- Porosity: " << abs(volume2 / volume1) << std::endl
                 << "-- Surface Area ratio: " << area2 / area1 << std::endl;
+            else
+                result
+                << abs(volume2) << ',' << area2 << ',' << abs(volume2 / volume1) << ',' << area2 / area1 << ','
+                << mesh.VN() << ',' << mesh.FN() <<  std::endl;
         }
         
         if (!no_output) {
@@ -430,22 +503,23 @@ int main(int argc, char* argv[])
             filename2.append("_inverse." + format);
             if (format == "ply") {
                 vcg::tri::io::ExporterPLY<TMesh>::Save(mesh, filename.c_str(), false);
-                vcg::tri::io::ExporterPLY<TMesh>::Save(inverse_mesh, filename2.c_str(), false);
+                if (is_build_inverse && is_export_inverse) vcg::tri::io::ExporterPLY<TMesh>::Save(inverse_mesh, filename2.c_str(), false);
             }
             else if (format == "obj") {
                 vcg::tri::io::ExporterOBJ<TMesh>::Save(mesh, filename.c_str(), 0);
-                vcg::tri::io::ExporterOBJ<TMesh>::Save(inverse_mesh, filename2.c_str(), 0);
+                if (is_build_inverse && is_export_inverse) vcg::tri::io::ExporterOBJ<TMesh>::Save(inverse_mesh, filename2.c_str(), 0);
             }
             else if (format == "off") {
                 vcg::tri::io::ExporterOFF<TMesh>::Save(mesh, filename.c_str(), 0);
-                vcg::tri::io::ExporterOFF<TMesh>::Save(inverse_mesh, filename2.c_str(), 0);
+                if (is_build_inverse && is_export_inverse) vcg::tri::io::ExporterOFF<TMesh>::Save(inverse_mesh, filename2.c_str(), 0);
             }
             else if (format == "stl") {
                 vcg::tri::io::ExporterSTL<TMesh>::Save(mesh, filename.c_str(), 0);
-                vcg::tri::io::ExporterSTL<TMesh>::Save(inverse_mesh, filename2.c_str(), 0);
+                if (is_build_inverse && is_export_inverse) vcg::tri::io::ExporterSTL<TMesh>::Save(inverse_mesh, filename2.c_str(), 0);
             }
         }
-        if (verbose) std::cout << "OK" << std::endl << "[Finished]" << std::endl;
+        if (verbose) std::cout << "[Finished]" << std::endl;
+        result.close();
     }
     return 0;
 }

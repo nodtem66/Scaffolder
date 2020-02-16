@@ -16,6 +16,10 @@
 // stl includes
 #include <unordered_map>
 #include <vector>
+#include "ProgressBar.hpp"
+#ifndef PROGRESS_BAR_COLUMN
+#define PROGRESS_BAR_COLUMN 40
+#endif
 
 namespace dualmc {
 
