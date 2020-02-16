@@ -1,4 +1,4 @@
-# Scaffolder
+# Scaffolder [![Build Status](https://travis-ci.org/nodtem66/Scaffolder.svg?branch=master)](https://travis-ci.org/nodtem66/Scaffolder)
 Generate scaffold from STL file with implicit function (Schwarz P/ Gyroid).
 ```
 Scaffolder - generate 3D scaffold from STL file
@@ -45,6 +45,7 @@ Usage:
 ## Dependencies
 - [libigl](https://libigl.github.io/)
 - [vcglib](https://github.com/cnr-isti-vclab/vcglib)
+- [diplib](https://github.com/DIPlib/diplib)
 
 ## How it works
 - Read STL file and finding the boundary box
@@ -58,4 +59,5 @@ Usage:
 ## Reference 
 - [dualmc](https://github.com/dominikwodniok/dualmc)
 - [cxxopts](https://github.com/jarro2783/cxxopts)
+- [ProgressBar](https://github.com/prakhar1989/progress-cpp)
 - [Minimal surface Blog](https://minimalsurfaces.blog/)

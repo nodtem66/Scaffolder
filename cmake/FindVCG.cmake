@@ -12,15 +12,7 @@ find_path(VCG_INCLUDE_DIR vcg/complex/base.h
         ${VCG_DIR}
         ENV VCG_DIR
     PATHS
-        ${CMAKE_SOURCE_DIR}
-        ${CMAKE_SOURCE_DIR}/..
-        ${CMAKE_SOURCE_DIR}/../..
-        ${CMAKE_SOURCE_DIR}/vcglib
-        ${CMAKE_SOURCE_DIR}/../vcglib
-        ${CMAKE_SOURCE_DIR}/../../vcglib        
-        /usr
-        /usr/local
-        /usr/local/vcglib
+        ${CMAKE_SOURCE_DIR}/external/vcglib
     PATH_SUFFIXES include
 )
 
@@ -30,5 +22,5 @@ find_package_handle_standard_args(VCG
     VCG_INCLUDE_DIR)
 mark_as_advanced(VCG_INCLUDE_DIR)
 
-message(STATUS "INCLUDE DIR: ${VCG_INCLUDE_DIR}/")
+message(STATUS "USE DIR: ${VCG_INCLUDE_DIR}/")
 # include(VCG)
