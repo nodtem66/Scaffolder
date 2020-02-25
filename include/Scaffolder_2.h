@@ -6,6 +6,7 @@
 #include <string>
 #include <sstream>
 #include <algorithm>
+#include <ctime>
 
 #include "cxxopts.hpp"
 #include "diplib.h"
@@ -21,6 +22,7 @@
 
 #ifdef _WIN32
 #include <Windows.h>
+#include <direct.h>
 #else
 #include <sys/time.h>
 #include <ctime>
@@ -153,9 +155,7 @@ int make_dir(std::string& str) {
     if (str.empty())
         return 0;
 #ifdef _WIN32
-    wchar_t* wc = new wchar_t[str.size() + 1];
-    mbstowcs(wc, str.c_str(), str.size());
-    return _wmkdir(wc);
+    return _mkdir(str.c_str());
 #else
     return mkdir(str.c_str(), 0733);
 #endif

@@ -11,10 +11,10 @@ int main(int argc, char* argv[])
     bool is_export_inverse = false;
     bool is_build_inverse = true;
     bool no_output = false;
-    uint16_t grid_offset = 2;
+    uint16_t grid_offset = 3;
     uint16_t shell = 0;
     uint16_t smooth_step = 5;
-    double thickness = 0.5;
+    double thickness = 0.0;
     size_t minimum_grid_size = 100;
     double coff = pi;
     double minimum_diameter = 0.25;
@@ -41,9 +41,9 @@ int main(int argc, char* argv[])
             ("c,coff", "default:4*PI", cxxopts::value<double>(), "DOUBLE")
             ("s,shell", "[default:0]", cxxopts::value<uint16_t>(), "INT")
             ("n,surface", "rectlinear, schwarzp, schwarzd, gyroid, double-p, double-d, double-gyroiod, lidinoid, schoen_iwp, neovius, bcc, tubular_g_ab, tubular_g_c [default: schwarzp]", cxxopts::value<std::string>(), "NAME")
-            ("t,thickness", "Thickness [default: 1.0]", cxxopts::value<double>(), "DOUBLE")
+            ("t,thickness", "Thickness [default: 0]", cxxopts::value<double>(), "DOUBLE")
             ("g,grid_size", "Grid size [default: 100]", cxxopts::value<size_t>(), "INT")
-            ("grid_offset", "[default:2]", cxxopts::value<uint16_t>(), "INT")
+            ("grid_offset", "[default:3]", cxxopts::value<uint16_t>(), "INT")
             ("smooth_step", "Smooth with laplacian (default: 5)", cxxopts::value<uint16_t>(), "INT")
             ("output_inverse", "additional output inverse scaffold")
             ("inverse", "Enable build inverse 3D scaffold (for pore connectivity analysis)")
@@ -133,9 +133,9 @@ int main(int argc, char* argv[])
             << "-- Export Inverse: " << (is_export_inverse ? "True" : "False") << std::endl;
     }
     else {
-        std::string _name(filename);
-        _name.append(".txt");
-        result.open(_name.c_str(), std::ofstream::out);
+        std::stringstream _name;
+        _name << filename << '_' << surface << std::time(nullptr) << ".txt";
+        result.open(_name.str(), std::ofstream::out);
         // Print header
         result << "Surface,coff,shell,thickness,grid_size,grid_offset,smooth_step,input_file,avg_min_feret,avg_max_feret,"
             << "min_min_feret,q1_min_feret,q2_min_feret,q3_min_feret,max_min_feret,"
@@ -145,7 +145,8 @@ int main(int argc, char* argv[])
             << "min_circle,q1_circle,q2_circle,q3_circle,max_circle,"
             << "min_triangle,q1_triangle,q2_triangle,q3_triangle,max_triangle,"
             << "min_ellipse,q1_ellipse,q2_ellipse,q3_ellipse,max_ellipse,"
-            << "min_elongation,q1_elongation,q2_elongation,q3_elongation,max_elongation" << std::endl;
+            << "min_elongation,q1_elongation,q2_elongation,q3_elongation,max_elongation,"
+            << "volumn,surface_area,porosity,surface_area_ratio,vertices,faces" << std::endl;
         result << surface << ',' << coff << ',' << shell << ',' << thickness << ',' << minimum_grid_size << ',' << grid_offset << ',' << smooth_step << ','
             << input_file << ',';
     }
@@ -414,14 +415,14 @@ int main(int argc, char* argv[])
                 }
                 progress.done();
                 if (minFeret.size() > 0 && maxFeret.size() > 0) {
+                    std::sort(minFeret.begin(), minFeret.end());
+                    std::sort(maxFeret.begin(), maxFeret.end());
+                    std::sort(podczeckShapes[0].begin(), podczeckShapes[0].end());
+                    std::sort(podczeckShapes[1].begin(), podczeckShapes[1].end());
+                    std::sort(podczeckShapes[2].begin(), podczeckShapes[2].end());
+                    std::sort(podczeckShapes[3].begin(), podczeckShapes[3].end());
+                    std::sort(podczeckShapes[4].begin(), podczeckShapes[4].end());
                     if (verbose) {
-                        std::sort(minFeret.begin(), minFeret.end());
-                        std::sort(maxFeret.begin(), maxFeret.end());
-                        std::sort(podczeckShapes[0].begin(), podczeckShapes[0].end());
-                        std::sort(podczeckShapes[1].begin(), podczeckShapes[1].end());
-                        std::sort(podczeckShapes[2].begin(), podczeckShapes[2].end());
-                        std::sort(podczeckShapes[3].begin(), podczeckShapes[3].end());
-                        std::sort(podczeckShapes[4].begin(), podczeckShapes[4].end());
                         std::cout << "[Microstructure] " << std::endl
                             << "-- Avg Min Feret: " << std::accumulate(minFeret.begin(), minFeret.end(), 0.0) / minFeret.size() << std::endl
                             << "-- Avg Max Feret: " << std::accumulate(maxFeret.begin(), maxFeret.end(), 0.0) / maxFeret.size() << std::endl
@@ -444,6 +445,16 @@ int main(int argc, char* argv[])
                             << podczeckShapes[3].at(0) << ',' << podczeckShapes[3].at(podczeckShapes[3].size() * 0.25) << ',' << podczeckShapes[3].at(podczeckShapes[3].size() / 2) << ',' << podczeckShapes[3].at(podczeckShapes[3].size() * 0.75) << ',' << podczeckShapes[3].at(podczeckShapes[3].size() - 1) << ','
                             << podczeckShapes[4].at(0) << ',' << podczeckShapes[4].at(podczeckShapes[4].size() * 0.25) << ',' << podczeckShapes[4].at(podczeckShapes[4].size() / 2) << ',' << podczeckShapes[4].at(podczeckShapes[4].size() * 0.75) << ',' << podczeckShapes[4].at(podczeckShapes[4].size() - 1) << ',';
                     }
+                }
+                else {
+                    result << "0,0,"
+                        << "0,0,0,0,0,"
+                        << "0,0,0,0,0,"
+                        << "0,0,0,0,0,"
+                        << "0,0,0,0,0,"
+                        << "0,0,0,0,0,"
+                        << "0,0,0,0,0,"
+                        << "0,0,0,0,0,";
                 }
             }
         }
@@ -471,7 +482,9 @@ int main(int argc, char* argv[])
             if (verbose)
                 std::cout << "[Pore connectivity]" << std::endl
                 << "-- #Edge Border: " << edgeBorderNum << std::endl
-                << "-- #Edge Non-manifold: " << edgeNonManifNum << std::endl;
+                << "-- #Edge Non-manifold: " << edgeNonManifNum << std::endl
+                << "-- Vertices: " << inverse_mesh.VN() << std::endl
+                << "-- Faces: " << inverse_mesh.FN() << std::endl;
             bool watertight = (edgeBorderNum == 0) && (edgeNonManifNum == 0);
             bool pointcloud = (mesh.fn == 0 && mesh.vn != 0);
             if (!watertight || pointcloud) std::cout << "[Warning] Pore isn't conencted" << std::endl;
@@ -485,7 +498,7 @@ int main(int argc, char* argv[])
             area2 = vcg::tri::Stat<TMesh>::ComputeMeshArea(mesh);
             volume2 = vcg::tri::Stat<TMesh>::ComputeMeshVolume(mesh);
             if (verbose)
-                std::cout
+                std::cout << "[Scaffold properties]"
                 << "-- Volume: " << abs(volume2) << std::endl
                 << "-- Surface Area: " << area2 << std::endl
                 << "-- Porosity: " << abs(volume2 / volume1) << std::endl
@@ -494,6 +507,12 @@ int main(int argc, char* argv[])
                 result
                 << abs(volume2) << ',' << area2 << ',' << abs(volume2 / volume1) << ',' << area2 / area1 << ','
                 << mesh.VN() << ',' << mesh.FN() <<  std::endl;
+        }
+        else {
+            if (!verbose) {
+                result << ",,,," << mesh.VN() << ',' << mesh.FN() << std::endl;
+            }
+            std::cout << "[Warning] The scaffolder isn't a manifold. The grid_offset should have been increased" << std::endl;
         }
         
         if (!no_output) {

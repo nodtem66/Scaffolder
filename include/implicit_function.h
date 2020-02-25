@@ -265,7 +265,7 @@ Function* isosurface(std::string name, FT t) {
 		return new DoubleGyroid(t);
 	}
 	else if (name == "lidinoid") {
-		return new Lidinoid();
+		return new Lidinoid(t);
 	}
 	else if (name == "neovius") {
 		return new Neovius(t);
