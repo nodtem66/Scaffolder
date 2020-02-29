@@ -195,28 +195,8 @@ int main(int argc, char* argv[])
                         << "-- Point cloud: " << pointcloud << (!pointcloud ? "[Valid]" : "[Invalid]") << std::endl;
                     return 1;
                 }
-                // Convert STL VCG::TMesh
-                // Vertices to Eigen matrixXd V1
-                V1.resize(stl.VN(), 3);
-                size_t i = 0;
-                std::vector<size_t> vertexId(stl.vert.size());
-                for (TMesh::VertexIterator it = stl.vert.begin(); it != stl.vert.end(); ++it) if (!it->IsD()) {
-                    vertexId[it - stl.vert.begin()] = i;
-                    vcg::Point3d point = it->P();
-                    V1(i, 0) = point[0];
-                    V1(i, 1) = point[1];
-                    V1(i, 2) = point[2];
-                    i++;
-                }
-                // Faces to Eigen matrixXi F1
-                i = 0;
-                F1.resize(stl.FN(), stl.face.begin()->VN());
-                for (TMesh::FaceIterator it = stl.face.begin(); it != stl.face.end(); ++it) if (!it->IsD()) {
-                    for (int k = 0; k < it->VN(); k++) {
-                        F1(i, k) = vertexId[vcg::tri::Index(stl, it->V(k))];
-                    }
-                    i++;
-                }
+                // Convert input STL from VCG::TMesh to Eigen matrixXd V1
+                mesh_to_eigen_vector(stl, V1, F1);
             }
 
             {
@@ -322,11 +302,17 @@ int main(int argc, char* argv[])
             }
             if (verbose) std::cout << "OK" << std::endl;
 
-            // Evaluating pore size by create 2D slice 8-bit image (0-blacks're pores and 255-whites're grains)
-            // Then an 8-bit image become a binary image by image thresholding (value of 150)
-            // The binary imaege'll be labeled and finally evaluated the feret diameter by chain coding
+            // Create scaffolder and inverse mesh by dual marching cube
+            marching_cube(mesh, Fxyz, grid_size, V1min1, grid_delta, verbose, dirty);
+            if (is_build_inverse) marching_cube(inverse_mesh, IFxyz, grid_size, V1min1, grid_delta, false, false);
+
             if (is_analysis_microstructure) {
+                // Evaluating pore size by create 2D slice 8-bit image (0-blacks're pores and 255-whites're grains)
+                // Then an 8-bit image become a binary image by image thresholding (value of 150)
+                // The binary imaege'll be labeled and finally evaluated the feret diameter by chain coding
+            
                 // init filename
+                /*
                 std::string dir;
                 std::stringstream filename;
                 std::vector<dip::dfloat> minFeret;
@@ -456,6 +442,7 @@ int main(int argc, char* argv[])
                         << "0,0,0,0,0,"
                         << "0,0,0,0,0,";
                 }
+                */
             }
         }
         catch (const std::exception& ex) {
@@ -463,9 +450,6 @@ int main(int argc, char* argv[])
             std::cout << strerror(errno) << endl;
             return errno;
         }
-
-        marching_cube(mesh, Fxyz, grid_size, V1min1, grid_delta, verbose, dirty);
-        if(is_build_inverse) marching_cube(inverse_mesh, IFxyz, grid_size, V1min1, grid_delta, false, false);
     }
 
     // Stage 2: Cleaning

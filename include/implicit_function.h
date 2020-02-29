@@ -154,7 +154,7 @@ class TGc : public Function {
 public:
 	TGc() {}
 	FT operator ()(FT x, FT y, FT z) {
-		return 10 * (cos(x) * sin(y) + cos(y) * sin(z) + cos(z) * sin(x)) - 2 * (cos(2 * x) * cos(2 * y) + cos(2 * y) * cos(2 * z) + cos(2 * z) * cos(2 * x)) - 12;
+		return -(10 * (cos(x) * sin(y) + cos(y) * sin(z) + cos(z) * sin(x)) - 2 * (cos(2 * x) * cos(2 * y) + cos(2 * y) * cos(2 * z) + cos(2 * z) * cos(2 * x)) - 12);
 	}
 };
 

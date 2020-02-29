@@ -9,3 +9,6 @@
 	path = external/vcglib
 	url = https://github.com/cnr-isti-vclab/vcglib
 	branch = master
+[submodule "external/tbb"]
+	path = external/tbb
+	url = https://github.com/wjakob/tbb
