@@ -312,7 +312,6 @@ int main(int argc, char* argv[])
                 // The binary imaege'll be labeled and finally evaluated the feret diameter by chain coding
             
                 // init filename
-                /*
                 std::string dir;
                 std::stringstream filename;
                 std::vector<dip::dfloat> minFeret;
@@ -442,7 +441,6 @@ int main(int argc, char* argv[])
                         << "0,0,0,0,0,"
                         << "0,0,0,0,0,";
                 }
-                */
             }
         }
         catch (const std::exception& ex) {

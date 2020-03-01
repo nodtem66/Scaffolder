@@ -17,9 +17,9 @@ find_path(TBB_INCLUDE_DIR tbb/tbb.h
 )
 set(TBB_ROOT_DIR ${TBB_INCLUDE_DIR}/../)
 
-set(TBB_BUILD_SHARED OFF)
-set(TBB_BUILD_STATIC ON)
-set(TBB_BUILD_TESTS OFF)
+set(TBB_BUILD_SHARED OFF CACHE INTERNAL "")
+set(TBB_BUILD_STATIC ON CACHE INTERNAL "")
+set(TBB_BUILD_TESTS OFF CACHE INTERNAL "")
 
 include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(TBB

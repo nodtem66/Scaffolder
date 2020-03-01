@@ -60,22 +60,24 @@ int main(int argc, char* argv[])
             TMesh stl;
             int loadmark = 0;
             vcg::tri::io::ImporterSTL<TMesh>::Open(stl, input_file.c_str(), loadmark);
-            vcg::tri::Clean<TMesh>::RemoveDuplicateFace(stl);
-            vcg::tri::Clean<TMesh>::RemoveDuplicateVertex(stl);
-            vcg::tri::Clean<TMesh>::RemoveUnreferencedVertex(stl);
-            vcg::tri::UpdateTopology<TMesh>::FaceFace(stl);
-            vcg::tri::Clean<TMesh>::RemoveZeroAreaFace(stl);
-            vcg::tri::Clean<TMesh>::RemoveNonManifoldFace(stl);
-            vcg::tri::Clean<TMesh>::RemoveUnreferencedVertex(stl);
-            vcg::tri::UpdateTopology<TMesh>::FaceFace(stl);
-
+            std::cout << "STL Imported" << std::endl;
             vcg::tri::UpdateBounding<TMesh>::Box(stl);
             vcg::Box3d bbox = stl.bbox;
             vcg::Point3d dim = bbox.Dim();
+
+            vcg::tri::Clean<TMesh>::RemoveDuplicateVertex(stl);
+            vcg::tri::Allocator<TMesh>::CompactEveryVector(stl);
+            std::cout << "Removed duplicate face and vertex" << std::endl;
+            vcg::tri::UpdateTopology<TMesh>::FaceFace(stl);
+            std::cout << "Update topology" << std::endl;
+            vcg::tri::Clean<TMesh>::MergeCloseVertex(stl, SLICE_PRECISION*100);
+            std::cout << "Merge close vertex" << std::endl;
+            vcg::tri::UpdateTopology<TMesh>::FaceFace(stl);
+            std::cout << "Update topology" << std::endl;
             
             int connectedComponentsNum = vcg::tri::Clean<TMesh>::CountConnectedComponents(stl);
             std::cout << "Mesh is composed by " << connectedComponentsNum << " connected component(s)" << std::endl;
-            
+
             int edgeNum = 0, edgeBorderNum = 0, edgeNonManifoldNum = 0;
             vcg::tri::Clean<TMesh>::CountEdgeNum(stl, edgeNum, edgeBorderNum, edgeNonManifoldNum);
             int vertManifNum = vcg::tri::Clean<TMesh>::CountNonManifoldVertexFF(stl, true);
