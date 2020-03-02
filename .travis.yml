@@ -8,26 +8,17 @@ jobs:
   include:
     - os: linux
       script:
-        - rm -rf ./external/vcglib/eigenlib/Eigen/* && rm -rf ./external/vcglib/eigenlib/unsupported/*
-        - cp -rf ./external/libigl/external/eigen/Eigen/* ./external/vcglib/eigenlib/Eigen
-        - cp -rf ./external/libigl/external/eigen/unsupported/* ./external/vcglib/eigenlib/unsupported
         - mkdir build && cd build
         - cmake ..
         - make
     - os: osx
       osx_image: xcode10
       script:
-        - rm -rf ./external/vcglib/eigenlib/Eigen/* && rm -rf ./external/vcglib/eigenlib/unsupported/*
-        - cp -rf ./external/libigl/external/eigen/Eigen/* ./external/vcglib/eigenlib/Eigen
-        - cp -rf ./external/libigl/external/eigen/unsupported/* ./external/vcglib/eigenlib/unsupported
         - mkdir build && cd build
         - cmake ..
         - make
     - os: windows
       script:
-        - rd /S /Q ./external/vcglib/eigenlib/Eigen/* && rd /S /Q ./external/vcglib/eigenlib/unsupported/*
-        - copy /y ./external/libigl/external/eigen/Eigen/* ./external/vcglib/eigenlib/Eigen
-        - copy /y ./external/libigl/external/eigen/unsupported/* ./external/vcglib/eigenlib/unsupported
         - mkdir build && cd build
         - cmake ..
         - cmake --build .
