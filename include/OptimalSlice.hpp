@@ -552,7 +552,7 @@ namespace slice {
         if (C.empty()) return false;
         ContourPositions p = contour_inside_test(C);
         assert(p.size() == C.size());
-        std::ofstream svg(filename, 'r');
+        std::ofstream svg(filename, std::ofstream::out);
         svg << "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" << std::endl;
         svg << "<!DOCTYPE svg PUBLIC \" -//W3C//DTD SVG 1.0//EN\" \"http://www.w3.org/TR/2001/REC-SVG-20010904/DTD/svg10.dtd\">" << std::endl;
         svg << "<svg viewBox=\"" << min_x-1 << " " << min_y-1 << " " << width+1 << " " << height+1 << "\" xmlns=\"http://www.w3.org/2000/svg\">" << std::endl;
