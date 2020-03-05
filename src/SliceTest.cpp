@@ -18,6 +18,7 @@ int main(int argc, char* argv[])
     std::string input_file = "";
     size_t slice = 10;
     int direction = 2;
+    bool is_export_convexhull = false;
     try {
         cxxopts::Options options("SliceTest", "Test");
         options.positional_help("[option args]").show_positional_help();
@@ -25,7 +26,8 @@ int main(int argc, char* argv[])
             ("h,help", "Print help")
             ("i,input", "Input file (STL)", cxxopts::value<std::string>(), "FILE")
             ("s,slice", "Number of slice > 1 (Default: 10)", cxxopts::value<std::size_t>(), "POSITVE INTEGER MORE THAN 1")
-            ("d,direction", "Direction 0=X, 1=Y, 2=Z default: 2)", cxxopts::value<int>(), "{0,1,2}");
+            ("d,direction", "Direction 0=X, 1=Y, 2=Z default: 2)", cxxopts::value<int>(), "{0,1,2}")
+            ("x,convexhull", "Export convexhull to SVG", cxxopts::value<bool>());
         options.parse_positional({ "input", "slice", "direction" });
         bool isEmptyOption = (argc == 1);
         cxxopts::ParseResult result = options.parse(argc, argv);
@@ -47,12 +49,15 @@ int main(int argc, char* argv[])
         if (direction < 0 && direction > 2) {
             std::cout << "Invalid direction: " << direction << std::endl;
         }
+        if (result.count("convexhull")) is_export_convexhull = result["convexhull"].as<bool>();
     }
     catch (const cxxopts::OptionException & ex) {
         std::cout << "Error parsing options: " << ex.what() << std::endl;
         return 1;
     }
-
+    //slice::Polygon p = { {0,0}, {10,0}, {20,10}, {21, 20}, {10, 30}, {4, 31}, {-10, 22}, {-1, 20}, {8,18}, {2,6}, {-5,5} };
+    //slice::Polygon p2 = { {-20,0}, {0,-20}, {20,0}, {0,20} };
+    
     // Stage 1:
     {
         try {
@@ -64,6 +69,8 @@ int main(int argc, char* argv[])
             vcg::tri::UpdateBounding<TMesh>::Box(stl);
             vcg::Box3d bbox = stl.bbox;
             vcg::Point3d dim = bbox.Dim();
+            int next_direction = ((direction + 1) % 3);
+            int prev_direction = ((direction + 2) % 3);
 
             vcg::tri::Clean<TMesh>::RemoveDuplicateVertex(stl);
             vcg::tri::Allocator<TMesh>::CompactEveryVector(stl);
@@ -72,6 +79,8 @@ int main(int argc, char* argv[])
             std::cout << "Update topology" << std::endl;
             vcg::tri::Clean<TMesh>::MergeCloseVertex(stl, SLICE_PRECISION*100);
             std::cout << "Merge close vertex" << std::endl;
+            vcg::tri::UpdateTopology<TMesh>::FaceFace(stl);
+            vcg::tri::Clean<TMesh>::RemoveDuplicateFace(stl);
             vcg::tri::UpdateTopology<TMesh>::FaceFace(stl);
             std::cout << "Update topology" << std::endl;
             
@@ -90,7 +99,7 @@ int main(int argc, char* argv[])
             }
 
             slice::Slice s = slice::incremental_slicing(stl, slice, direction);
-            slice::ContourSlice C = slice::contour_construct(s);
+            slice::ContourSlice C = slice::contour_construct(s, direction);
             
             // create output directory
             if (!C.empty()) {
@@ -99,15 +108,33 @@ int main(int argc, char* argv[])
                 size_t lastindex = input_file.find_last_of(".");
                 std::string dir = input_file.substr(firstindex, lastindex - firstindex) + "_svg";
                 std::cout << "Creating direction: " << dir << std::endl;
-                make_dir(dir);
+                //make_dir(dir);
 
+#ifndef USE_PARALLEL
                 for (slice::ContourSlice::const_iterator cs = C.begin(); cs != C.end(); cs++) {
                     size_t index = (size_t)(cs - C.begin() + 1);
-                    std::cout << "Contour slice " << index << " size: " << cs->size() << " contour(s)" << std::endl;
                     std::stringstream name(dir);
                     name << dir << "/" << index << ".svg";
-                    slice::write_svg(name.str(), *cs, dim[0], dim[1], bbox.min[0], bbox.min[1]);
+                    slice::write_svg(name.str(), *cs, dim[next_direction], dim[prev_direction], bbox.min[next_direction], bbox.min[prev_direction], is_export_convexhull);
                 }
+#else
+                tbb::parallel_for(
+                    tbb::blocked_range<size_t>(0, C.size()),
+                    [&](const tbb::blocked_range<size_t> &r) {
+                        for (size_t index = r.begin(); index < r.end(); index++) {
+                            std::stringstream name(dir);
+                            name << dir << "/" << (index) << ".svg";
+                            slice::write_svg(name.str(), C[index], dim[next_direction], dim[prev_direction], bbox.min[next_direction], bbox.min[prev_direction], is_export_convexhull);
+                        }
+                    }
+                );
+#endif
+                std::vector<double> minFeret, maxFeret, shape[5];
+                slice::measure_feret_and_shape(C, minFeret, maxFeret, shape);
+                std::copy(minFeret.begin(), minFeret.end(), std::ostream_iterator<double>(std::cout, " "));
+                std::cout << std::endl;
+                std::copy(maxFeret.begin(), maxFeret.end(), std::ostream_iterator<double>(std::cout, " "));
+                std::cout << std::endl;
             }
             
         }

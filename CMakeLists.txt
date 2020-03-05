@@ -10,8 +10,8 @@ option(LIBIGL_WITH_OPENGL            "Use OpenGL"         OFF)
 option(LIBIGL_WITH_OPENGL_GLFW       "Use GLFW"           OFF)
 
 find_package(LIBIGL REQUIRED)
-find_package(VCG REQUIRED)
 find_package(TBB REQUIRED)
+find_package(VCG REQUIRED)
 find_package(DIPlib REQUIRED)
 
 # Add your project files
@@ -38,9 +38,9 @@ endif()
 
 add_definitions(-DDIP__IS_STATIC -DDIP__ENABLE_ASSERT -DDIP__HAS_JPEG -DDIP__EXCEPTIONS_RECORD_STACK_TRACE)
 add_executable(${PROJECT_NAME} ${MAIN_SOURCES} ${PROJECT_SOURCE_DIR}/src/Main.cpp ${VCG_INCLUDE_DIR}/wrap/ply/plylib.cpp)
-target_include_directories(${PROJECT_NAME} PRIVATE "${PROJECT_SOURCE_DIR}/include" ${VCG_INCLUDE_DIR} ${DIPlib_INCLUDE_DIR})
-target_link_libraries(${PROJECT_NAME} PRIVATE igl::core DIP)
+target_include_directories(${PROJECT_NAME} PRIVATE "${PROJECT_SOURCE_DIR}/include" ${TBB_INCLUDE_DIR} ${VCG_INCLUDE_DIR} ${DIPlib_INCLUDE_DIR})
+target_link_libraries(${PROJECT_NAME} PRIVATE igl::core DIP tbb_static)
 
 add_executable(SliceTest ${MAIN_SOURCES} ${PROJECT_SOURCE_DIR}/src/SliceTest.cpp)
-target_include_directories(SliceTest PRIVATE "${PROJECT_SOURCE_DIR}/include" ${VCG_INCLUDE_DIR} ${TBB_INCLUDE_DIR})
+target_include_directories(SliceTest PRIVATE "${PROJECT_SOURCE_DIR}/include" ${TBB_INCLUDE_DIR} ${VCG_INCLUDE_DIR})
 target_link_libraries(SliceTest PRIVATE igl::core tbb_static)

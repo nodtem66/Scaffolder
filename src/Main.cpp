@@ -14,6 +14,7 @@ int main(int argc, char* argv[])
     uint16_t grid_offset = 3;
     uint16_t shell = 0;
     uint16_t smooth_step = 5;
+    uint8_t method = METHOD_IMAGE_PROCESS;
     double thickness = 0.0;
     size_t minimum_grid_size = 100;
     double coff = pi;
@@ -32,9 +33,9 @@ int main(int argc, char* argv[])
         options.add_options()
             ("h,help", "Print help")
             ("q,quiet", "Disable verbose output [default: false]")
-            ("m,microstructure", "Analysis microstructure [default: false]")
-            ("m2", "Export and analysis microstructure [default: false]")
-            ("m3", "Export feret data")
+            ("m,microstructure", "Analysis microstructure ( [default: false]")
+            ("m1", "Export and analysis microstructure 1 (Image processing technique) [default: false]")
+            ("m2", "Export and analysis microstructure 2 (Slice coutour technique) [default: false]")
             ("f,format", "Output format (OFF,PLY,STL,OBJ) [default: ply]", cxxopts::value<std::string>())
             ("i,input", "Input file (STL)", cxxopts::value<std::string>(), "FILE")
             ("o,output", "Output filename without extension [default: out]", cxxopts::value<std::string>(), "FILENAME")
@@ -45,6 +46,7 @@ int main(int argc, char* argv[])
             ("g,grid_size", "Grid size [default: 100]", cxxopts::value<size_t>(), "INT")
             ("grid_offset", "[default:3]", cxxopts::value<uint16_t>(), "INT")
             ("smooth_step", "Smooth with laplacian (default: 5)", cxxopts::value<uint16_t>(), "INT")
+            ("method", "Method of microstructure analysis: 0 (Image processing technique) or 1 (Slice contour technique) [default: 0]", cxxopts::value<uint8_t>(), "0,1")
             ("output_inverse", "additional output inverse scaffold")
             ("inverse", "Enable build inverse 3D scaffold (for pore connectivity analysis)")
             ("dirty", "Disable autoclean")
@@ -69,14 +71,18 @@ int main(int argc, char* argv[])
             is_analysis_microstructure = result["microstructure"].as<bool>();
             no_output = true;
         }
+        if (result.count("method")) method = result["method"].as<uint8_t>();
+        if (result.count("m1")) {
+            is_analysis_microstructure = result["m1"].as<bool>();
+            is_export_microstructure = result["m1"].as<bool>();
+            method = METHOD_IMAGE_PROCESS;
+            no_output = true;
+        }
         if (result.count("m2")) {
             is_analysis_microstructure = result["m2"].as<bool>();
             is_export_microstructure = result["m2"].as<bool>();
+            method = METHOD_SLICE_CONTOUR;
             no_output = true;
-        }
-        if (result.count("m3")) {
-            is_export_feret = result["m3"].as<bool>();
-            is_analysis_microstructure = is_export_feret;
         }
         if (result.count("output_inverse")) {
             is_export_inverse = result["output_inverse"].as<bool>();
@@ -306,6 +312,12 @@ int main(int argc, char* argv[])
             marching_cube(mesh, Fxyz, grid_size, V1min1, grid_delta, verbose, dirty);
             if (is_build_inverse) marching_cube(inverse_mesh, IFxyz, grid_size, V1min1, grid_delta, false, false);
 
+            if (!dirty) {
+                clean_mesh(mesh, minimum_diameter, smooth_step, verbose);
+                if (is_build_inverse) clean_mesh(inverse_mesh, minimum_diameter, smooth_step, false);
+            }
+            if (verbose) report_mesh(mesh);
+
             if (is_analysis_microstructure) {
                 // Evaluating pore size by create 2D slice 8-bit image (0-blacks're pores and 255-whites're grains)
                 // Then an 8-bit image become a binary image by image thresholding (value of 150)
@@ -326,78 +338,93 @@ int main(int argc, char* argv[])
                 }
                 // init progress bar
                 ProgressBar progress(grid_size.sum(), PROGRESS_BAR_COLUMN);
-                // init DIP MeasurementTool and DIP image
-                dip::MeasurementTool tool;
-                dip::Image img2d({ (dip::uint64)grid_size.maxCoeff(), (dip::uint64)grid_size.maxCoeff() }, 1, dip::DT_UINT8);
-                dip::uint8* data = static_cast<dip::uint8*>(img2d.Origin());
-                char axis = 'x';
-                for (uint8_t main_axis = 0; main_axis < 3; main_axis++) {
-                    // main_axis: 0 = x, 1 = y, 2 = z
-                    size_t index;
-                    uint8_t axis2 = (main_axis + 1) % 3;
-                    uint8_t axis3 = (main_axis + 2) % 3;
-                    for (size_t k = 0; k < grid_size(main_axis); k++) {
-                        img2d.Fill(200);
-                        for (size_t j = 0; j < grid_size(axis2); j++) {
-                            for (size_t i = 0; i < grid_size(axis3); i++) {
-                                if (main_axis == 0)
-                                    index = k + grid_size(0) * (j + grid_size(1) * i);
-                                else if (main_axis == 1)
-                                    index = i + grid_size(0) * (k + grid_size(1) * j);
-                                else
-                                    index = j + grid_size(0) * (i + grid_size(1) * k);
-                                if (W(index) >= 0.8) {// inside STL mesh
-                                    if (Fxyz(index) > eps2)
-                                        data[i + grid_size(axis3) * j] = 0;
+                
+                if (method == METHOD_IMAGE_PROCESS) {
+                    // init DIP MeasurementTool and DIP image
+                    dip::MeasurementTool tool;
+                    dip::Image img2d({ (dip::uint64)grid_size.maxCoeff(), (dip::uint64)grid_size.maxCoeff() }, 1, dip::DT_UINT8);
+                    dip::uint8* data = static_cast<dip::uint8*>(img2d.Origin());
+                    char axis = 'x';
+                    for (uint8_t main_axis = 0; main_axis < 3; main_axis++) {
+                        // main_axis: 0 = x, 1 = y, 2 = z
+                        size_t index;
+                        uint8_t axis2 = (main_axis + 1) % 3;
+                        uint8_t axis3 = (main_axis + 2) % 3;
+                        for (size_t k = 0; k < grid_size(main_axis); k++) {
+                            img2d.Fill(200);
+                            for (size_t j = 0; j < grid_size(axis2); j++) {
+                                for (size_t i = 0; i < grid_size(axis3); i++) {
+                                    if (main_axis == 0)
+                                        index = k + grid_size(0) * (j + grid_size(1) * i);
+                                    else if (main_axis == 1)
+                                        index = i + grid_size(0) * (k + grid_size(1) * j);
+                                    else
+                                        index = j + grid_size(0) * (i + grid_size(1) * k);
+                                    if (W(index) >= 0.8) {// inside STL mesh
+                                        if (Fxyz(index) > eps2)
+                                            data[i + grid_size(axis3) * j] = 0;
+                                    }
                                 }
                             }
+                            // Measurement Feret diameter
+                            dip::Image label = dip::Label(img2d < 50, 2);
+                            dip::Measurement msr = tool.Measure(label, img2d, { "Feret", "PodczeckShapes" }, {}, 2);
+                            dip::Measurement::IteratorFeature it = msr["Feret"];
+                            dip::Measurement::IteratorFeature::Iterator feret = it.FirstObject();
+                            while (feret) {
+                                // From ref: https://diplib.github.io/diplib-docs/features.html#size_features_Feret
+                                maxFeret.push_back(feret[2] * grid_delta);
+                                minFeret.push_back(feret[1] * grid_delta);
+                                ++feret;
+                            }
+                            it = msr["PodczeckShapes"];
+                            dip::Measurement::IteratorFeature::Iterator shape = it.FirstObject();
+                            while (shape) {
+                                podczeckShapes[0].push_back(shape[0]);
+                                podczeckShapes[1].push_back(shape[1]);
+                                podczeckShapes[2].push_back(shape[2]);
+                                podczeckShapes[3].push_back(shape[3]);
+                                podczeckShapes[4].push_back(shape[4]);
+                                ++shape;
+                            }
+                            if (is_export_microstructure) {
+                                filename.str(std::string());
+                                filename << dir << '/' << axis << '_' << k << ".jpg";
+                                dip::ImageWriteJPEG(img2d, filename.str());
+                            }
+                            ++progress;
+                            progress.display();
                         }
-                        // Measurement Feret diameter
-                        dip::Image label = dip::Label(img2d < 50, 2);
-                        dip::Measurement msr = tool.Measure(label, img2d, { "Feret", "PodczeckShapes" }, {}, 2);
-                        dip::Measurement::IteratorFeature it = msr["Feret"];
-                        dip::Measurement::IteratorFeature::Iterator feret = it.FirstObject();
-                        while (feret) {
-                            // From ref: https://diplib.github.io/diplib-docs/features.html#size_features_Feret
-                            maxFeret.push_back(feret[2]*grid_delta);
-                            minFeret.push_back(feret[1]*grid_delta);
-                            ++feret;
-                        }
-                        it = msr["PodczeckShapes"];
-                        dip::Measurement::IteratorFeature::Iterator shape = it.FirstObject();
-                        while (shape) {
-                            podczeckShapes[0].push_back(shape[0]);
-                            podczeckShapes[1].push_back(shape[1]);
-                            podczeckShapes[2].push_back(shape[2]);
-                            podczeckShapes[3].push_back(shape[3]);
-                            podczeckShapes[4].push_back(shape[4]);
-                            ++shape;
-                        }
+                        axis++;
+                    }
+                } // End Image processing
+                else if (method == METHOD_SLICE_CONTOUR) {
+                    vcg::tri::UpdateBounding<TMesh>::Box(mesh);
+                    vcg::Box3d bbox = mesh.bbox;
+                    vcg::Point3d dim = bbox.Dim();
+                    
+                    char axis = 'x';
+                    for (uint8_t main_axis = 0; main_axis < 3; main_axis++) {
+                        // main_axis: 0 = x, 1 = y, 2 = z
+                        size_t index;
+                        slice::Slice s = slice::incremental_slicing(mesh, grid_size(main_axis), main_axis);
+                        slice::ContourSlice C = slice::contour_construct(s);
+                        measure_feret_and_shape(C, minFeret, maxFeret, podczeckShapes);
                         if (is_export_microstructure) {
                             filename.str(std::string());
-                            filename << dir << '/' << axis << '_' << k << ".jpg";
-                            dip::ImageWriteJPEG(img2d, filename.str());
+                            for (slice::ContourSlice::const_iterator cs = C.begin(); cs != C.end(); cs++) {
+                                size_t index = (size_t)(cs - C.begin() + 1);
+                                std::cout << "Contour slice " << index << " size: " << cs->size() << " contour(s)" << std::endl;
+                                std::stringstream name(dir);
+                                name << dir << "/" << axis << '_' << index << ".svg";
+                                slice::write_svg(name.str(), *cs, dim[0], dim[1], bbox.min[0], bbox.min[1]);
+                            }
                         }
                         ++progress;
                         progress.display();
+                        axis++;
                     }
-                    axis++;
-                }
-                if (is_export_feret) {
-                    std::string f = filename.str() + ".csv";
-                    std::ofstream fs(f.c_str(), std::ofstream::out);
-                    fs << "MIN";
-                    for (std::vector<dip::dfloat>::iterator it = minFeret.begin(); it != minFeret.end(); it++) {
-                        fs << "," << *it;
-                    }
-                    fs << std::endl;
-                    fs << "MAX";
-                    for (std::vector<dip::dfloat>::iterator it = maxFeret.begin(); it != maxFeret.end(); it++) {
-                        fs << "," << *it;
-                    }
-                    fs << std::endl;
-                    fs.close();
-                }
+                } // End Slice contour
                 progress.done();
                 if (minFeret.size() > 0 && maxFeret.size() > 0) {
                     std::sort(minFeret.begin(), minFeret.end());
@@ -450,13 +477,8 @@ int main(int argc, char* argv[])
         }
     }
 
-    // Stage 2: Cleaning
+    // Stage 2: Result
     {
-        if (!dirty) {
-            clean_mesh(mesh, minimum_diameter, smooth_step, verbose);
-            if (is_build_inverse) clean_mesh(inverse_mesh, minimum_diameter, smooth_step, false);
-        }
-
         // Report Volume and surface area
         int edgeNum = 0, edgeBorderNum = 0, edgeNonManifNum = 0;
         if (is_build_inverse) {

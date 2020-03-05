@@ -1,13 +1,14 @@
 #pragma once
+#include <string>
+#include <sstream>
+#include <algorithm>
+#include <ctime>
+
 #include <igl/writePLY.h>
 #include <igl/readSTL.h>
 #include <igl/copyleft/marching_cubes.h>
 #include <igl/fast_winding_number.h>
 #include <Eigen/Core>
-#include <string>
-#include <sstream>
-#include <algorithm>
-#include <ctime>
 
 #include "cxxopts.hpp"
 #include "diplib.h"
@@ -15,8 +16,8 @@
 #include "diplib/regions.h"
 #include "diplib/measurement.h"
 #include "dualmc/dualmc.h"
-//#include "H5Easy.hpp"
 #include "ProgressBar.hpp"
+#include "OptimalSlice.hpp"
 
 #include "implicit_function.h"
 #include "Mesh.h"
@@ -24,6 +25,9 @@
 
 #define VERSION "v1.2"
 #define PROGRESS_BAR_COLUMN 40
+
+#define METHOD_IMAGE_PROCESS 0
+#define METHOD_SLICE_CONTOUR 1
 
 typedef struct index_type {
     size_t x; size_t y; size_t z;
@@ -125,15 +129,37 @@ inline void clean_mesh(TMesh& mesh, double minimum_diameter, uint16_t smooth_ste
     vcg::tri::Clean<TMesh>::RemoveSmallConnectedComponentsDiameter(mesh, minimum_diameter * mesh.bbox.Diag());
     vcg::tri::Clean<TMesh>::RemoveUnreferencedVertex(mesh);
     vcg::tri::UpdateTopology<TMesh>::FaceFace(mesh);
-    if (verbose) {
-        std::cout
-            << "OK" << std::endl
-            << "-- IsWaterTight: " << vcg::tri::Clean<TMesh>::IsWaterTight(mesh) << std::endl
-            << "-- Minimum_diameter: " << minimum_diameter * mesh.bbox.Diag() << std::endl;
-    }
+    vcg::tri::Clean<TMesh>::RemoveDuplicateVertex(mesh);
+    vcg::tri::Allocator<TMesh>::CompactEveryVector(mesh);
+    vcg::tri::UpdateTopology<TMesh>::FaceFace(mesh);
+    vcg::tri::UpdateBounding<TMesh>::Box(mesh);
+    vcg::tri::Clean<TMesh>::MergeCloseVertex(mesh, mesh.bbox.Diag()/10000);
+    vcg::tri::UpdateTopology<TMesh>::FaceFace(mesh);
+    if (verbose) std::cout << "OK" << std::endl;
     if (smooth_step > 0) {
         if (verbose) std::cout << "[Laplacian smoothing] ";
         vcg::tri::Smooth<TMesh>::VertexCoordLaplacian(mesh, smooth_step, false, true);
         if (verbose) std::cout << "OK" << std::endl;
+    }
+}
+
+inline void report_mesh(TMesh& mesh) {
+    int connectedComponentsNum = vcg::tri::Clean<TMesh>::CountConnectedComponents(mesh);
+    std::cout
+        << "[Topology Measurement] " << std::endl
+        << "-- Mesh is composed by " << connectedComponentsNum << " connected component(s)" << std::endl;
+
+    int edgeNum = 0, edgeBorderNum = 0, edgeNonManifoldNum = 0;
+    vcg::tri::Clean<TMesh>::CountEdgeNum(mesh, edgeNum, edgeBorderNum, edgeNonManifoldNum);
+    int vertManifNum = vcg::tri::Clean<TMesh>::CountNonManifoldVertexFF(mesh, true);
+
+    if (edgeNonManifoldNum == 0 && vertManifNum == 0) {
+        int holeNum = vcg::tri::Clean<TMesh>::CountHoles(mesh);
+        int genus = vcg::tri::Clean<TMesh>::MeshGenus(mesh.vn, edgeNum, mesh.fn, holeNum, connectedComponentsNum);
+
+        std::cout
+            << "-- Mesh is two-manifold " << std::endl
+            << "-- Mesh has " << holeNum << " holes" << std::endl
+            << "-- Genus is " << genus << std::endl;
     }
 }
