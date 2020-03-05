@@ -82,7 +82,7 @@ inline bool MarkAndSweepNeighbor(Eigen::VectorXd& W, index_type& index, Queue_t&
 
 inline void marching_cube(TMesh &mesh, Eigen::MatrixXd &Fxyz, Eigen::RowVector3i grid_size, Eigen::RowVector3d &Vmin, double delta, bool verbose = true, bool dirty = false) {
     {
-        if (verbose) std::cout << "[Marching Cube] ";
+        if (verbose) std::cout << "[Marching Cube] " << std::endl;
         dualmc::DualMC<double> builder;
         std::vector<dualmc::Vertex> mc_vertices;
         std::vector<dualmc::Quad> mc_quads;
@@ -114,7 +114,6 @@ inline void marching_cube(TMesh &mesh, Eigen::MatrixXd &Fxyz, Eigen::RowVector3i
             vcg::tri::UpdateTopology<TMesh>::FaceFace(mesh);
         }
 
-        if (verbose) std::cout << "OK" << std::endl;
         if (verbose) std::cout << "-- Info: " << mc_vertices.size() << " vertices " << mc_quads.size() << " faces" << std::endl;
     }
 }
@@ -133,14 +132,14 @@ inline void clean_mesh(TMesh& mesh, double minimum_diameter, uint16_t smooth_ste
     vcg::tri::Allocator<TMesh>::CompactEveryVector(mesh);
     vcg::tri::UpdateTopology<TMesh>::FaceFace(mesh);
     vcg::tri::UpdateBounding<TMesh>::Box(mesh);
-    vcg::tri::Clean<TMesh>::MergeCloseVertex(mesh, mesh.bbox.Diag()/10000);
-    vcg::tri::UpdateTopology<TMesh>::FaceFace(mesh);
     if (verbose) std::cout << "OK" << std::endl;
     if (smooth_step > 0) {
         if (verbose) std::cout << "[Laplacian smoothing] ";
         vcg::tri::Smooth<TMesh>::VertexCoordLaplacian(mesh, smooth_step, false, true);
         if (verbose) std::cout << "OK" << std::endl;
     }
+    vcg::tri::Clean<TMesh>::MergeCloseVertex(mesh, SLICE_PRECISION*100); //mesh.bbox.Diag() / 10000
+    vcg::tri::UpdateTopology<TMesh>::FaceFace(mesh);
 }
 
 inline void report_mesh(TMesh& mesh) {

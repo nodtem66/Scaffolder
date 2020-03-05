@@ -14,7 +14,7 @@ int main(int argc, char* argv[])
     uint16_t grid_offset = 3;
     uint16_t shell = 0;
     uint16_t smooth_step = 5;
-    uint8_t method = METHOD_IMAGE_PROCESS;
+    uint8_t method = METHOD_SLICE_CONTOUR;
     double thickness = 0.0;
     size_t minimum_grid_size = 100;
     double coff = pi;
@@ -46,7 +46,7 @@ int main(int argc, char* argv[])
             ("g,grid_size", "Grid size [default: 100]", cxxopts::value<size_t>(), "INT")
             ("grid_offset", "[default:3]", cxxopts::value<uint16_t>(), "INT")
             ("smooth_step", "Smooth with laplacian (default: 5)", cxxopts::value<uint16_t>(), "INT")
-            ("method", "Method of microstructure analysis: 0 (Image processing technique) or 1 (Slice contour technique) [default: 0]", cxxopts::value<uint8_t>(), "0,1")
+            ("method", "Method of microstructure analysis: 0 (Image processing technique) or 1 (Slice contour technique) [default: 1]", cxxopts::value<uint8_t>(), "0,1")
             ("output_inverse", "additional output inverse scaffold")
             ("inverse", "Enable build inverse 3D scaffold (for pore connectivity analysis)")
             ("dirty", "Disable autoclean")
@@ -72,6 +72,10 @@ int main(int argc, char* argv[])
             no_output = true;
         }
         if (result.count("method")) method = result["method"].as<uint8_t>();
+        if (method < 0 && method > 1) {
+            std::cout << "Invalid method option: " << method << ". The method option must be only 0 or 1, see --help";
+            return 1;
+        }
         if (result.count("m1")) {
             is_analysis_microstructure = result["m1"].as<bool>();
             is_export_microstructure = result["m1"].as<bool>();
@@ -134,7 +138,9 @@ int main(int argc, char* argv[])
             << "-- Smooth step: " << smooth_step << std::endl
             << "-- Autoclean: " << (dirty ? "False" : "True") << std::endl
             << "-- Minimum diameter: " << 100 * minimum_diameter << "%" << std::endl
-            << "-- Analysis microstructure: " << (is_analysis_microstructure || is_export_microstructure ? "True" : "False") << std::endl
+            << "-- Analysis microstructure: " << (is_analysis_microstructure ? "True" : "False")
+            << " Method=" << (method == METHOD_IMAGE_PROCESS ? "Image Processing" : "Contour Slicing") << std::endl
+            << "-- Export microstructure: " << (is_analysis_microstructure ? "True" : "False") << std::endl
             << "-- Build Inverse: " << (is_build_inverse ? "True" : "False") << std::endl
             << "-- Export Inverse: " << (is_export_inverse ? "True" : "False") << std::endl;
     }
@@ -404,24 +410,42 @@ int main(int argc, char* argv[])
                     vcg::Point3d dim = bbox.Dim();
                     
                     char axis = 'x';
+                    progress.display();
                     for (uint8_t main_axis = 0; main_axis < 3; main_axis++) {
                         // main_axis: 0 = x, 1 = y, 2 = z
                         size_t index;
+                        int next_axis = ((main_axis + 1) % 3);
+                        int prev_axis = ((main_axis + 2) % 3);
+                        unsigned int progress_major_step = grid_size[main_axis] / 4;
                         slice::Slice s = slice::incremental_slicing(mesh, grid_size(main_axis), main_axis);
-                        slice::ContourSlice C = slice::contour_construct(s);
-                        measure_feret_and_shape(C, minFeret, maxFeret, podczeckShapes);
+                        progress += progress_major_step;
+                        progress.display();
+                        slice::ContourSlice C = slice::contour_construct(s, main_axis);
+                        progress += progress_major_step;
+                        progress.display();
+                        slice::measure_feret_and_shape(C, minFeret, maxFeret, podczeckShapes);
+                        progress += progress_major_step;
+                        progress.display();
                         if (is_export_microstructure) {
                             filename.str(std::string());
+                            unsigned int minor_step = C.size() / progress_major_step, step = minor_step;
                             for (slice::ContourSlice::const_iterator cs = C.begin(); cs != C.end(); cs++) {
                                 size_t index = (size_t)(cs - C.begin() + 1);
-                                std::cout << "Contour slice " << index << " size: " << cs->size() << " contour(s)" << std::endl;
                                 std::stringstream name(dir);
                                 name << dir << "/" << axis << '_' << index << ".svg";
-                                slice::write_svg(name.str(), *cs, dim[0], dim[1], bbox.min[0], bbox.min[1]);
+                                slice::write_svg(name.str(), *cs, dim[next_axis], dim[prev_axis], bbox.min[next_axis], bbox.min[prev_axis]);
+                                step--;
+                                if (step == 0) {
+                                    step = minor_step;
+                                    ++progress;
+                                    progress.display();
+                                }
                             }
                         }
-                        ++progress;
-                        progress.display();
+                        else {
+                            progress += progress_major_step;
+                            progress.display();
+                        }
                         axis++;
                     }
                 } // End Slice contour
@@ -429,11 +453,14 @@ int main(int argc, char* argv[])
                 if (minFeret.size() > 0 && maxFeret.size() > 0) {
                     std::sort(minFeret.begin(), minFeret.end());
                     std::sort(maxFeret.begin(), maxFeret.end());
-                    std::sort(podczeckShapes[0].begin(), podczeckShapes[0].end());
-                    std::sort(podczeckShapes[1].begin(), podczeckShapes[1].end());
-                    std::sort(podczeckShapes[2].begin(), podczeckShapes[2].end());
-                    std::sort(podczeckShapes[3].begin(), podczeckShapes[3].end());
-                    std::sort(podczeckShapes[4].begin(), podczeckShapes[4].end());
+                    for (int i = 0; i < 5; i++) {
+                        if (podczeckShapes[i].empty()) {
+                            podczeckShapes[i].push_back(0);
+                        }
+                        else {
+                            std::sort(podczeckShapes[i].begin(), podczeckShapes[i].end());
+                        }
+                    }
                     if (verbose) {
                         std::cout << "[Microstructure] " << std::endl
                             << "-- Avg Min Feret: " << std::accumulate(minFeret.begin(), minFeret.end(), 0.0) / minFeret.size() << std::endl
@@ -502,7 +529,7 @@ int main(int argc, char* argv[])
             area2 = vcg::tri::Stat<TMesh>::ComputeMeshArea(mesh);
             volume2 = vcg::tri::Stat<TMesh>::ComputeMeshVolume(mesh);
             if (verbose)
-                std::cout << "[Scaffold properties]"
+                std::cout << "[Scaffold properties]" << std::endl
                 << "-- Volume: " << abs(volume2) << std::endl
                 << "-- Surface Area: " << area2 << std::endl
                 << "-- Porosity: " << abs(volume2 / volume1) << std::endl

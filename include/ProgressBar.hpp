@@ -21,6 +21,7 @@ public:
     ProgressBar(unsigned int total, unsigned int width) : total_ticks{ total }, bar_width{ width } {}
 
     unsigned int operator++() { return ++ticks; }
+    ProgressBar& operator+=(const unsigned int tick) { ticks += tick; return *this; }
 
     void display() const
     {

@@ -218,6 +218,7 @@ namespace slice {
 
     class FeretDiameter {
     public:
+        bool empty = true;
         double min;
         double max;
         double perpendicularMax;
@@ -237,6 +238,7 @@ namespace slice {
                 max = d2; angleMax = lines[1].theta;
             }
             perpendicularMax = max;
+            empty = false;
         }
         void update(const SupportLine2d (&lines)[4]) {
             double d1 = two_line_distance(lines[0], lines[2]);
@@ -682,7 +684,7 @@ namespace slice {
             size_t i_next = (i == s - 1) ? 0 : i + 1;
             A2 += C[i].x * (C[i_next].y - C[i_prev].y);
         }
-        return A2 * 0.5;
+        return abs(A2) * 0.5;
     }
 
     double measure_point_square_distance(const Point2d& p1, const Point2d& p2) {
@@ -894,7 +896,7 @@ namespace slice {
             // For each contour in slice, calculate min max of contour
             std::vector<double> minX, minY, maxX, maxY;
             std::vector<double> sortedMinX, sortedMinY, sortedMaxX, sortedMaxY;
-            size_t n_outside = 0;
+            size_t n_outside = 0, n_inside = 0;
             for (slice::Polygons::const_iterator c = cs->begin(); c != cs->end(); c++) {
                 // if polygon must have more-than 2 lines
                 if (c->size() <= 2) continue;
@@ -936,19 +938,23 @@ namespace slice {
                     sortedMaxY.push_back(_maxY);
                 }
                 else {
+                    n_inside++;
                     double area = measure_polygon_area(*c);
                     FeretDiameter feret = measure_polygon_feret_diameter(*c);
-                    double w = feret.min, h = feret.perpendicularMax;
-                    // calculate Podczeck's shape description
-                    // from: https://diplib.github.io/diplib-docs/features.html#shape_features_PodczeckShapes
-                    // the polygon is the boundary of a hole; push the feret diameter to the result
-                    minFeret.push_back(feret.min);
-                    maxFeret.push_back(feret.perpendicularMax);
-                    shapes[0].push_back(area / (w * h));
-                    shapes[1].push_back(4 * area / (M_PI * h * h));
-                    shapes[2].push_back(2 * area / (w * h));
-                    shapes[3].push_back(4 * area / (M_PI * w * h));
-                    shapes[4].push_back(feret.perimeter / feret.max);
+                    if (!feret.empty && feret.min > 0) {
+                        double w = feret.min, h = feret.perpendicularMax;
+                        assert(w > 0 && h > 0 && area > 0);
+                        // calculate Podczeck's shape description
+                        // from: https://diplib.github.io/diplib-docs/features.html#shape_features_PodczeckShapes
+                        // the polygon is the boundary of a hole; push the feret diameter to the result
+                        minFeret.push_back(feret.min);
+                        maxFeret.push_back(feret.perpendicularMax);
+                        shapes[0].push_back(area / (w * h));
+                        shapes[1].push_back(4 * area / (M_PI * h * h));
+                        shapes[2].push_back(2 * area / (w * h));
+                        shapes[3].push_back(4 * area / (M_PI * w * h));
+                        shapes[4].push_back(feret.perimeter / feret.max);
+                    }
                 }
             }
 

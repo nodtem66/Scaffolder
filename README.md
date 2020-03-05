@@ -7,7 +7,12 @@ Usage:
   Scaffolder [OPTION...] [option args]
 
   -h, --help                    Print help
-  -q, --quiet                   Disable verbose output
+  -q, --quiet                   Disable verbose output [default: false]
+  -m, --microstructure          Analysis microstructure ( [default: false]
+      --m1                      Export and analysis microstructure 1 (Image
+                                processing technique) [default: false]
+      --m2                      Export and analysis microstructure 2 (Slice
+                                coutour technique) [default: false]
   -f, --format arg              Output format (OFF,PLY,STL,OBJ) [default:
                                 ply]
   -i, --input FILE              Input file (STL)
@@ -15,11 +20,20 @@ Usage:
                                 out]
   -c, --coff DOUBLE             default:4*PI
   -s, --shell INT               [default:0]
-  -n, --surface NAME            schwarzp, schwarzd, gyroid, lidinoid,
-                                schoen_iwp, neovius, pwhybrid [default: schwarzp]
-  -t, --thickness DOUBLE        Thickness [default: 1.0]
+  -n, --surface NAME            rectlinear, schwarzp, schwarzd, gyroid,
+                                double-p, double-d, double-gyroiod, lidinoid,
+                                schoen_iwp, neovius, bcc, tubular_g_ab, tubular_g_c
+                                [default: schwarzp]
+  -t, --thickness DOUBLE        Thickness [default: 0]
   -g, --grid_size INT           Grid size [default: 100]
-      --grid_offset INT         [default:2]
+      --grid_offset INT         [default:3]
+      --smooth_step INT         Smooth with laplacian (default: 5)
+      --method 0,1              Method of microstructure analysis: 0 (Image
+                                processing technique) or 1 (Slice contour
+                                technique) [default: 0]
+      --output_inverse          additional output inverse scaffold
+      --inverse                 Enable build inverse 3D scaffold (for pore
+                                connectivity analysis)
       --dirty                   Disable autoclean
       --minimum_diameter DOUBLE
                                 used for removing small orphaned (between
