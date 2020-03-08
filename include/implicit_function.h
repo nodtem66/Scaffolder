@@ -78,7 +78,7 @@ public:
 	const FT t;
 	DoubleD(FT t = 0) : t(t) {}
 	FT operator ()(FT x, FT y, FT z) {
-		return -1 * (cos(x) * cos(y) + cos(y) * cos(z) + cos(x) * cos(z)) - 1 * (sin(x) * sin(y) * sin(z)) - t;
+		return -1 * (cos(x) * cos(y) + cos(y) * cos(z) + cos(x) * cos(z)) - 1 * (sin(x) * sin(y) * sin(z)) + t;
 	}
 };
 
@@ -108,7 +108,7 @@ public:
 	const FT t = 0;
 	Lidinoid(FT t = 0) : t(t) {}
 	FT operator ()(FT x, FT y, FT z) {
-		return -1 * (
+		return (
 			(sin(2 * x) * cos(y) * sin(z) + sin(2 * y) * cos(z) * sin(x) + sin(2 * z) * cos(x) * sin(y)) +
 			(cos(2 * x) * cos(2 * y) + cos(2 * y) * cos(2 * z) + cos(2 * z) * cos(2 * x))
 		) + t;

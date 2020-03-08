@@ -808,9 +808,10 @@ namespace slice {
         // the conhexhull's direction is counterclockwise and this procedure direction will be clockwise
         // the loop will finish when the initial upper-most point reached the bottom-most point
         size_t last_index = index_point[1] == 0 ? size - 1 : index_point[1] - 1;
+        size_t _count = 0;
         FeretDiameter feret(line);
         feret.perimeter = perimeter;
-        while (index_point[0] != last_index) {
+        while (index_point[0] != last_index && _count < size) {
             // measure the next minimal angle (min_theta) of 4 lines
             double min_angle = 359;
             size_t min_index = 0;
@@ -839,6 +840,7 @@ namespace slice {
             //for (int i = 0; i < 4; i++) std::cout << "    " << line[i] << std::endl;
             feret.update(line);
             //std::cout << feret << std::endl;
+            _count++;
         }
         return feret;
     }

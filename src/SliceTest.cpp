@@ -74,13 +74,15 @@ int main(int argc, char* argv[])
 
             vcg::tri::Clean<TMesh>::RemoveDuplicateVertex(stl);
             vcg::tri::Allocator<TMesh>::CompactEveryVector(stl);
-            std::cout << "Removed duplicate face and vertex" << std::endl;
-            vcg::tri::UpdateTopology<TMesh>::FaceFace(stl);
-            std::cout << "Update topology" << std::endl;
-            vcg::tri::Clean<TMesh>::MergeCloseVertex(stl, SLICE_PRECISION*100);
-            std::cout << "Merge close vertex" << std::endl;
             vcg::tri::UpdateTopology<TMesh>::FaceFace(stl);
             vcg::tri::Clean<TMesh>::RemoveDuplicateFace(stl);
+            vcg::tri::UpdateTopology<TMesh>::FaceFace(stl);
+            vcg::tri::Clean<TMesh>::RemoveZeroAreaFace(stl);
+            vcg::tri::UpdateTopology<TMesh>::FaceFace(stl);
+            std::cout << "Removed duplicate face and vertex" << std::endl;
+            std::cout << "Update topology" << std::endl;
+            vcg::tri::Clean<TMesh>::MergeCloseVertex(stl, SLICE_PRECISION*10);
+            std::cout << "Merge close vertex" << std::endl;
             vcg::tri::UpdateTopology<TMesh>::FaceFace(stl);
             std::cout << "Update topology" << std::endl;
             
@@ -108,7 +110,7 @@ int main(int argc, char* argv[])
                 size_t lastindex = input_file.find_last_of(".");
                 std::string dir = input_file.substr(firstindex, lastindex - firstindex) + "_svg";
                 std::cout << "Creating direction: " << dir << std::endl;
-                //make_dir(dir);
+                make_dir(dir);
 
 #ifndef USE_PARALLEL
                 for (slice::ContourSlice::const_iterator cs = C.begin(); cs != C.end(); cs++) {

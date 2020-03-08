@@ -131,18 +131,18 @@ int main(int argc, char* argv[])
             << "-- Output file: " << filename << '.' << format << std::endl
             << "-- Surface: " << surface << std::endl
             << "-- Coff: " << coff << std::endl
-            << "-- shell: " << shell << std::endl
             << "-- Thickness: " << thickness << std::endl
             << "-- Grid size: " << minimum_grid_size << std::endl
-            << "-- Grid offset: " << grid_offset << std::endl
-            << "-- Smooth step: " << smooth_step << std::endl
+            << "--   Grid offset: " << grid_offset << std::endl
+            << "--   Shell: " << shell << std::endl
             << "-- Autoclean: " << (dirty ? "False" : "True") << std::endl
-            << "-- Minimum diameter: " << 100 * minimum_diameter << "%" << std::endl
-            << "-- Analysis microstructure: " << (is_analysis_microstructure ? "True" : "False")
-            << " Method=" << (method == METHOD_IMAGE_PROCESS ? "Image Processing" : "Contour Slicing") << std::endl
-            << "-- Export microstructure: " << (is_analysis_microstructure ? "True" : "False") << std::endl
+            << "--   Minimum diameter: " << 100 * minimum_diameter << "%" << std::endl
+            << "--   Smooth step: " << smooth_step << std::endl
+            << "-- Analysis microstructure: " << (is_analysis_microstructure ? "True" : "False") << std::endl
+            << "--   Method :" << (method == METHOD_IMAGE_PROCESS ? "Image Processing" : "Contour Slicing") << std::endl
+            << "--   Export microstructure: " << (is_analysis_microstructure ? "True" : "False") << std::endl
             << "-- Build Inverse: " << (is_build_inverse ? "True" : "False") << std::endl
-            << "-- Export Inverse: " << (is_export_inverse ? "True" : "False") << std::endl;
+            << "--   Export Inverse: " << (is_export_inverse ? "True" : "False") << std::endl;
     }
     else {
         std::stringstream _name;
@@ -182,16 +182,14 @@ int main(int argc, char* argv[])
                 TMesh stl;
                 int loadmark = 0;
                 vcg::tri::io::ImporterSTL<TMesh>::Open(stl, input_file.c_str(), loadmark);
-                if (!dirty) {
-                    vcg::tri::Clean<TMesh>::RemoveDuplicateFace(stl);
-                    vcg::tri::Clean<TMesh>::RemoveDuplicateVertex(stl);
-                    vcg::tri::Clean<TMesh>::RemoveUnreferencedVertex(stl);
-                    vcg::tri::UpdateTopology<TMesh>::FaceFace(stl);
-                    vcg::tri::Clean<TMesh>::RemoveZeroAreaFace(stl);
-                    vcg::tri::Clean<TMesh>::RemoveNonManifoldFace(stl);
-                    vcg::tri::Clean<TMesh>::RemoveUnreferencedVertex(stl);
-                    vcg::tri::UpdateTopology<TMesh>::FaceFace(stl);
-                }
+                vcg::tri::Clean<TMesh>::RemoveDuplicateFace(stl);
+                vcg::tri::Clean<TMesh>::RemoveDuplicateVertex(stl);
+                vcg::tri::Clean<TMesh>::RemoveUnreferencedVertex(stl);
+                vcg::tri::UpdateTopology<TMesh>::FaceFace(stl);
+                vcg::tri::Clean<TMesh>::RemoveZeroAreaFace(stl);
+                vcg::tri::Clean<TMesh>::RemoveNonManifoldFace(stl);
+                vcg::tri::Clean<TMesh>::RemoveUnreferencedVertex(stl);
+                vcg::tri::UpdateTopology<TMesh>::FaceFace(stl);
                 // Report Volume and surface area
                 int edgeNum = 0, edgeBorderNum = 0, edgeNonManifNum = 0;
                 vcg::tri::Clean<TMesh>::CountEdgeNum(stl, edgeNum, edgeBorderNum, edgeNonManifNum);
@@ -320,11 +318,15 @@ int main(int argc, char* argv[])
 
             if (!dirty) {
                 clean_mesh(mesh, minimum_diameter, smooth_step, verbose);
-                if (is_build_inverse) clean_mesh(inverse_mesh, minimum_diameter, smooth_step, false);
+                if (is_build_inverse) clean_mesh(inverse_mesh, minimum_diameter, 0, false);
+            }
+            bool is_manifold = is_mesh_manifold(mesh);
+            if (!is_manifold && !verbose) {
+                std::cout << "[Warning] Mesh is not two manifold" << std::endl;
             }
             if (verbose) report_mesh(mesh);
 
-            if (is_analysis_microstructure) {
+            if (is_analysis_microstructure && is_manifold) {
                 // Evaluating pore size by create 2D slice 8-bit image (0-blacks're pores and 255-whites're grains)
                 // Then an 8-bit image become a binary image by image thresholding (value of 150)
                 // The binary imaege'll be labeled and finally evaluated the feret diameter by chain coding
@@ -356,10 +358,10 @@ int main(int argc, char* argv[])
                         size_t index;
                         uint8_t axis2 = (main_axis + 1) % 3;
                         uint8_t axis3 = (main_axis + 2) % 3;
-                        for (size_t k = 0; k < grid_size(main_axis); k++) {
+                        for (size_t k = grid_offset; k < grid_size(main_axis) - (size_t)(grid_offset); k++) {
                             img2d.Fill(200);
-                            for (size_t j = 0; j < grid_size(axis2); j++) {
-                                for (size_t i = 0; i < grid_size(axis3); i++) {
+                            for (size_t j = grid_offset; j < grid_size(axis2) - (size_t)(grid_offset); j++) {
+                                for (size_t i = grid_offset; i < grid_size(axis3) - (size_t)(grid_offset); i++) {
                                     if (main_axis == 0)
                                         index = k + grid_size(0) * (j + grid_size(1) * i);
                                     else if (main_axis == 1)
@@ -567,6 +569,7 @@ int main(int argc, char* argv[])
                 vcg::tri::io::ExporterSTL<TMesh>::Save(mesh, filename.c_str(), 0);
                 if (is_build_inverse && is_export_inverse) vcg::tri::io::ExporterSTL<TMesh>::Save(inverse_mesh, filename2.c_str(), 0);
             }
+            if (verbose) std::cout << "OK" << std::endl;
         }
         if (verbose) std::cout << "[Finished]" << std::endl;
         result.close();

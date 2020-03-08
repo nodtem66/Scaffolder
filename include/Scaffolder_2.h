@@ -23,7 +23,7 @@
 #include "Mesh.h"
 #include "utils.h"
 
-#define VERSION "v1.2"
+#define VERSION "v1.3"
 #define PROGRESS_BAR_COLUMN 40
 
 #define METHOD_IMAGE_PROCESS 0
@@ -120,16 +120,17 @@ inline void marching_cube(TMesh &mesh, Eigen::MatrixXd &Fxyz, Eigen::RowVector3i
 
 inline void clean_mesh(TMesh& mesh, double minimum_diameter, uint16_t smooth_step, bool verbose = true) {
     if (verbose) std::cout << "[libVCG Cleaning] ";
+    vcg::tri::Clean<TMesh>::RemoveDuplicateVertex(mesh);
+    vcg::tri::Allocator<TMesh>::CompactEveryVector(mesh);
+    vcg::tri::UpdateTopology<TMesh>::FaceFace(mesh);
+    vcg::tri::Clean<TMesh>::RemoveDuplicateFace(mesh);
+    vcg::tri::UpdateTopology<TMesh>::FaceFace(mesh);
     vcg::tri::Clean<TMesh>::RemoveZeroAreaFace(mesh);
-    vcg::tri::Clean<TMesh>::RemoveNonManifoldFace(mesh);
     vcg::tri::Clean<TMesh>::RemoveUnreferencedVertex(mesh);
     vcg::tri::UpdateTopology<TMesh>::FaceFace(mesh);
     vcg::tri::UpdateBounding<TMesh>::Box(mesh);
     vcg::tri::Clean<TMesh>::RemoveSmallConnectedComponentsDiameter(mesh, minimum_diameter * mesh.bbox.Diag());
     vcg::tri::Clean<TMesh>::RemoveUnreferencedVertex(mesh);
-    vcg::tri::UpdateTopology<TMesh>::FaceFace(mesh);
-    vcg::tri::Clean<TMesh>::RemoveDuplicateVertex(mesh);
-    vcg::tri::Allocator<TMesh>::CompactEveryVector(mesh);
     vcg::tri::UpdateTopology<TMesh>::FaceFace(mesh);
     vcg::tri::UpdateBounding<TMesh>::Box(mesh);
     if (verbose) std::cout << "OK" << std::endl;
@@ -138,8 +139,16 @@ inline void clean_mesh(TMesh& mesh, double minimum_diameter, uint16_t smooth_ste
         vcg::tri::Smooth<TMesh>::VertexCoordLaplacian(mesh, smooth_step, false, true);
         if (verbose) std::cout << "OK" << std::endl;
     }
-    vcg::tri::Clean<TMesh>::MergeCloseVertex(mesh, SLICE_PRECISION*100); //mesh.bbox.Diag() / 10000
+    vcg::tri::Clean<TMesh>::MergeCloseVertex(mesh, SLICE_PRECISION*100);
+    vcg::tri::Clean<TMesh>::RemoveUnreferencedVertex(mesh);
     vcg::tri::UpdateTopology<TMesh>::FaceFace(mesh);
+    //vcg::tri::Clean<TMesh>::SelfIntersections(mesh)
+}
+
+inline void fix_self_intersect_mesh(TMesh& mesh, uint16_t max_iteration = 10) {
+    std::vector<TMesh::FaceType*> faces;
+    vcg::tri::Clean<TMesh>::SelfIntersections(mesh, faces);
+    
 }
 
 inline void report_mesh(TMesh& mesh) {
@@ -161,4 +170,11 @@ inline void report_mesh(TMesh& mesh) {
             << "-- Mesh has " << holeNum << " holes" << std::endl
             << "-- Genus is " << genus << std::endl;
     }
+}
+
+inline bool is_mesh_manifold(TMesh &mesh) {
+    int edgeNum = 0, edgeBorderNum = 0, edgeNonManifoldNum = 0;
+    vcg::tri::Clean<TMesh>::CountEdgeNum(mesh, edgeNum, edgeBorderNum, edgeNonManifoldNum);
+    int vertManifNum = vcg::tri::Clean<TMesh>::CountNonManifoldVertexFF(mesh, true);
+    return edgeNonManifoldNum == 0 && vertManifNum == 0;
 }
