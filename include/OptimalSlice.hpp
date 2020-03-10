@@ -16,6 +16,7 @@
 #define USE_PARALLEL
 
 #include "Mesh.h"
+#include "MaxHeap.hpp"
 #include "tbb/tbb.h"
 
 namespace slice {
@@ -32,6 +33,15 @@ namespace slice {
         bool operator< (const Point2d& ls) const {
             if (x < ls.x) return true;
             return y < ls.y;
+        }
+        Point2d operator-(const Point2d &rh) const {
+            return {x - rh.x, y - rh.y};
+        }
+        Point2d operator+(const Point2d& rh) const {
+            return { x + rh.x, y + rh.y };
+        }
+        Point2d operator-() const {
+            return { -x, -y };
         }
     };
     
@@ -128,7 +138,7 @@ namespace slice {
 
     class Line {
     public:
-        Point3d v[2];
+        Point3d v[2] = { 0,0 };
 
         Line() {}
 
@@ -203,6 +213,7 @@ namespace slice {
         return 0;
     }
 
+    // return the 0 < angle <= 90 degree between line and vertex P
     double line_point_angle(const SupportLine2d& line, const Point2d& p) {
         double angle;
         if (DOUBLE_EQ(p.x, line.x)) angle = 90;
@@ -213,6 +224,21 @@ namespace slice {
         else angle = 180 + line.theta - angle;
         // normalized angle
         if (angle > 90) angle -= 180;
+        return angle;
+    }
+
+    // return the 0 <= angle < 180 degree between line and vertex P
+    double line_edge_angle(const SupportLine2d& line, const Point2d& delta, bool direction_ccw = false) {
+        double angle;
+        if (DOUBLE_EQ(delta.x, 0)) angle = 90;
+        else if (DOUBLE_EQ(delta.y, 0)) angle = 0;
+        else angle = atan(delta.y / delta.x) * 180 / M_PI;
+        // calculate delta
+        if (DOUBLE_GT_EQ(line.theta, angle)) angle = line.theta - angle;
+        else angle = 180 + line.theta - angle;
+        if (direction_ccw && angle > 0) angle = 180 - angle;
+        // normalized angle
+        if (angle < 0) angle += 180;
         return angle;
     }
 
@@ -237,6 +263,7 @@ namespace slice {
                 min = d1; angleMin = lines[0].theta;
                 max = d2; angleMax = lines[1].theta;
             }
+            perimeter = 0;
             perpendicularMax = max;
             empty = false;
         }
@@ -276,6 +303,7 @@ namespace slice {
     typedef std::pair<Point2d, Point2d> PairPoint2d;
     typedef std::unordered_map<Point2d, PairPoint2d> ContourHash;
     typedef std::vector<PolygonSide> PolygonSides;
+    typedef std::pair<double, size_t> DistanceIndexPair;
 
     std::ostream& operator<< (std::ostream& out, Point2d const& data) {
         out << "[" << data.x << "," << data.y << "]";
@@ -309,6 +337,15 @@ namespace slice {
 
     std::ostream& operator<< (std::ostream& out, SupportLine2d const& data) {
         out << "slice::SupportLine2d(x:" << data.x << ", y:" << data.y << ", m:" << data.m << ", c:" << data.c << ", theta:" << data.theta << "[" << data.is_vertical <<"])";
+        return out;
+    }
+
+    std::ostream& operator<< (std::ostream& out, Polygon const& data) {
+        out << "slice::Polygon{" << std::endl;
+        for (auto d = data.begin(); d != data.end(); ++d) {
+            out << " -- " << (*d) << std::endl; 
+        }
+        out << "}" << std::endl;
         return out;
     }
 }
@@ -623,6 +660,11 @@ namespace slice {
                         hash.erase(item);
                         for (size_t j = 1;; j++) {
                             item = hash.find(C[j]);
+                            // TODO: fixed this bugs
+                            if (item == hash.end()) {
+                                CS[i].clear();
+                                break;
+                            }
                             assert(item != hash.end());
                             if (!(C[j] == last)) {
                                 if (item->second.first == C[j - 1])
@@ -691,6 +733,14 @@ namespace slice {
         return (p1.x - p2.x) * (p1.x - p2.x) + (p1.y - p2.y) * (p1.y - p2.y);
     }
 
+    double measure_point_distance(const Point2d& p1, const Point2d& p2) {
+        return sqrt((p1.x - p2.x) * (p1.x - p2.x) + (p1.y - p2.y) * (p1.y - p2.y));
+    }
+
+    double measure_point_magnitude(const Point2d& p) {
+        return sqrt(p.x * p.x + p.y * p.y);
+    }
+
     // To find orientation of ordered triplet (p, q, r). 
     // The function returns following values 
     // 0 --> p, q and r are colinear 
@@ -715,6 +765,7 @@ namespace slice {
     };
 
     // Graham scan algorithm for constructing convex hull
+    // the direction is counterclockwise
     // https://www.geeksforgeeks.org/convex-hull-set-2-graham-scan/
     Polygon convexhull(Polygon points) {
         Polygon p;
@@ -767,6 +818,165 @@ namespace slice {
             p.push_back(next);
         }
         return p;
+    }
+
+    // Support function generate the farthest point in direction d
+    // Complexity O(m+n)
+    Point2d gjk_support(const Polygon& P, const Polygon& Q, const Point2d& d) {
+        assert(P.size() > 0 && Q.size() > 0);
+        Point2d p = P[0];
+        double max_dot = p.x * d.x + p.y * d.y;
+        for (auto it = P.begin(); it != P.end(); ++it) {
+            double dot = it->x * d.x + it->y * d.y;
+            if (dot > max_dot) {
+                max_dot = dot;
+                p = (*it);
+            }
+        }
+        Point2d q = Q[0];
+        max_dot = q.x * -d.x + q.y * -d.y;
+        for (auto it = Q.begin(); it != Q.end(); ++it) {
+            double dot = it->x * -d.x + it->y * -d.y;
+            if (dot > max_dot) {
+                max_dot = dot;
+                q = (*it);
+            }
+        }
+        return p - q;
+    }
+
+    // return the origin-closest point on simplex A,B
+    // complexity: O(1)
+    Point2d gjk_closest_point_to_origin(const Point2d& A, const Point2d& B) {
+        Point2d AB = B - A;
+        double norm_AB = (AB.x * AB.x + AB.y * AB.y);
+        if (DOUBLE_EQ(norm_AB, 0)) return A;
+        double lambda_2 = (-AB.x * A.x + -AB.y * A.y) / norm_AB;
+        if (lambda_2 > 1) return B;
+        else if (lambda_2 < -1) return A;
+        double lambda_1 = 1 - lambda_2;
+        return { lambda_1 * A.x + lambda_2 * B.x, lambda_1 * A.y + lambda_2 * B.y };
+    }
+
+    Point2d center_point_distance(const Polygon& P, const Polygon& Q) {
+        Point2d d;
+        double x = 0, y = 0;
+        for (auto it = P.begin(); it != P.end(); ++it) {
+            x += it->x;
+            y += it->y;
+        }
+        d.x = x / P.size();
+        d.y = y / P.size();
+        x = 0;
+        y = 0;
+        for (auto it = Q.begin(); it != Q.end(); ++it) {
+            x += it->x;
+            y += it->y;
+        }
+        d.x -= x / Q.size();
+        d.y -= y / Q.size();
+        return d;
+    }
+
+    // Minkowski difference of two convex: P and Q
+    // return S = P - Q, Complexity O(m+n)
+    Polygon minkwoski_difference(const Polygon& P, Polygon Q) {
+        Polygon S;
+        if (P.size() >= 3 && Q.size() >= 3) {
+            // compute -Q and find the bottom-left vertex of Q
+            size_t index_q = 0;
+            double min_y = -Q[0].y;
+            for (Polygon::iterator it = Q.begin(); it != Q.end(); it++) {
+                it->x *= -1;
+                it->y *= -1;
+                if (min_y > it->y || (DOUBLE_EQ(min_y, it->y) && it->x < Q[index_q].x )) {
+                    min_y = it->y;
+                    index_q = (size_t)(it - Q.begin());
+                }
+            }
+            size_t index_p = 0;
+            min_y = P[0].y;
+            // find the bottom-left vertex of P
+            for (Polygon::const_iterator it = P.begin(); it != P.end(); it++) {
+                if (min_y > it->y || (DOUBLE_EQ(min_y, it->y) && it->x < P[index_p].x)) {
+                    min_y = it->y;
+                    index_p = (size_t)(it - P.begin());
+                }
+            }
+            SupportLine2d line(P[index_p] + Q[index_q], 0);
+            S.push_back({ line.x, line.y });
+            size_t last_p = index_p;
+            size_t _count = 0;
+            Point2d first_point = S.front();
+            //std::cout << line << std::endl;
+            do {
+                size_t next_p = (index_p == P.size() - 1) ? 0 : index_p + 1;
+                size_t next_q = (index_q == Q.size() - 1) ? 0 : index_q + 1;
+                Point2d edge_q = Q[next_q] - Q[index_q];
+                Point2d edge_p = P[next_p] - P[index_p];
+                double angle_p = line_edge_angle(line, edge_p, true);
+                double angle_q = line_edge_angle(line, edge_q, true);
+                //std::cout << "Edge P:" << edge_p << " " << angle_p << " Q:" << edge_q << " " << angle_q << std::endl;
+                if (angle_p > angle_q) {
+                    // insert edge q into S and update index_q
+                    line.update(line.x + edge_q.x, line.y + edge_q.y);
+                    line += angle_q;
+                    index_q = next_q;
+                }
+                else {
+                    line.update(line.x + edge_p.x, line.y + edge_p.y);
+                    line += angle_p;
+                    index_p = next_p;
+                    _count++;
+                }
+                //std::cout << line << std::endl;
+                if (index_p != last_p || _count == 0) {
+                    S.push_back({ line.x,line.y });
+                }
+            } while (index_p != last_p || _count == 0);
+        }
+        return S;
+    }
+
+    // Implement from JAVA lib
+    // ref: http://www.dyn4j.org/2010/04/gjk-distance-closest-points/#gjk-closest
+    // return -1 if the polygon is intersecting
+    double gjk_minimal_distance(const Polygon& P, const Polygon& Q, double tolerance = 1e-4) {
+        if (P.size() < 3 || Q.size() < 3) return -1;
+        Polygon P1 = convexhull(P);
+        Polygon Q1 = convexhull(Q);
+        //Polygon Diff = minkwoski_difference(P1, Q1);
+        //assert(Diff.size() > 3);
+        //std::copy(Diff.begin(), Diff.end(), std::ostream_iterator<slice::Point2d>(std::cout, " "));
+        Point2d d = center_point_distance(P1, Q1);
+        Point2d simplex_a = gjk_support(P1, Q1, d);
+        Point2d simplex_b = gjk_support(P1, Q1, -d);
+        d = -gjk_closest_point_to_origin(simplex_a, simplex_b);
+        //std::cout << std::endl << "Pre: a:" << simplex_a << " b:" << simplex_b << " d:" << d << std::endl;
+        size_t _count = P1.size() + Q1.size();
+        while (_count > 0) {
+            if (DOUBLE_EQ(d.x * d.x + d.y * d.y, 0)) return 0;
+            Point2d c = gjk_support(P1, Q1, d);
+            //std::cout << "  -- c:" << c << std::endl;
+            // check new point c is better than simplex a, b
+            if (( d.x * c.x + d.y * c.y ) - (simplex_a.x * d.x + simplex_a.y * d.y) < tolerance) {
+                return measure_point_magnitude(d);
+            }
+            Point2d p1 = gjk_closest_point_to_origin(simplex_a, c);
+            Point2d p2 = gjk_closest_point_to_origin(c, simplex_b);
+            if (measure_point_magnitude(p1) < measure_point_magnitude(p2)) {
+                simplex_b = c;
+                d = -p1;
+            }
+            else {
+                simplex_a = c;
+                d = -p2;
+            }
+            //std::cout << "  -- a:" << simplex_a << " b:" << simplex_b << " d:" << d << std::endl;
+            _count--;
+        }
+        //std::cout << "[Warning] GJK Iteration timeout: Found the intersect polygon" << std::endl;
+        return -1;
     }
 
     FeretDiameter measure_polygon_feret_diameter(const Polygon& p) {
@@ -890,108 +1100,117 @@ namespace slice {
     // Measure feret diameter
     void measure_feret_and_shape(const slice::ContourSlice& CS, std::vector<double>& minFeret, std::vector<double>& maxFeret, std::vector<double> (&shapes)[5]) {
         // Foreach slice in 3D
-        for (slice::ContourSlice::const_iterator cs = CS.begin(); cs != CS.end(); cs++) {
-            if (cs->empty()) continue;
-            // Inside or outside testing
-            slice::PolygonSides p = contour_inside_test(*cs);
-            assert(p.size() == cs->size());
-            // For each contour in slice, calculate min max of contour
-            std::vector<double> minX, minY, maxX, maxY;
-            std::vector<double> sortedMinX, sortedMinY, sortedMaxX, sortedMaxY;
-            size_t n_outside = 0, n_inside = 0;
-            for (slice::Polygons::const_iterator c = cs->begin(); c != cs->end(); c++) {
-                // if polygon must have more-than 2 lines
-                if (c->size() <= 2) continue;
-                size_t index_polygon = (size_t)(c - cs->begin());
-                
-                // Loop for each point to find max min in polygon
-                slice::Polygon::const_iterator l = c->begin();
-                double _minX = l->x, _minY = l->y, _maxX = l->x, _maxY = l->y;
-                for (l++; l != c->end(); l++) {
-                    if (l->x > _maxX) {
-                        _maxX = l->x;
-                    }
-                    if (_minX > l->x) {
-                        _minX = l->x;
-                    }
-                    if (l->y > _maxY) {
-                        _maxY = l->y;
-                    }
-                    if (_minY > l->y) {
-                        _minY = l->y;
-                    }
-                }
-                minX.push_back(_minX);
-                maxX.push_back(_maxX);
-                minY.push_back(_minY);
-                maxY.push_back(_maxY);
+        // TODO: change to TBB parallel for
+#ifndef USE_PARALLEL
+        for (size_t cs_index = 0, cs_size = CS.size(); cs_index < cs_size; cs_index++) {
+#else
+        static tbb::affinity_partitioner ap;
+        tbb::spin_mutex feretMutex, shapeMutex;
+        tbb::parallel_for(tbb::blocked_range<size_t>(0, CS.size()), [&](tbb::blocked_range<size_t> r) {
+            for (size_t cs_index = r.begin(); cs_index < r.end(); cs_index++) {
+#endif
+                if (CS[cs_index].empty()) continue;
+                // Inside or outside testing
+                slice::PolygonSides p = contour_inside_test(CS[cs_index]);
+                assert(p.size() == CS[cs_index].size());
+                // For each contour in slice, calculate min max of contour
+                std::vector< Point2d > polygonCenters;
+                std::vector< std::pair<Point2d, size_t> > centerPolygonMap;
+                size_t n_outside = 0, n_inside = 0;
+                for (slice::Polygons::const_iterator c = CS[cs_index].begin(); c != CS[cs_index].end(); c++) {
+                    // if polygon must have more-than 2 lines
+                    if (c->size() <= 2) continue;
+                    size_t index_polygon = (size_t)(c - CS[cs_index].begin());
 
-                /*
-                if (DOUBLE_GT(h, 0) && DOUBLE_GT(w, 0)) {
-                    double shape[5] = { area, 4 * area / (M_PI * h * h), 2 * area / (w * h), 4 * area / (M_PI * w * h), P / l };
-                }*/
-                // count the outside polygon
-                if (p[index_polygon] == slice::PolygonSide::OUTSIDE) {
-                    // the polygon is the boundary of solid;
-                    n_outside++;
-                    sortedMinX.push_back(_minX);
-                    sortedMaxX.push_back(_maxX);
-                    sortedMinY.push_back(_minY);
-                    sortedMaxY.push_back(_maxY);
+                    // Loop for each point to find max min in polygon
+                    slice::Polygon::const_iterator l = c->begin();
+                    double _x = 0, _y = 0;
+                    for (l++; l != c->end(); l++) {
+                        _x += l->x;
+                        _y += l->y;
+                    }
+                    _x /= c->size();
+                    _y /= c->size();
+                    polygonCenters.push_back({ _x, _y });
+
+                    if (p[index_polygon] == slice::PolygonSide::OUTSIDE) {
+                        // the polygon is the boundary of solid;
+                        // count the outside polygon
+                        n_outside++;
+                        centerPolygonMap.push_back(std::make_pair(Point2d{ _x, _y }, index_polygon));
+                    }
+                    else {
+                        n_inside++;
+                        double area = measure_polygon_area(*c);
+                        FeretDiameter feret = measure_polygon_feret_diameter(*c);
+                        if (!feret.empty && feret.min > 0) {
+                            double w = feret.min, h = feret.perpendicularMax;
+                            assert(w > 0 && h > 0 && area > 0);
+                            // calculate Podczeck's shape description
+                            // from: https://diplib.github.io/diplib-docs/features.html#shape_features_PodczeckShapes
+                            // the polygon is the boundary of a hole; push the feret diameter to the result
+                            {
+#ifdef USE_PARALLEL
+                                tbb::spin_mutex::scoped_lock lock(feretMutex);
+#endif
+                                minFeret.push_back(feret.min);
+                                maxFeret.push_back(feret.perpendicularMax);
+                            }
+                            {
+#ifdef USE_PARALLEL
+                                tbb::spin_mutex::scoped_lock lock(shapeMutex);
+#endif
+                                shapes[0].push_back(area / (w * h));
+                                shapes[1].push_back(4 * area / (M_PI * h * h));
+                                shapes[2].push_back(2 * area / (w * h));
+                                shapes[3].push_back(4 * area / (M_PI * w * h));
+                                shapes[4].push_back(feret.perimeter / feret.max);
+                            }
+                        }
+                    }
                 }
-                else {
-                    n_inside++;
-                    double area = measure_polygon_area(*c);
-                    FeretDiameter feret = measure_polygon_feret_diameter(*c);
-                    if (!feret.empty && feret.min > 0) {
-                        double w = feret.min, h = feret.perpendicularMax;
-                        assert(w > 0 && h > 0 && area > 0);
-                        // calculate Podczeck's shape description
-                        // from: https://diplib.github.io/diplib-docs/features.html#shape_features_PodczeckShapes
-                        // the polygon is the boundary of a hole; push the feret diameter to the result
-                        minFeret.push_back(feret.min);
-                        maxFeret.push_back(feret.perpendicularMax);
-                        shapes[0].push_back(area / (w * h));
-                        shapes[1].push_back(4 * area / (M_PI * h * h));
-                        shapes[2].push_back(2 * area / (w * h));
-                        shapes[3].push_back(4 * area / (M_PI * w * h));
-                        shapes[4].push_back(feret.perimeter / feret.max);
+
+                if (n_outside > 1) {
+                    // For each Polygon in slice layer, find 4 minimum-distance polygon
+                    for (slice::Polygons::const_iterator c = CS[cs_index].begin(); c != CS[cs_index].end(); c++) {
+                        size_t index = (size_t)(c - CS[cs_index].begin());
+                        std::vector<double> feret;
+                        double _feret;
+                        std::vector<DistanceIndexPair> pairs;
+                        int k = std::min(centerPolygonMap.size() - 1, (size_t)4);
+                        if (p[index] == slice::PolygonSide::OUTSIDE) {
+                            size_t i = 0;
+                            for (size_t j = 0; j < k; i++) {
+                                if (i != index && i < centerPolygonMap.size()) {
+                                    double distance = measure_point_distance(polygonCenters[index], centerPolygonMap[i].first);
+                                    pairs.push_back(std::make_pair(distance, centerPolygonMap[i].second));
+                                    j++;
+                                }
+                            }
+                            MaxHeap<DistanceIndexPair> minimum(k, &pairs);
+                            for (; i < centerPolygonMap.size(); i++) {
+                                double distance = measure_point_distance(polygonCenters[index], centerPolygonMap[i].first);
+                                minimum.update(std::make_pair(distance, centerPolygonMap[i].second));
+                            }
+                            for (i = 0; i < k; i++) {
+                                size_t next_index = pairs[i].second;
+                                _feret = gjk_minimal_distance(*c, CS[cs_index].at(next_index));
+                                if (_feret > 0) feret.push_back(_feret);
+                            }
+                        }
+                        if (feret.size() > 0) {
+                            std::sort(feret.begin(), feret.end());
+#ifdef USE_PARALLEL
+                            tbb::spin_mutex::scoped_lock lock(feretMutex);
+#endif
+                            minFeret.push_back(feret.front());
+                            maxFeret.push_back(feret.back());
+                        }
                     }
                 }
             }
-
-            // sorting for searching performances
-            std::sort(sortedMinX.begin(), sortedMinX.end());
-            std::sort(sortedMaxX.begin(), sortedMaxX.end());
-            std::sort(sortedMinY.begin(), sortedMinY.end());
-            std::sort(sortedMaxY.begin(), sortedMaxY.end());
-            
-            // For each contour in slice, calculate feret
-            if (n_outside > 1) {
-                std::vector<double> feret;
-                for (slice::Polygons::const_iterator c = cs->begin(); c != cs->end(); c++) {
-                    size_t index = (size_t)(c - cs->begin());
-                    if (p[index] == slice::PolygonSide::OUTSIDE) {
-                        // Left direction: find previous maxX of left neighbor < minX
-                        auto lower = std::lower_bound(sortedMaxX.begin(), sortedMaxX.end(), minX[index]);
-                        if (lower != sortedMaxX.end() && lower != sortedMaxX.begin()) feret.push_back(minX[index] - *(lower - 1));
-                        // Right direction: find next minX of right neightbor > maxX
-                        auto upper = std::upper_bound(sortedMinX.begin(), sortedMinX.end(), maxX[index]);
-                        if (upper != sortedMinX.end()) feret.push_back(*upper - maxX[index]);
-                        // Upper direction; find previous maxY of upper neighbor < minY
-                        lower = std::lower_bound(sortedMaxY.begin(), sortedMaxY.end(), minY[index]);
-                        if (lower != sortedMaxY.end() && lower != sortedMaxY.begin()) feret.push_back(minY[index] - *(lower - 1));
-                        // lower direction; find next minY of lower neightbor > maxY
-                        upper = std::upper_bound(sortedMinY.begin(), sortedMinY.end(), maxY[index]);
-                        if (upper != sortedMinY.end()) feret.push_back(*upper - maxY[index]);
-                    }
-                }
-                std::sort(feret.begin(), feret.end());
-                if (feret.size() > 0) {
-                    minFeret.push_back(feret.front());
-                    maxFeret.push_back(feret.back());
-                }
-            }
-        }
+#ifdef USE_PARALLEL
+            }, ap);
+#endif
     }
 }

@@ -139,16 +139,98 @@ inline void clean_mesh(TMesh& mesh, double minimum_diameter, uint16_t smooth_ste
         vcg::tri::Smooth<TMesh>::VertexCoordLaplacian(mesh, smooth_step, false, true);
         if (verbose) std::cout << "OK" << std::endl;
     }
-    vcg::tri::Clean<TMesh>::MergeCloseVertex(mesh, SLICE_PRECISION*100);
+    vcg::tri::Clean<TMesh>::MergeCloseVertex(mesh, SLICE_PRECISION*1000);
     vcg::tri::Clean<TMesh>::RemoveUnreferencedVertex(mesh);
+    vcg::tri::Allocator<TMesh>::CompactEveryVector(mesh);
     vcg::tri::UpdateTopology<TMesh>::FaceFace(mesh);
-    //vcg::tri::Clean<TMesh>::SelfIntersections(mesh)
 }
 
-inline void fix_self_intersect_mesh(TMesh& mesh, uint16_t max_iteration = 10) {
+inline void fix_self_intersect_mesh(TMesh& mesh, double minimum_diameter, uint16_t max_iteration = 10, bool verbose = false) {
+    
     std::vector<TMesh::FaceType*> faces;
     vcg::tri::Clean<TMesh>::SelfIntersections(mesh, faces);
     
+    uint16_t iteration = 0;
+    int maxSize = mesh.bbox.SquaredDiag();
+    size_t nf = 0;
+    while (iteration < max_iteration && (faces.size() > 0 || nf > 0)) {
+        
+        if (verbose) std::cout << "[Fix Self-intersect face]" << std::endl << "  -- Iteration " << iteration + 1 << std::endl;
+        
+        if (faces.size() > 0) {
+            for (size_t i = 0; i < faces.size(); i++) {
+                if (!faces[i]->IsD())
+                    vcg::tri::Allocator<TMesh>::DeleteFace(mesh, *(faces[i]));
+            }
+            if (verbose) std::cout << "  -- self-intersect faces: " << faces.size() << std::endl;
+            vcg::tri::Clean<TMesh>::RemoveUnreferencedVertex(mesh);
+            vcg::tri::Allocator<TMesh>::CompactEveryVector(mesh);
+            vcg::tri::UpdateTopology<TMesh>::FaceFace(mesh);
+            vcg::tri::UpdateBounding<TMesh>::Box(mesh);
+            if (verbose) std::cout << "  -- Remove faces [OK]" << std::endl;
+            vcg::tri::Clean<TMesh>::RemoveSmallConnectedComponentsDiameter(mesh, minimum_diameter * mesh.bbox.Diag());
+            vcg::tri::Clean<TMesh>::RemoveUnreferencedVertex(mesh);
+            if (verbose) std::cout << "  -- Remove small components " << minimum_diameter * mesh.bbox.Diag() << " [OK]" << std::endl;
+            vcg::tri::Clean<TMesh>::RemoveNonManifoldFace(mesh);
+            vcg::tri::UpdateTopology<TMesh>::FaceFace(mesh);
+            if (verbose) std::cout << "  -- Remove non-manifold edges [OK]" << std::endl;
+            if (vcg::tri::Clean<TMesh>::CountNonManifoldEdgeFF(mesh) > 0) {
+                std::cout << "[Warning]: Fixed Self-intersecting failed: Mesh has some not 2-manifold edges" << std::endl;
+                return;
+            }
+            vcg::tri::Hole<TMesh>::EarCuttingIntersectionFill<vcg::tri::SelfIntersectionEar<TMesh>>(mesh, maxSize, false);
+            if (verbose) std::cout << "  -- Close holes [OK]" << std::endl;
+        }
+        
+        vcg::tri::UpdateFlags<TMesh>::FaceBorderFromNone(mesh);
+        vcg::tri::UpdateFlags<TMesh>::VertexBorderFromFaceBorder(mesh);
+        vcg::tri::UpdateSelection<TMesh>::FaceFromBorderFlag(mesh);
+        vcg::tri::UpdateSelection<TMesh>::VertexFromBorderFlag(mesh);
+        nf = vcg::tri::UpdateSelection<TMesh>::FaceCount(mesh);
+        if (nf > 0) {
+            vcg::tri::UpdateSelection<TMesh>::VertexFromFaceLoose(mesh);
+            vcg::tri::UpdateSelection<TMesh>::FaceFromVertexLoose(mesh);
+            vcg::tri::UpdateSelection<TMesh>::VertexClear(mesh);
+            vcg::tri::UpdateSelection<TMesh>::VertexFromFaceStrict(mesh);
+            for (TMesh::FaceIterator it = mesh.face.begin(); it != mesh.face.end(); ++it) {
+                if (!it->IsD() && it->IsS())
+                    vcg::tri::Allocator<TMesh>::DeleteFace(mesh, *it);
+            }
+            for (TMesh::VertexIterator it = mesh.vert.begin(); it != mesh.vert.end(); ++it) {
+                if (!it->IsD() && it->IsS())
+                    vcg::tri::Allocator<TMesh>::DeleteVertex(mesh, *it);
+            }
+            vcg::tri::Allocator<TMesh>::CompactEveryVector(mesh);
+            vcg::tri::UpdateTopology<TMesh>::FaceFace(mesh);
+            if (verbose) std::cout << "  -- Remove Border faces [OK]" << std::endl;
+            vcg::tri::Clean<TMesh>::RemoveNonManifoldFace(mesh);
+            vcg::tri::UpdateBounding<TMesh>::Box(mesh);
+            vcg::tri::UpdateTopology<TMesh>::FaceFace(mesh);
+            if (verbose) std::cout << "  -- Remove non-manifold edges [OK]" << std::endl;
+            vcg::tri::Hole<TMesh>::EarCuttingIntersectionFill<vcg::tri::SelfIntersectionEar<TMesh>>(mesh, maxSize, false);
+            if (verbose) std::cout << "  -- Close holes [OK]" << std::endl;
+
+            vcg::tri::UpdateFlags<TMesh>::FaceBorderFromNone(mesh);
+            vcg::tri::UpdateFlags<TMesh>::VertexBorderFromFaceBorder(mesh);
+            vcg::tri::UpdateSelection<TMesh>::FaceFromBorderFlag(mesh);
+            vcg::tri::UpdateSelection<TMesh>::VertexFromBorderFlag(mesh);
+            nf = vcg::tri::UpdateSelection<TMesh>::FaceCount(mesh);
+        }
+        
+        vcg::tri::Clean<TMesh>::SelfIntersections(mesh, faces);
+        iteration++;
+    }
+    vcg::tri::Allocator<TMesh>::CompactEveryVector(mesh);
+    
+    while (iteration < max_iteration && nf > 0) {
+        if (verbose) std::cout << "[Fix Border Edges and holes]" << std::endl << "  -- Iteration " << iteration + 1 << std::endl;
+        
+
+        
+        iteration++;
+    }
+    vcg::tri::UpdateBounding<TMesh>::Box(mesh);
+    vcg::tri::UpdateTopology<TMesh>::FaceFace(mesh);
 }
 
 inline void report_mesh(TMesh& mesh) {

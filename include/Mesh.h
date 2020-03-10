@@ -3,6 +3,7 @@
 #include <vcg/complex/complex.h>
 #include <vcg/complex/algorithms/update/halfedge_indexed.h>
 #include <vcg/complex/algorithms/clean.h>
+#include <vcg/complex/algorithms/hole.h>
 #include <wrap/io_trimesh/import.h>
 #include <wrap/io_trimesh/export.h>
 #include <Eigen/Core>

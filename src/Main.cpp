@@ -10,11 +10,12 @@ int main(int argc, char* argv[])
     bool is_export_feret = false;
     bool is_export_inverse = false;
     bool is_build_inverse = true;
+    bool is_fix_self_intersect = false;
     bool no_output = false;
     uint16_t grid_offset = 3;
     uint16_t shell = 0;
     uint16_t smooth_step = 5;
-    uint8_t method = METHOD_SLICE_CONTOUR;
+    uint8_t method = METHOD_IMAGE_PROCESS;
     double thickness = 0.0;
     size_t minimum_grid_size = 100;
     double coff = pi;
@@ -46,10 +47,11 @@ int main(int argc, char* argv[])
             ("g,grid_size", "Grid size [default: 100]", cxxopts::value<size_t>(), "INT")
             ("grid_offset", "[default:3]", cxxopts::value<uint16_t>(), "INT")
             ("smooth_step", "Smooth with laplacian (default: 5)", cxxopts::value<uint16_t>(), "INT")
-            ("method", "Method of microstructure analysis: 0 (Image processing technique) or 1 (Slice contour technique) [default: 1]", cxxopts::value<uint8_t>(), "0,1")
-            ("output_inverse", "additional output inverse scaffold")
-            ("inverse", "Enable build inverse 3D scaffold (for pore connectivity analysis)")
-            ("dirty", "Disable autoclean")
+            ("method", "Method of microstructure analysis: 0 (Image processing technique) or 1 (Slice contour technique) [default: 0]", cxxopts::value<uint8_t>(), "0,1")
+            ("output_inverse", "additional output inverse scaffold [default: false]")
+            ("inverse", "Enable build inverse 3D scaffold (for pore connectivity analysis) [default: true]")
+            ("dirty", "Disable autoclean [default false]")
+            ("fix_self_intersect", "Experimental fix self-intersect faces [default: false]")
             ("minimum_diameter", "used for removing small orphaned (between 0-1) [default: 0.25]", cxxopts::value<double>(), "DOUBLE");
         options.parse_positional({ "input", "output", "format" });
         bool isEmptyOption = (argc == 1);
@@ -105,6 +107,7 @@ int main(int argc, char* argv[])
         if (result.count("shell")) shell = result["shell"].as<uint16_t>();
         if (result.count("smooth_step")) smooth_step = result["smooth_step"].as<uint16_t>();
         if (result.count("inverse")) is_build_inverse = result["inverse"].as<bool>();
+        if (result.count("fix_self_intersect")) is_fix_self_intersect = result["fix_self_intersect"].as<bool>();
         
         to_lower(surface);
         to_lower(format);
@@ -138,9 +141,10 @@ int main(int argc, char* argv[])
             << "-- Autoclean: " << (dirty ? "False" : "True") << std::endl
             << "--   Minimum diameter: " << 100 * minimum_diameter << "%" << std::endl
             << "--   Smooth step: " << smooth_step << std::endl
+            << "--   Fix self-intersect: " << (is_fix_self_intersect ? "True" : "False") << std::endl
             << "-- Analysis microstructure: " << (is_analysis_microstructure ? "True" : "False") << std::endl
-            << "--   Method :" << (method == METHOD_IMAGE_PROCESS ? "Image Processing" : "Contour Slicing") << std::endl
-            << "--   Export microstructure: " << (is_analysis_microstructure ? "True" : "False") << std::endl
+            << "--   Method: " << (method == METHOD_IMAGE_PROCESS ? "Image Processing" : "Contour Slicing") << std::endl
+            << "--   Export microstructure: " << (is_export_microstructure ? "True" : "False") << std::endl
             << "-- Build Inverse: " << (is_build_inverse ? "True" : "False") << std::endl
             << "--   Export Inverse: " << (is_export_inverse ? "True" : "False") << std::endl;
     }
@@ -318,6 +322,7 @@ int main(int argc, char* argv[])
 
             if (!dirty) {
                 clean_mesh(mesh, minimum_diameter, smooth_step, verbose);
+                if (is_fix_self_intersect) fix_self_intersect_mesh(mesh, minimum_diameter, 5, verbose);
                 if (is_build_inverse) clean_mesh(inverse_mesh, minimum_diameter, 0, false);
             }
             bool is_manifold = is_mesh_manifold(mesh);
@@ -519,13 +524,13 @@ int main(int argc, char* argv[])
                 << "-- Vertices: " << inverse_mesh.VN() << std::endl
                 << "-- Faces: " << inverse_mesh.FN() << std::endl;
             bool watertight = (edgeBorderNum == 0) && (edgeNonManifNum == 0);
-            bool pointcloud = (mesh.fn == 0 && mesh.vn != 0);
+            bool pointcloud = (mesh.FN() == 0 && mesh.VN() != 0);
             if (!watertight || pointcloud) std::cout << "[Warning] Pore isn't conencted" << std::endl;
         }
 
         vcg::tri::Clean<TMesh>::CountEdgeNum(mesh, edgeNum, edgeBorderNum, edgeNonManifNum);
         bool watertight = (edgeBorderNum == 0) && (edgeNonManifNum == 0);
-        bool pointcloud = (mesh.fn == 0 && mesh.vn != 0);
+        bool pointcloud = (mesh.FN() == 0 && mesh.VN() != 0);
         
         if (!pointcloud && watertight) {
             area2 = vcg::tri::Stat<TMesh>::ComputeMeshArea(mesh);
@@ -567,7 +572,7 @@ int main(int argc, char* argv[])
             }
             else if (format == "stl") {
                 vcg::tri::io::ExporterSTL<TMesh>::Save(mesh, filename.c_str(), 0);
-                if (is_build_inverse && is_export_inverse) vcg::tri::io::ExporterSTL<TMesh>::Save(inverse_mesh, filename2.c_str(), 0);
+                if (is_build_inverse && is_export_inverse) vcg::tri::io::ExporterSTL<TMesh>::Save(inverse_mesh, filename2.c_str(), true, 0);
             }
             if (verbose) std::cout << "OK" << std::endl;
         }
