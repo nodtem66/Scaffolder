@@ -170,7 +170,7 @@ int main(int argc, char* argv[])
                 std::string dir = input_file.substr(firstindex, lastindex - firstindex);
                 dir.append("_svg");
                 std::cout << "Creating direction: " << dir << std::endl;
-                make_dir(dir);
+                util::make_dir(dir);
 
 #ifndef USE_PARALLEL
                 for (slice::ContourSlice::const_iterator cs = C.begin(); cs != C.end(); cs++) {
@@ -193,10 +193,15 @@ int main(int argc, char* argv[])
 #endif
                 std::vector<double> minFeret, maxFeret, shape[5];
                 slice::measure_feret_and_shape(C, minFeret, maxFeret, shape);
-                std::sort(minFeret.begin(), minFeret.end());
-                std::sort(maxFeret.begin(), maxFeret.end());
-                std::cout << minFeret.at(0) << ',' << minFeret.at(minFeret.size() * 0.25) << ',' << minFeret.at(minFeret.size() / 2) << ',' << minFeret.at(minFeret.size() * 0.75) << ',' << minFeret.at(minFeret.size() - 1) << ',' << std::endl;
-                std::cout << maxFeret.at(0) << ',' << maxFeret.at(maxFeret.size() * 0.25) << ',' << maxFeret.at(maxFeret.size() / 2) << ',' << maxFeret.at(maxFeret.size() * 0.75) << ',' << maxFeret.at(maxFeret.size() - 1) << ',' << std::endl;
+                if (minFeret.size() > 0) {
+                    std::sort(minFeret.begin(), minFeret.end());
+                    std::cout << minFeret.at(0) << ',' << minFeret.at(minFeret.size() * 0.25) << ',' << minFeret.at(minFeret.size() / 2) << ',' << minFeret.at(minFeret.size() * 0.75) << ',' << minFeret.at(minFeret.size() - 1) << ',' << std::endl;
+                }
+                if (maxFeret.size() > 0) {
+                    std::sort(maxFeret.begin(), maxFeret.end());
+                    std::cout << maxFeret.at(0) << ',' << maxFeret.at(maxFeret.size() * 0.25) << ',' << maxFeret.at(maxFeret.size() / 2) << ',' << maxFeret.at(maxFeret.size() * 0.75) << ',' << maxFeret.at(maxFeret.size() - 1) << ',' << std::endl;
+                }
+
             }
             
         }

@@ -15,6 +15,7 @@ int main(int argc, char* argv[])
     uint16_t grid_offset = 3;
     uint16_t shell = 0;
     uint16_t smooth_step = 5;
+    uint16_t slice_grid = 100;
     uint8_t method = METHOD_IMAGE_PROCESS;
     double thickness = 0.0;
     size_t minimum_grid_size = 100;
@@ -30,16 +31,13 @@ int main(int argc, char* argv[])
 
     try {
         cxxopts::Options options("Scaffolder", "Scaffolder - generate 3D scaffold from STL file");
-        options.positional_help("[option args]").show_positional_help();
+        options.positional_help("INPUT OUTPUT FORMAT").show_positional_help();
         options.add_options()
             ("h,help", "Print help")
             ("q,quiet", "Disable verbose output [default: false]")
-            ("m,microstructure", "Analysis microstructure ( [default: false]")
-            ("m1", "Export and analysis microstructure 1 (Image processing technique) [default: false]")
-            ("m2", "Export and analysis microstructure 2 (Slice coutour technique) [default: false]")
-            ("f,format", "Output format (OFF,PLY,STL,OBJ) [default: ply]", cxxopts::value<std::string>())
             ("i,input", "Input file (STL)", cxxopts::value<std::string>(), "FILE")
             ("o,output", "Output filename without extension [default: out]", cxxopts::value<std::string>(), "FILENAME")
+            ("f,format", "Output format (OFF,PLY,STL,OBJ) [default: ply]", cxxopts::value<std::string>())
             ("c,coff", "default:4*PI", cxxopts::value<double>(), "DOUBLE")
             ("s,shell", "[default:0]", cxxopts::value<uint16_t>(), "INT")
             ("n,surface", "rectlinear, schwarzp, schwarzd, gyroid, double-p, double-d, double-gyroiod, lidinoid, schoen_iwp, neovius, bcc, tubular_g_ab, tubular_g_c [default: schwarzp]", cxxopts::value<std::string>(), "NAME")
@@ -47,7 +45,11 @@ int main(int argc, char* argv[])
             ("g,grid_size", "Grid size [default: 100]", cxxopts::value<size_t>(), "INT")
             ("grid_offset", "[default:3]", cxxopts::value<uint16_t>(), "INT")
             ("smooth_step", "Smooth with laplacian (default: 5)", cxxopts::value<uint16_t>(), "INT")
+            ("m,microstructure", "Analysis microstructure ( [default: false]")
+            ("m1", "Export and analysis microstructure 1 (Image processing technique) [default: false]")
+            ("m2", "Export and analysis microstructure 2 (Slice coutour technique) [default: false]")
             ("method", "Method of microstructure analysis: 0 (Image processing technique) or 1 (Slice contour technique) [default: 0]", cxxopts::value<uint8_t>(), "0,1")
+            ("slice_grid", "Slice Grid used in microstructure analysis [default: 100]", cxxopts::value<uint16_t>(), "INT")
             ("output_inverse", "additional output inverse scaffold [default: false]")
             ("inverse", "Enable build inverse 3D scaffold (for pore connectivity analysis) [default: true]")
             ("dirty", "Disable autoclean [default false]")
@@ -95,6 +97,12 @@ int main(int argc, char* argv[])
         }
         if (result.count("output")) {
             filename = result["output"].as<std::string>();
+            to_lower(filename);
+            std::string ext = util::PathGetExtension(filename);
+            if (!ext.empty()) {
+                filename = filename.substr(0, filename.size()-ext.size());
+                format = ext.substr(1);
+            }
             no_output = false;
         }
         if (result.count("format")) format = result["format"].as<std::string>();
@@ -108,6 +116,7 @@ int main(int argc, char* argv[])
         if (result.count("smooth_step")) smooth_step = result["smooth_step"].as<uint16_t>();
         if (result.count("inverse")) is_build_inverse = result["inverse"].as<bool>();
         if (result.count("fix_self_intersect")) is_fix_self_intersect = result["fix_self_intersect"].as<bool>();
+        if (result.count("slice_grid")) slice_grid = result["slice_grid"].as<uint16_t>();
         
         to_lower(surface);
         to_lower(format);
@@ -144,6 +153,7 @@ int main(int argc, char* argv[])
             << "--   Fix self-intersect: " << (is_fix_self_intersect ? "True" : "False") << std::endl
             << "-- Analysis microstructure: " << (is_analysis_microstructure ? "True" : "False") << std::endl
             << "--   Method: " << (method == METHOD_IMAGE_PROCESS ? "Image Processing" : "Contour Slicing") << std::endl
+            << "--   Slice grid: " << slice_grid << std::endl
             << "--   Export microstructure: " << (is_export_microstructure ? "True" : "False") << std::endl
             << "-- Build Inverse: " << (is_build_inverse ? "True" : "False") << std::endl
             << "--   Export Inverse: " << (is_export_inverse ? "True" : "False") << std::endl;
@@ -347,7 +357,7 @@ int main(int argc, char* argv[])
                     firstindex = firstindex == string::npos ? 0 : firstindex + 1;
                     size_t lastindex = input_file.find_last_of(".");
                     dir = input_file.substr(firstindex, lastindex - firstindex) + "_slice";
-                    make_dir(dir);
+                    util::make_dir(dir);
                 }
                 // init progress bar
                 ProgressBar progress(grid_size.sum(), PROGRESS_BAR_COLUMN);
@@ -424,7 +434,7 @@ int main(int argc, char* argv[])
                         int next_axis = ((main_axis + 1) % 3);
                         int prev_axis = ((main_axis + 2) % 3);
                         unsigned int progress_major_step = grid_size[main_axis] / 4;
-                        slice::Slice s = slice::incremental_slicing(mesh, grid_size(main_axis), main_axis);
+                        slice::Slice s = slice::incremental_slicing(mesh, slice_grid, main_axis);
                         progress += progress_major_step;
                         progress.display();
                         slice::ContourSlice C = slice::contour_construct(s, main_axis);

@@ -138,9 +138,12 @@ namespace slice {
 
     class Line {
     public:
-        Point3d v[2] = { 0,0 };
+        Point3d v[2];
 
-        Line() {}
+        Line() {
+            v[0] = Point3d{ 0, 0, 0 };
+            v[1] = Point3d{ 0, 0, 0 };
+        }
 
         Line(Point3d v0, Point3d v1, size_t index) {
             v[0] = v0;
@@ -768,8 +771,7 @@ namespace slice {
     // the direction is counterclockwise
     // https://www.geeksforgeeks.org/convex-hull-set-2-graham-scan/
     Polygon convexhull(Polygon points) {
-        Polygon p;
-        if (points.size() < 3) return p;
+        if (points.size() < 3) return points;
         double ymin = points[0].y;
         size_t index = 0;
         // Find the bottom-left point
@@ -784,6 +786,7 @@ namespace slice {
         Point2d origin = points.front();
         std::sort(points.begin() + 1, points.end(), CompareOrientation(origin));
         // delete the colinear points 
+        Polygon p;
         for (Polygon::iterator p = points.begin() + 1; p != points.end();) {
             Polygon::iterator next_p = (p + 1);
             if (next_p != points.end()) {
@@ -798,7 +801,7 @@ namespace slice {
                 break;
             }
         }
-        if (points.size() < 3) return p;
+        if (points.size() < 3) return points;
         // Create convexhull polygon with points[0..2]
         p.reserve(points.size());
         p.push_back(points[0]);
@@ -945,6 +948,7 @@ namespace slice {
         if (P.size() < 3 || Q.size() < 3) return -1;
         Polygon P1 = convexhull(P);
         Polygon Q1 = convexhull(Q);
+        if (P1.size() < 3 || Q1.size() < 3) return -1;
         //Polygon Diff = minkwoski_difference(P1, Q1);
         //assert(Diff.size() > 3);
         //std::copy(Diff.begin(), Diff.end(), std::ostream_iterator<slice::Point2d>(std::cout, " "));
@@ -1119,7 +1123,10 @@ namespace slice {
                 size_t n_outside = 0, n_inside = 0;
                 for (slice::Polygons::const_iterator c = CS[cs_index].begin(); c != CS[cs_index].end(); c++) {
                     // if polygon must have more-than 2 lines
-                    if (c->size() <= 2) continue;
+                    if (c->size() <= 2) {
+                        polygonCenters.push_back({ 0, 0 });
+                        continue;
+                    }
                     size_t index_polygon = (size_t)(c - CS[cs_index].begin());
 
                     // Loop for each point to find max min in polygon
@@ -1170,9 +1177,10 @@ namespace slice {
                     }
                 }
 
-                if (n_outside > 1) {
+                if (n_outside > 1 && centerPolygonMap.size() > 1) {
                     // For each Polygon in slice layer, find 4 minimum-distance polygon
                     for (slice::Polygons::const_iterator c = CS[cs_index].begin(); c != CS[cs_index].end(); c++) {
+                        if (c->size() <= 2) continue;
                         size_t index = (size_t)(c - CS[cs_index].begin());
                         std::vector<double> feret;
                         double _feret;
@@ -1194,8 +1202,10 @@ namespace slice {
                             }
                             for (i = 0; i < k; i++) {
                                 size_t next_index = pairs[i].second;
-                                _feret = gjk_minimal_distance(*c, CS[cs_index].at(next_index));
-                                if (_feret > 0) feret.push_back(_feret);
+                                if (next_index < CS[cs_index].size()) {
+                                    _feret = gjk_minimal_distance(*c, CS[cs_index].at(next_index));
+                                    if (_feret > 0) feret.push_back(_feret);
+                                }
                             }
                         }
                         if (feret.size() > 0) {

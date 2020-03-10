@@ -30,9 +30,11 @@ public:
 		}
 	}
 	void build() {
-		for (size_t i = (size_t)(size / 2) - 1;; i--) {
-			heapify(i);
-			if (i == 0) return;
+		if (size >= 2) {
+			for (size_t i = (size_t)(size / 2) - 1;; i--) {
+				heapify(i);
+				if (i == 0) return;
+			}
 		}
 	}
 	void update(DataType d) {
