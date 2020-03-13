@@ -22,6 +22,14 @@ public:
 	virtual FT operator()(FT, FT, FT) = 0;
 };
 
+class Fixed : public Function {
+public:
+	const FT val;
+	Fixed(FT val) : val(val) {}
+	FT operator()(FT x, FT y, FT z) {
+		return val;
+	}
+};
 /* Function return rectlinear style from slicer
  * where coff is required to adjust the diameter filament
  */
@@ -70,7 +78,7 @@ public:
 	const FT t;
 	DoubleD(FT t = 0) : t(t) {}
 	FT operator ()(FT x, FT y, FT z) {
-		return -1 * (cos(x) * cos(y) + cos(y) * cos(z) + cos(x) * cos(z)) - 1 * (sin(x) * sin(y) * sin(z)) - t;
+		return -1 * (cos(x) * cos(y) + cos(y) * cos(z) + cos(x) * cos(z)) - 1 * (sin(x) * sin(y) * sin(z)) + t;
 	}
 };
 
@@ -100,7 +108,7 @@ public:
 	const FT t = 0;
 	Lidinoid(FT t = 0) : t(t) {}
 	FT operator ()(FT x, FT y, FT z) {
-		return -1 * (
+		return (
 			(sin(2 * x) * cos(y) * sin(z) + sin(2 * y) * cos(z) * sin(x) + sin(2 * z) * cos(x) * sin(y)) +
 			(cos(2 * x) * cos(2 * y) + cos(2 * y) * cos(2 * z) + cos(2 * z) * cos(2 * x))
 		) + t;
@@ -146,7 +154,7 @@ class TGc : public Function {
 public:
 	TGc() {}
 	FT operator ()(FT x, FT y, FT z) {
-		return 10 * (cos(x) * sin(y) + cos(y) * sin(z) + cos(z) * sin(x)) - 2 * (cos(2 * x) * cos(2 * y) + cos(2 * y) * cos(2 * z) + cos(2 * z) * cos(2 * x)) - 12;
+		return -(10 * (cos(x) * sin(y) + cos(y) * sin(z) + cos(z) * sin(x)) - 2 * (cos(2 * x) * cos(2 * y) + cos(2 * y) * cos(2 * z) + cos(2 * z) * cos(2 * x)) - 12);
 	}
 };
 
@@ -225,14 +233,11 @@ public:
 	}
 };
 
-inline void to_lower(std::string& s) {
-	std::locale loc;
-	for (std::string::size_type i = 0; i < s.length(); ++i)
-		s[i] = std::tolower(s[i], loc);
-}
-
 Function* isosurface(std::string name, FT t) {
-	if (name == "rectlinear") {
+	if (name == "empty") {
+		return new Fixed(1);
+	}
+	else if (name == "rectlinear") {
 		return new Rectlinear();
 	}
 	else if (name == "schwarzp") {
@@ -254,7 +259,7 @@ Function* isosurface(std::string name, FT t) {
 		return new DoubleGyroid(t);
 	}
 	else if (name == "lidinoid") {
-		return new Lidinoid();
+		return new Lidinoid(t);
 	}
 	else if (name == "neovius") {
 		return new Neovius(t);

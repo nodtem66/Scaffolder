@@ -1,10 +1,14 @@
+#pragma once
+#include <string>
+#include <sstream>
+#include <algorithm>
+#include <ctime>
+
 #include <igl/writePLY.h>
 #include <igl/readSTL.h>
 #include <igl/copyleft/marching_cubes.h>
 #include <igl/fast_winding_number.h>
 #include <Eigen/Core>
-#include <string>
-#include <sstream>
 
 #include "cxxopts.hpp"
 #include "diplib.h"
@@ -12,20 +16,18 @@
 #include "diplib/regions.h"
 #include "diplib/measurement.h"
 #include "dualmc/dualmc.h"
-//#include "H5Easy.hpp"
 #include "ProgressBar.hpp"
+#include "OptimalSlice.hpp"
 
 #include "implicit_function.h"
 #include "Mesh.h"
+#include "utils.h"
 
-#ifndef _WIN32
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#endif
-
-#define VERSION "v1.2"
+#define VERSION "v1.3"
 #define PROGRESS_BAR_COLUMN 40
+
+#define METHOD_IMAGE_PROCESS 0
+#define METHOD_SLICE_CONTOUR 1
 
 typedef struct index_type {
     size_t x; size_t y; size_t z;
@@ -80,7 +82,7 @@ inline bool MarkAndSweepNeighbor(Eigen::VectorXd& W, index_type& index, Queue_t&
 
 inline void marching_cube(TMesh &mesh, Eigen::MatrixXd &Fxyz, Eigen::RowVector3i grid_size, Eigen::RowVector3d &Vmin, double delta, bool verbose = true, bool dirty = false) {
     {
-        if (verbose) std::cout << "[Marching Cube] ";
+        if (verbose) std::cout << "[Marching Cube] " << std::endl;
         dualmc::DualMC<double> builder;
         std::vector<dualmc::Vertex> mc_vertices;
         std::vector<dualmc::Quad> mc_quads;
@@ -112,46 +114,29 @@ inline void marching_cube(TMesh &mesh, Eigen::MatrixXd &Fxyz, Eigen::RowVector3i
             vcg::tri::UpdateTopology<TMesh>::FaceFace(mesh);
         }
 
-        if (verbose) std::cout << "OK" << std::endl;
         if (verbose) std::cout << "-- Info: " << mc_vertices.size() << " vertices " << mc_quads.size() << " faces" << std::endl;
     }
 }
 
-inline void clean_mesh(TMesh& mesh, double minimum_diameter, uint16_t smooth_step, bool verbose = true) {
-    if (verbose) std::cout << "[libVCG Cleaning] ";
-    vcg::tri::Clean<TMesh>::RemoveZeroAreaFace(mesh);
-    vcg::tri::Clean<TMesh>::RemoveNonManifoldFace(mesh);
-    vcg::tri::Clean<TMesh>::RemoveUnreferencedVertex(mesh);
-    vcg::tri::UpdateTopology<TMesh>::FaceFace(mesh);
-    vcg::tri::UpdateBounding<TMesh>::Box(mesh);
-    vcg::tri::Clean<TMesh>::RemoveSmallConnectedComponentsDiameter(mesh, minimum_diameter * mesh.bbox.Diag());
-    vcg::tri::Clean<TMesh>::RemoveUnreferencedVertex(mesh);
-    vcg::tri::UpdateTopology<TMesh>::FaceFace(mesh);
-    if (mesh.fn > 0) {
-        vcg::tri::UpdateNormal<TMesh>::PerFaceNormalized(mesh);
-        vcg::tri::UpdateNormal<TMesh>::PerVertexAngleWeighted(mesh);
+inline void mesh_to_eigen_vector(TMesh& mesh, Eigen::MatrixXd& V, Eigen::MatrixXi& F) {
+    V.resize(mesh.VN(), 3);
+    size_t i = 0;
+    std::vector<size_t> vertexId(mesh.vert.size());
+    for (TMesh::VertexIterator it = mesh.vert.begin(); it != mesh.vert.end(); ++it) if (!it->IsD()) {
+        vertexId[it - mesh.vert.begin()] = i;
+        vcg::Point3d point = it->P();
+        V(i, 0) = point[0];
+        V(i, 1) = point[1];
+        V(i, 2) = point[2];
+        i++;
     }
-    if (verbose) {
-        std::cout
-            << "OK" << std::endl
-            << "-- IsWaterTight: " << vcg::tri::Clean<TMesh>::IsWaterTight(mesh) << std::endl
-            << "-- Minimum_diameter: " << minimum_diameter * mesh.bbox.Diag() << std::endl;
+    // Faces to Eigen matrixXi F1
+    i = 0;
+    F.resize(mesh.FN(), mesh.face.begin()->VN());
+    for (TMesh::FaceIterator it = mesh.face.begin(); it != mesh.face.end(); ++it) if (!it->IsD()) {
+        for (int k = 0; k < it->VN(); k++) {
+            F(i, k) = vertexId[vcg::tri::Index(mesh, it->V(k))];
+        }
+        i++;
     }
-    if (smooth_step > 0) {
-        if (verbose) std::cout << "[Laplacian smoothing] ";
-        vcg::tri::Smooth<TMesh>::VertexCoordLaplacian(mesh, smooth_step, false, true);
-        if (verbose) std::cout << "OK" << std::endl;
-    }
-}
-
-int make_dir(std::string& str) {
-    if (str.empty())
-        return 0;
-#ifdef _WIN32
-    wchar_t* wc = new wchar_t[str.size() + 1];
-    mbstowcs(wc, str.c_str(), str.size());
-    return _wmkdir(wc);
-#else
-    return mkdir(str.c_str(), 0733);
-#endif
 }

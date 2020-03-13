@@ -267,8 +267,10 @@ void DualMC<T>::buildQuadSoup(
     Vertex vertex3;
     int pointCode;
 
+    ProgressBar progress(reducedX*reducedY*reducedZ, PROGRESS_BAR_COLUMN);
+
     // iterate voxels
-    for(int32_t z = 0; z < reducedZ; ++z)
+    for(int32_t z = 0; z < reducedZ; ++z) {
         for(int32_t y = 0; y < reducedY; ++y)
             for(int32_t x = 0; x < reducedX; ++x) {
                 // construct quad for x edge
@@ -369,7 +371,10 @@ void DualMC<T>::buildQuadSoup(
                         }
                     }
                 }
+                ++progress;
             }
+        progress.display();
+    }
     
     // generate triangle soup quads
     size_t const numQuads = vertices.size() / 4;
@@ -377,6 +382,7 @@ void DualMC<T>::buildQuadSoup(
     for (size_t i = 0; i < numQuads; ++i) {
         quads.emplace_back(i * 4, i * 4 + 1, i * 4 + 2, i * 4 + 3);
     }
+    progress.done();
 }
 
 //------------------------------------------------------------------------------
@@ -397,8 +403,10 @@ void DualMC<T>::buildSharedVerticesQuads(
     
     pointToIndex.clear();
 
+    ProgressBar progress(reducedX*reducedY*reducedZ, PROGRESS_BAR_COLUMN);
+
     // iterate voxels
-    for(int32_t z = 0; z < reducedZ; ++z)
+    for(int32_t z = 0; z < reducedZ; ++z) {
         for(int32_t y = 0; y < reducedY; ++y)
             for(int32_t x = 0; x < reducedX; ++x) {
                 // construct quads for x edge
@@ -456,6 +464,11 @@ void DualMC<T>::buildSharedVerticesQuads(
                             quads.emplace_back(i0,i3,i2,i1);
                         }
                     }
-                } 
+                }
+                // progress bar
+                ++progress;
             }
+        progress.display();
+    }
+    progress.done();
 }
