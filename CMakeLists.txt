@@ -4,6 +4,9 @@ project ("Scaffolder")
 
 set(CGAL_DO_NOT_WARN_ABOUT_CMAKE_BUILD_TYPE ON)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
+set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
 
 # libigl
 option(LIBIGL_WITH_OPENGL            "Use OpenGL"         OFF)
@@ -46,5 +49,4 @@ target_include_directories(SliceTest PRIVATE "${PROJECT_SOURCE_DIR}/include" ${T
 target_link_libraries(SliceTest PRIVATE igl::core tbb_static)
 
 add_executable(Fixer ${MAIN_SOURCES} ${PROJECT_SOURCE_DIR}/src/FixSelfIntersect.cpp ${VCG_INCLUDE_DIR}/wrap/ply/plylib.cpp)
-target_include_directories(Fixer PRIVATE "${PROJECT_SOURCE_DIR}/include" ${TBB_INCLUDE_DIR} ${VCG_INCLUDE_DIR})
-target_link_libraries(Fixer PRIVATE)
+target_include_directories(Fixer PRIVATE "${PROJECT_SOURCE_DIR}/include" ${VCG_INCLUDE_DIR})

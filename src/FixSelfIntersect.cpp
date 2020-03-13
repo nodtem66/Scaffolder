@@ -2,10 +2,10 @@
 #include <sstream>
 #include <algorithm>
 
-#include "cxxopts.hpp"
 #include "ProgressBar.hpp"
 #include "utils.h"
 #include "Mesh.h"
+#include "cxxopts.hpp"
 
 ProgressBar import_progress(100, 40);
 
