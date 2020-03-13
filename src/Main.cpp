@@ -16,7 +16,7 @@ int main(int argc, char* argv[])
     uint16_t shell = 0;
     uint16_t smooth_step = 5;
     uint16_t slice_grid = 100;
-    uint8_t method = METHOD_IMAGE_PROCESS;
+    uint8_t method = METHOD_SLICE_CONTOUR;
     double thickness = 0.0;
     size_t minimum_grid_size = 100;
     double coff = pi;
@@ -48,7 +48,7 @@ int main(int argc, char* argv[])
             ("m,microstructure", "Analysis microstructure ( [default: false]")
             ("m1", "Export and analysis microstructure 1 (Image processing technique) [default: false]")
             ("m2", "Export and analysis microstructure 2 (Slice coutour technique) [default: false]")
-            ("method", "Method of microstructure analysis: 0 (Image processing technique) or 1 (Slice contour technique) [default: 0]", cxxopts::value<uint8_t>(), "0,1")
+            ("method", "Method of microstructure analysis: 0 (Image processing technique) or 1 (Slice contour technique) [default: 1]", cxxopts::value<uint8_t>(), "0,1")
             ("slice_grid", "Slice Grid used in microstructure analysis [default: 100]", cxxopts::value<uint16_t>(), "INT")
             ("output_inverse", "additional output inverse scaffold [default: false]")
             ("inverse", "Enable build inverse 3D scaffold (for pore connectivity analysis) [default: false]")
