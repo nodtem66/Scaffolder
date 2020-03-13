@@ -46,5 +46,4 @@ target_include_directories(SliceTest PRIVATE "${PROJECT_SOURCE_DIR}/include" ${T
 target_link_libraries(SliceTest PRIVATE igl::core tbb_static)
 
 add_executable(Fixer ${MAIN_SOURCES} ${PROJECT_SOURCE_DIR}/src/FixSelfIntersect.cpp ${VCG_INCLUDE_DIR}/wrap/ply/plylib.cpp)
-target_include_directories(Fixer PRIVATE "${PROJECT_SOURCE_DIR}/include" ${TBB_INCLUDE_DIR} ${VCG_INCLUDE_DIR})
-target_link_libraries(Fixer PRIVATE)
+target_include_directories(Fixer PRIVATE "${PROJECT_SOURCE_DIR}/include" ${VCG_INCLUDE_DIR})
