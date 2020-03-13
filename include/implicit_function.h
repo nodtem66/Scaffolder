@@ -233,12 +233,6 @@ public:
 	}
 };
 
-inline void to_lower(std::string& s) {
-	std::locale loc;
-	for (std::string::size_type i = 0; i < s.length(); ++i)
-		s[i] = std::tolower(s[i], loc);
-}
-
 Function* isosurface(std::string name, FT t) {
 	if (name == "empty") {
 		return new Fixed(1);

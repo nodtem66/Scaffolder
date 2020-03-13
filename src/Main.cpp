@@ -9,7 +9,7 @@ int main(int argc, char* argv[])
     bool is_export_microstructure = false;
     bool is_export_feret = false;
     bool is_export_inverse = false;
-    bool is_build_inverse = true;
+    bool is_build_inverse = false;
     bool is_fix_self_intersect = false;
     bool no_output = false;
     uint16_t grid_offset = 3;
@@ -51,7 +51,7 @@ int main(int argc, char* argv[])
             ("method", "Method of microstructure analysis: 0 (Image processing technique) or 1 (Slice contour technique) [default: 0]", cxxopts::value<uint8_t>(), "0,1")
             ("slice_grid", "Slice Grid used in microstructure analysis [default: 100]", cxxopts::value<uint16_t>(), "INT")
             ("output_inverse", "additional output inverse scaffold [default: false]")
-            ("inverse", "Enable build inverse 3D scaffold (for pore connectivity analysis) [default: true]")
+            ("inverse", "Enable build inverse 3D scaffold (for pore connectivity analysis) [default: false]")
             ("dirty", "Disable autoclean [default false]")
             ("fix_self_intersect", "Experimental fix self-intersect faces [default: false]")
             ("minimum_diameter", "used for removing small orphaned (between 0-1) [default: 0.25]", cxxopts::value<double>(), "DOUBLE");
@@ -97,7 +97,7 @@ int main(int argc, char* argv[])
         }
         if (result.count("output")) {
             filename = result["output"].as<std::string>();
-            to_lower(filename);
+            util::to_lower(filename);
             std::string ext = util::PathGetExtension(filename);
             if (!ext.empty()) {
                 filename = filename.substr(0, filename.size()-ext.size());
@@ -118,8 +118,8 @@ int main(int argc, char* argv[])
         if (result.count("fix_self_intersect")) is_fix_self_intersect = result["fix_self_intersect"].as<bool>();
         if (result.count("slice_grid")) slice_grid = result["slice_grid"].as<uint16_t>();
         
-        to_lower(surface);
-        to_lower(format);
+        util::to_lower(surface);
+        util::to_lower(format);
         
         if (format != "ply" && format != "obj" && format != "stl" && format != "off") {
             std::cout << "Invalid format: " << format << std::endl;
@@ -166,7 +166,6 @@ int main(int argc, char* argv[])
         result << "Surface,coff,shell,thickness,grid_size,grid_offset,smooth_step,input_file,avg_min_feret,avg_max_feret,"
             << "min_min_feret,q1_min_feret,q2_min_feret,q3_min_feret,max_min_feret,"
             << "min_max_feret,q1_max_feret,q2_max_feret,q3_max_feret,max_max_feret,"
-            << "vol,surface_area,porosity,surface_area_ratio,#vertices,#faces,"
             << "min_square,q1_square,q2_square,q3_square,max_square,"
             << "min_circle,q1_circle,q2_circle,q3_circle,max_circle,"
             << "min_triangle,q1_triangle,q2_triangle,q3_triangle,max_triangle,"
@@ -336,6 +335,9 @@ int main(int argc, char* argv[])
                 if (is_build_inverse) clean_mesh(inverse_mesh, minimum_diameter, 0, false);
             }
             bool is_manifold = is_mesh_manifold(mesh);
+            if (!is_manifold) {
+                is_manifold = fix_non_manifold(mesh, minimum_diameter, 3, verbose);
+            }
             if (!is_manifold && !verbose) {
                 std::cout << "[Warning] Mesh is not two manifold" << std::endl;
             }
@@ -560,7 +562,7 @@ int main(int argc, char* argv[])
             if (!verbose) {
                 result << ",,,," << mesh.VN() << ',' << mesh.FN() << std::endl;
             }
-            std::cout << "[Warning] The scaffolder isn't a manifold. The grid_offset should have been increased" << std::endl;
+            std::cout << "[Warning] The scaffold isn't a manifold. The grid_offset should be increased or enable --fix_self_intersect option" << std::endl;
         }
         
         if (!no_output) {

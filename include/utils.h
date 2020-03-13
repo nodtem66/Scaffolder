@@ -1,5 +1,7 @@
 #pragma once
 
+#include <string>
+
 #ifdef _WIN32
 #include <Windows.h>
 #include <direct.h>
@@ -69,7 +71,7 @@ namespace util {
 
         // Find the last dot, if any.
         size_t dotIdx = path.find_last_of(".");
-        if (dotIdx != string::npos)
+        if (dotIdx != std::string::npos)
         {
             // Find the last directory separator, if any.
             size_t dirSepIdx = path.find_last_of("/\\");
@@ -85,5 +87,11 @@ namespace util {
         }
 
         return ext;
+    }
+
+    inline void to_lower(std::string& s) {
+        std::locale loc;
+        for (std::string::size_type i = 0; i < s.length(); ++i)
+            s[i] = std::tolower(s[i], loc);
     }
 }

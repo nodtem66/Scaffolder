@@ -386,7 +386,7 @@ namespace slice {
         L.resize(grid_size + 2);
         for (size_t i = 0; i <= grid_size + 1; i++) L[i].clear();
         // foreach triangle in mesh
-        // TODO: implement parallel version with tbb
+#ifndef USE_PARALLEL
         for (TMesh::FaceIterator it = mesh.face.begin(); it != mesh.face.end(); it++) {
             if (!it->IsD())
             {
@@ -397,6 +397,34 @@ namespace slice {
                 L[i].push_back(triangle);
             }
         }
+#else
+        tbb::spin_mutex writeMutex;
+        static tbb::affinity_partitioner ap;
+        tbb::parallel_for(
+            tbb::blocked_range<size_t>(0, mesh.face.size()),
+            [&](const tbb::blocked_range<size_t> r) {
+                // Prepare local_L
+                Layer _L(grid_size + 2);
+                _L.resize(grid_size + 2);
+                for (size_t i = 0; i <= grid_size + 1; i++) _L[i].clear();
+                for (size_t i = r.begin(); i < r.end(); i++) {
+                    if (!mesh.face[i].IsD()) {
+                        Triangle triangle(mesh.face[i]);
+                        size_t level = size_t(ceil((triangle.min[direction] - P[1]) / delta) + 1);
+                        assert(level > 0 && level <= grid_size + 1);
+                        _L[level].push_back(triangle);
+                    }
+                }
+                {
+                    tbb::spin_mutex::scoped_lock lock(writeMutex);
+                    for (size_t i = 0; i <= grid_size + 1; i++) {
+                        L[i].reserve(L[i].size() + _L[i].size());
+                        L[i].insert(L[i].end(), _L[i].begin(), _L[i].end());
+                    }
+                }
+            }, ap
+        );
+#endif
     }
 
     inline Point3d compute_point_at_plane(Point3d v0, Point3d v1, double position, int direction = Direction::Z) {

@@ -23,6 +23,8 @@ public:
     unsigned int operator++() { return ++ticks; }
     ProgressBar& operator+=(const unsigned int tick) { ticks += tick; return *this; }
 
+    void update(const unsigned int tick) { ticks = tick; }
+
     void display() const
     {
         float progress = (float)ticks / total_ticks;
