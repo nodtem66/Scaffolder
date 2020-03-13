@@ -21,6 +21,7 @@ jobs:
       addons:
         homebrew:
           packages:
+            - gcc
             - gcc@7
     - os: windows
         
@@ -28,15 +29,15 @@ install:
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew update; fi
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install icu4c; fi
   - if [[ "${COMPILER}" != "" ]]; then export CXX=${COMPILER}; fi
-  - ${CXX} --version
 
 before_script:
+  - ${CXX} --version
   - mkdir -p -v build
   - cd build
   - cmake ..
 
 script:
-  - cmake --build . -- -j2
+  - cmake --build .
 
 notifications:
   email: off
