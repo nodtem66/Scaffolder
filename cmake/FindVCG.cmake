@@ -12,8 +12,11 @@ find_path(VCG_INCLUDE_DIR vcg/complex/base.h
         ${VCG_DIR}
         ENV VCG_DIR
     PATHS
-        ${CMAKE_SOURCE_DIR}/external/vcglib
+        ${PROJECT_SOURCE_DIR}/external/vcglib
+        ${PROJECT_SOURCE_DIR}/../external/vcglib
+        ${PROJECT_SOURCE_DIR}/../../external/vcglib
     PATH_SUFFIXES include
+    NO_DEFAULT_PATH
 )
 
 include(FindPackageHandleStandardArgs)

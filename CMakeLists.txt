@@ -12,6 +12,8 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 option(LIBIGL_WITH_OPENGL            "Use OpenGL"         OFF)
 option(LIBIGL_WITH_OPENGL_GLFW       "Use GLFW"           OFF)
 
+message(STATUS "PROJECT_SOURCE_DIR=${PROJECT_SOURCE_DIR}")
+
 find_package(LIBIGL REQUIRED)
 find_package(TBB REQUIRED)
 find_package(VCG REQUIRED)
