@@ -12,8 +12,11 @@ find_path(DIPlib_INCLUDE_DIR diplib.h
         ${DIPlib_DIR}
         ENV DIPlib_DIR
     PATHS
-        ${CMAKE_SOURCE_DIR}/external/diplib    
+         ${PROJECT_SOURCE_DIR}/external/diplib
+         ${PROJECT_SOURCE_DIR}/../external/diplib
+         ${PROJECT_SOURCE_DIR}/../../external/diplib
     PATH_SUFFIXES include
+    NO_DEFAULT_PATH
 )
 # TODO: Rewrite this cmake to add the source without compiled lib
 set(DIPlib_LIB_DIR ${DIPlib_INCLUDE_DIR}/../lib)

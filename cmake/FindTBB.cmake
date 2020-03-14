@@ -12,8 +12,11 @@ find_path(TBB_INCLUDE_DIR tbb/tbb.h
         ${TBB_DIR}
         ENV TBB_DIR
     PATHS
-        ${CMAKE_SOURCE_DIR}/external/tbb    
+        ${PROJECT_SOURCE_DIR}/external/tbb
+        ${PROJECT_SOURCE_DIR}/../external/tbb
+        ${PROJECT_SOURCE_DIR}/../../external/tbb
     PATH_SUFFIXES include
+    NO_DEFAULT_PATH
 )
 set(TBB_ROOT_DIR ${TBB_INCLUDE_DIR}/../)
 
