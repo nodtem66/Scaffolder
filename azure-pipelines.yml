@@ -31,6 +31,8 @@ strategy:
 pool:
   vmImage: $(vmImage)
 steps:
+- checkout: self
+  submodules: true
 - task: CMake@1
   inputs:
     cmakeArgs: .. -DCMAKE_CXX_STANDARD=$(build_std) -DCMAKE_BUILD_TYPE=$(build_type)
