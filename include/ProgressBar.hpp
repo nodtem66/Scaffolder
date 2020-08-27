@@ -6,13 +6,14 @@
 
 class ProgressBar {
 private:
+    bool is_done = false;
     unsigned int ticks = 0;
 
     const unsigned int total_ticks;
     const unsigned int bar_width;
     const char complete_char = '=';
     const char incomplete_char = ' ';
-    const std::chrono::steady_clock::time_point start_time = std::chrono::steady_clock::now();
+    std::chrono::steady_clock::time_point start_time = std::chrono::steady_clock::now();
 
 public:
     ProgressBar(unsigned int total, unsigned int width, char complete, char incomplete) :
@@ -24,6 +25,11 @@ public:
     ProgressBar& operator+=(const unsigned int tick) { ticks += tick; return *this; }
 
     void update(const unsigned int tick) { ticks = tick; }
+    void reset() {
+        start_time = std::chrono::steady_clock::now();
+        ticks = 0;
+        is_done = false;
+    }
 
     void display() const
     {
@@ -45,8 +51,10 @@ public:
         std::cout.flush();
     }
 
-    void done() const
+    void done()
     {
+        if (is_done) return;
+        is_done = true;
         display();
         std::cout << std::endl;
     }

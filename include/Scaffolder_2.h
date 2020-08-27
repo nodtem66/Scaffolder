@@ -4,9 +4,6 @@
 #include <algorithm>
 #include <ctime>
 
-#include <igl/writePLY.h>
-#include <igl/readSTL.h>
-#include <igl/copyleft/marching_cubes.h>
 #include <igl/fast_winding_number.h>
 #include <Eigen/Core>
 
@@ -16,12 +13,13 @@
 #include "diplib/regions.h"
 #include "diplib/measurement.h"
 #include "dualmc/dualmc.h"
+
 #include "ProgressBar.hpp"
 #include "OptimalSlice.hpp"
-
 #include "implicit_function.h"
-#include "Mesh.h"
+#include "MeshOperation.h"
 #include "utils.h"
+//#include "QuadricSimplification.h"
 
 #define VERSION "v1.3"
 #define PROGRESS_BAR_COLUMN 40
@@ -111,10 +109,7 @@ inline void marching_cube(TMesh &mesh, Eigen::MatrixXd &Fxyz, Eigen::RowVector3i
             vcg::tri::Clean<TMesh>::RemoveDuplicateFace(mesh);
             vcg::tri::Clean<TMesh>::RemoveDuplicateVertex(mesh);
             vcg::tri::Clean<TMesh>::RemoveUnreferencedVertex(mesh);
-            vcg::tri::UpdateTopology<TMesh>::FaceFace(mesh);
         }
-
-        if (verbose) std::cout << "-- Info: " << mc_vertices.size() << " vertices " << mc_quads.size() << " faces" << std::endl;
     }
 }
 
@@ -139,4 +134,15 @@ inline void mesh_to_eigen_vector(TMesh& mesh, Eigen::MatrixXd& V, Eigen::MatrixX
         }
         i++;
     }
+}
+
+ProgressBar qsim_progress(100, 40);
+bool qsim_callback(int pos, const char* str) {
+    if (pos >= 0 && pos <= 100) {
+        qsim_progress.update(pos);
+        qsim_progress.display();
+    }
+    if (pos >= 100)
+        qsim_progress.done();
+    return true;
 }

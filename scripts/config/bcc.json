@@ -1,0 +1,9 @@
+{
+    "input_stl": "../../stl/cube20mm.stl",
+    "output": "result.txt",
+    "merge": "_*.txt",
+    "pattern": ["bcc"],
+    "grid_size": [300],
+    "thickness": [-2.9 , -2.32, -1.74, -1.16, -0.58,  0,  0.58,  1.16,  1.74, 2.32,  2.9],
+    "coff": [1]
+}

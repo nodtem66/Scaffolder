@@ -1,6 +1,8 @@
 # Scaffolder 
-[![Build Status](https://travis-ci.org/nodtem66/Scaffolder.svg?branch=master)](https://travis-ci.org/nodtem66/Scaffolder) [![Build Status](https://travis-ci.org/nodtem66/Scaffolder.svg?branch=dev)](https://travis-ci.org/nodtem66/Scaffolder) 
+[![Build Status](https://travis-ci.org/nodtem66/Scaffolder.svg?branch=master)](https://travis-ci.org/nodtem66/Scaffolder) [![Build Status](https://travis-ci.org/nodtem66/Scaffolder.svg?branch=dev)](https://travis-ci.org/nodtem66/Scaffolder) [![Build Status](https://dev.azure.com/n66/Public%20CI/_apis/build/status/nodtem66.Scaffolder?branchName=master)](https://dev.azure.com/n66/Public%20CI/_build/latest?definitionId=1&branchName=master) [![Build Status](https://dev.azure.com/n66/Public%20CI/_apis/build/status/nodtem66.Scaffolder?branchName=dev)](https://dev.azure.com/n66/Public%20CI/_build/latest?definitionId=1&branchName=dev)
+
 Generate scaffold from STL file with implicit function (Schwarz P/ Gyroid).
+
 ```
 Scaffolder - generate 3D scaffold from STL file
 Usage:
@@ -35,27 +37,22 @@ Usage:
       --inverse                 Enable build inverse 3D scaffold (for pore
                                 connectivity analysis)
       --dirty                   Disable autoclean
+      --fix_self_intersect	    Enable experimental fixing for self-intersect problems (default: false)
+      --qsim DOUBLE (0-1)       % Quadric simplification for reducing the resolution of 3D mesh (default: false)
       --minimum_diameter DOUBLE
                                 used for removing small orphaned (between
                                 0-1) [default: 0.25]
 ```
 
 ## Screenshots
-**Cube and rectlinear with shell**
 
-![Cube with rectlinear and shell](https://github.com/nodtem66/Scaffolder/raw/master/images/cube-rectlinear-shell.png)
+** The figure of patterns implemented in this program
 
-**Cube and rectlinear without shell**
+![TPMS Patterns](https://github.com/nodtem66/Scaffolder/raw/master/images/patterns.jpg)
 
-![Cube with rectlinear and shell](https://github.com/nodtem66/Scaffolder/raw/master/images/cube-rectlinear.png)
+** The examples of generated porous scaffold
 
-**Cube and Schwarz P without shell**
-
-![Cube and Schwarz P without shell](https://github.com/nodtem66/Scaffolder/raw/master/images/cube-schwarzp.png)
-
-**Maxilla bone and Gyroid without shell**
-
-![Maxilla bone and Gyroid without shell](https://github.com/nodtem66/Scaffolder/raw/master/images/maxilla-gyroid.png)
+![Examples porous scaffold](https://github.com/nodtem66/Scaffolder/raw/master/images/examples.jpg)
 
 ## Dependencies
 - [libigl](https://libigl.github.io/)
@@ -76,3 +73,6 @@ Usage:
 - [cxxopts](https://github.com/jarro2783/cxxopts)
 - [ProgressBar](https://github.com/prakhar1989/progress-cpp)
 - [Minimal surface Blog](https://minimalsurfaces.blog/)
+
+## Citation
+

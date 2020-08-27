@@ -1,0 +1,12 @@
+{
+    "input_stl": "../../stl/cube2mm.stl",
+    "output": "result.txt",
+    "merge": "out_*.txt",
+    "mode": "list",
+    "options": ["--method", "1"],
+    "list": [
+        {"pattern": "tubular_g_c", "grid_size": 300, "coff": 5, "thickness": 0},
+        {"pattern": "tubular_g_c", "grid_size": 300, "coff": 10, "thickness": 0}
+        
+    ]
+}

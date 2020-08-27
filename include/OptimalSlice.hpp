@@ -22,7 +22,7 @@
 namespace slice {
     
     enum Direction {X = 0,Y,Z};
-    enum PolygonSide {OUTSIDE = 0, INSIDE};
+    enum PolygonSide {OUTSIDE = 0, INSIDE = 1, PAIRED = 2, UNDEFINED = 3};
 
     struct Point2d {
         double x;
@@ -548,6 +548,8 @@ namespace slice {
                 [&](const tbb::blocked_range<size_t> &r)
                 {
                     Triangles local_A;
+                    Lines lines;
+                    lines.reserve(local_A.size());
                     std::copy(A.begin() + r.begin(), A.begin() + r.end(), std::back_inserter(local_A));
                     for (Triangles::iterator t = local_A.begin(); t != local_A.end();) {
                         if (t->max[direction] < P[i]) {
@@ -557,8 +559,9 @@ namespace slice {
                             Line line;
                             if (t->max[direction] >= P[i] && t->min[direction] <= P[i]) {
                                 if (compute_intersection(*t, P[i], line, direction)) {
-                                    tbb::spin_mutex::scoped_lock lock(writeMutex);
-                                    S[i - 1].push_back(line);
+                                    //tbb::spin_mutex::scoped_lock lock(writeMutex);
+                                    //S[i - 1].push_back(line);
+                                    lines.push_back(line);
                                 }
                             }
                             t++;
@@ -567,6 +570,11 @@ namespace slice {
                     if (local_A.size() > 0) {
                         tbb::spin_mutex::scoped_lock lock(concatMutex);
                         new_A.insert(new_A.end(), local_A.begin(), local_A.end());
+                    }
+                    if (lines.size() > 0) {
+                        tbb::spin_mutex::scoped_lock lock(writeMutex);
+                        S[i - 1].reserve(S[i - 1].size() + lines.size());
+                        S[i - 1].insert(S[i - 1].end(), lines.begin(), lines.end());
                     }
                 },
                 ap
@@ -609,15 +617,6 @@ namespace slice {
                     }
                 }
             }
-            //std::cout << " [Hash OK: " << hash.size() << "] from S[i]: " << S[i].size() << std::endl;
-            //std::copy(S[i].begin(), S[i].end(), std::ostream_iterator<Line>(std::cout, " "));
-            //std::cout << std::endl;
-            /* TODO: remove this debug message
-            for (ContourHash::const_iterator item = hash.begin(); item != hash.end(); item++) {
-                std::cout << "  " << item->first << ": " << item->second << (item->second.first == item->second.second ? " [***]" : "") << std::endl;
-                //std::cout << "  " << item->first << ": " << std::hash<Point2d>()(item->first) << std::endl;
-            }
-            //*/
             while (!hash.empty()) {
                 ContourHash::const_iterator item = hash.begin();
                 assert(item != hash.end());
@@ -731,20 +730,49 @@ namespace slice {
         return oddNodes;
     }
 
-    PolygonSides contour_inside_test(const Polygons& C) {
+    PolygonSides contour_inside_test(const Polygons& C, std::vector<std::pair<size_t, size_t>>& pairList) {
         PolygonSides position(C.size());
+        pairList.clear();
+        std::vector<size_t> countInside(C.size(), 0);
+        std::map<size_t, std::vector<size_t>> pairMapping;
         for (size_t i = 0, size = C.size(); i < size; i++) {
-            PolygonSide pos = PolygonSide::OUTSIDE;
+            std::vector<size_t> insidePairedList;
             for (size_t j = 0, size = C.size(); j < size; j++) {
                 if (i == j) continue;
                 if (is_point_inside_polygon(C[i][0], C[j])) {
-                    pos = PolygonSide::INSIDE;
-                    break;
+                    countInside[i]++;
+                    insidePairedList.push_back(j);
                 }
             }
-            position[i] = pos;
+            // Fill the outside polygon
+            if (countInside[i] == 0) position[i] = PolygonSide::OUTSIDE;
+            else if ((countInside[i] % 2) == 0) {
+                position[i] = PolygonSide::PAIRED;
+                pairMapping.emplace(i, insidePairedList);
+            }
+        }
+        // Match a pair polygon
+        for (auto it = pairMapping.begin(); it != pairMapping.end(); ++it) {
+            auto target = countInside[it->first] - 1;
+            assert(target > 0);
+            for (auto list_it = it->second.begin(); list_it != it->second.end(); ++list_it) {
+                if (target == countInside[*list_it]) {
+                    position[*list_it] = PolygonSide::PAIRED;
+                    pairList.push_back(make_pair(it->first, *list_it));
+                }
+            }
+        }
+        // Finally, fill the inside polygon
+        for (size_t i = 0, len = position.size(); i < len; i++) {
+            if ((countInside[i] % 2) == 1 && position[i] == PolygonSide::UNDEFINED)
+                position[i] = PolygonSide::INSIDE;
         }
         return position;
+    }
+
+    PolygonSides contour_inside_test(const Polygons& C) {
+        std::vector<std::pair<size_t, size_t>> pairs;
+        return contour_inside_test(C, pairs);
     }
 
     // This formular came from the cross product of two vectors that is the area of PARALLELOGRAM
@@ -780,8 +808,9 @@ namespace slice {
     int orientation(const Point2d& p, const Point2d& q, const Point2d& r) {
         double val = (q.y - p.y) * (r.x - q.x) - (q.x - p.x) * (r.y - q.y);
         if (DOUBLE_EQ(val, 0)) return 0;
-        else if (val > 0) return 1;
+        if (val > 0) return 1;
         else if (val < 0) return -1;
+        return 0;
     }
 
     struct CompareOrientation {
@@ -972,7 +1001,7 @@ namespace slice {
     // Implement from JAVA lib
     // ref: http://www.dyn4j.org/2010/04/gjk-distance-closest-points/#gjk-closest
     // return -1 if the polygon is intersecting
-    double gjk_minimal_distance(const Polygon& P, const Polygon& Q, double tolerance = 1e-4) {
+    double gjk_minimal_distance(const Polygon& P, const Polygon& Q, double tolerance = 1e-2) {
         if (P.size() < 3 || Q.size() < 3) return -1;
         Polygon P1 = convexhull(P);
         Polygon Q1 = convexhull(Q);
@@ -993,7 +1022,7 @@ namespace slice {
             // check new point c is better than simplex a, b
             if (( d.x * c.x + d.y * c.y ) - (simplex_a.x * d.x + simplex_a.y * d.y) < tolerance) {
                 return measure_point_magnitude(d);
-            }
+            } 
             Point2d p1 = gjk_closest_point_to_origin(simplex_a, c);
             Point2d p2 = gjk_closest_point_to_origin(c, simplex_b);
             if (measure_point_magnitude(p1) < measure_point_magnitude(p2)) {
@@ -1007,8 +1036,8 @@ namespace slice {
             //std::cout << "  -- a:" << simplex_a << " b:" << simplex_b << " d:" << d << std::endl;
             _count--;
         }
-        //std::cout << "[Warning] GJK Iteration timeout: Found the intersect polygon" << std::endl;
-        return -1;
+        //[Warning] GJK Iteration timeout: Found the intersect polygon
+        return measure_point_magnitude(d);
     }
 
     FeretDiameter measure_polygon_feret_diameter(const Polygon& p) {
@@ -1101,7 +1130,10 @@ namespace slice {
         for (Polygons::const_iterator t = C.begin(); t != C.end(); t++) {
             if (t->size() < 2) continue;
             size_t index = (size_t)(t - C.begin());
-            bool is_inside = (p[index] == PolygonSide::INSIDE);
+            std:string color = "eee";
+            if (p[index] == PolygonSide::INSIDE) color = "f00";
+            else if (p[index] == PolygonSide::OUTSIDE) color = "000";
+            else if (p[index] == PolygonSide::PAIRED) color = "00f";
             // Write origin polygon
             Polygon::const_iterator c = t->begin();
             svg << "<path d=\"M" << c->x << "," << c->y << " L";
@@ -1109,7 +1141,7 @@ namespace slice {
             for (; c != t->end(); c++) {
                 svg << c->x << "," << c->y << " ";
             }
-            svg << "z\" fill=\"transparent\" stroke=\"#" << (is_inside ? "f00" : "000") << "\" stroke-width=\"0.1\" stroke-linejoin=\"round\"/>" << std::endl;
+            svg << "z\" fill=\"transparent\" stroke=\"#" << color << "\" stroke-width=\"0.1\" stroke-linejoin=\"round\"/>" << std::endl;
             // Write a convex-hull polygon
             if (show_convexhull) {
                 Polygon convex = convexhull(*t);
@@ -1120,7 +1152,7 @@ namespace slice {
                     for (; c != convex.end(); c++) {
                         svg << c->x << "," << c->y << " ";
                     }
-                    svg << "z\" stroke-dasharray=\"1,1\" fill=\"transparent\" stroke=\"#" << (is_inside ? "d33" : "666") << "\" stroke-width=\"0.1\" stroke-linejoin=\"round\"/>" << std::endl;
+                    svg << "z\" stroke-dasharray=\"1,1\" fill=\"transparent\" stroke=\"#d33\" stroke-width=\"0.1\" stroke-linejoin=\"round\"/>" << std::endl;
                 }
             }
         }
@@ -1132,7 +1164,6 @@ namespace slice {
     // Measure feret diameter
     void measure_feret_and_shape(const slice::ContourSlice& CS, std::vector<double>& minFeret, std::vector<double>& maxFeret, std::vector<double> (&shapes)[5]) {
         // Foreach slice in 3D
-        // TODO: change to TBB parallel for
 #ifndef USE_PARALLEL
         for (size_t cs_index = 0, cs_size = CS.size(); cs_index < cs_size; cs_index++) {
 #else
@@ -1143,14 +1174,16 @@ namespace slice {
 #endif
                 if (CS[cs_index].empty()) continue;
                 // Inside or outside testing
-                slice::PolygonSides p = contour_inside_test(CS[cs_index]);
+                std::vector<std::pair<size_t, size_t>> pairPolygons;
+                slice::PolygonSides p = contour_inside_test(CS[cs_index], pairPolygons);
+
                 assert(p.size() == CS[cs_index].size());
                 // For each contour in slice, calculate min max of contour
                 std::vector< Point2d > polygonCenters;
                 std::vector< std::pair<Point2d, size_t> > centerPolygonMap;
                 size_t n_outside = 0, n_inside = 0;
                 for (slice::Polygons::const_iterator c = CS[cs_index].begin(); c != CS[cs_index].end(); c++) {
-                    // if polygon must have more-than 2 lines
+                    // the polygon must have more-than 2 lines
                     if (c->size() <= 2) {
                         polygonCenters.push_back({ 0, 0 });
                         continue;
@@ -1174,7 +1207,8 @@ namespace slice {
                         n_outside++;
                         centerPolygonMap.push_back(std::make_pair(Point2d{ _x, _y }, index_polygon));
                     }
-                    else {
+                    // 1. Rotating caliber for INSIDE polygon
+                    else if (p[index_polygon] == slice::PolygonSide::INSIDE) {
                         n_inside++;
                         double area = measure_polygon_area(*c);
                         FeretDiameter feret = measure_polygon_feret_diameter(*c);
@@ -1205,6 +1239,7 @@ namespace slice {
                     }
                 }
 
+                // 2. GJK distance for OUTSIDE polygon
                 if (n_outside > 1 && centerPolygonMap.size() > 1) {
                     // For each Polygon in slice layer, find 4 minimum-distance polygon
                     for (slice::Polygons::const_iterator c = CS[cs_index].begin(); c != CS[cs_index].end(); c++) {
@@ -1216,6 +1251,7 @@ namespace slice {
                         int k = std::min(centerPolygonMap.size() - 1, (size_t)4);
                         if (p[index] == slice::PolygonSide::OUTSIDE) {
                             size_t i = 0;
+                            // Take the first k in centerPolygonMap for initializing the MaxHeap
                             for (size_t j = 0; j < k; i++) {
                                 if (i != index && i < centerPolygonMap.size()) {
                                     double distance = measure_point_distance(polygonCenters[index], centerPolygonMap[i].first);
@@ -1224,10 +1260,12 @@ namespace slice {
                                 }
                             }
                             MaxHeap<DistanceIndexPair> minimum(k, &pairs);
+                            // Process the other centerPolygonMap
                             for (; i < centerPolygonMap.size(); i++) {
                                 double distance = measure_point_distance(polygonCenters[index], centerPolygonMap[i].first);
                                 minimum.update(std::make_pair(distance, centerPolygonMap[i].second));
                             }
+                            // Use the k closest centerPolygonMap for calculating the pore size
                             for (i = 0; i < k; i++) {
                                 size_t next_index = pairs[i].second;
                                 if (next_index < CS[cs_index].size()) {
@@ -1245,6 +1283,16 @@ namespace slice {
                             maxFeret.push_back(feret.back());
                         }
                     }
+                }
+
+                // 3. GJK distance for PAIRED polygon
+                for (auto it = pairPolygons.begin(); it != pairPolygons.end(); ++it) {
+                    double feret = gjk_minimal_distance(CS[cs_index].at(it->first), CS[cs_index].at(it->second));
+#ifdef USE_PARALLEL
+                    tbb::spin_mutex::scoped_lock lock(feretMutex);
+#endif
+                    minFeret.push_back(feret);
+                    maxFeret.push_back(feret);
                 }
             }
 #ifdef USE_PARALLEL

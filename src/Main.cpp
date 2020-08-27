@@ -1,4 +1,5 @@
 ﻿#include "Scaffolder_2.h"
+#include "QuadricSimplification.h"
 
 int main(int argc, char* argv[])
 {
@@ -11,51 +12,56 @@ int main(int argc, char* argv[])
     bool is_export_inverse = false;
     bool is_build_inverse = false;
     bool is_fix_self_intersect = false;
-    bool no_output = false;
+    bool no_output = true;
+    
+    uint8_t method = METHOD_SLICE_CONTOUR;
     uint16_t grid_offset = 3;
     uint16_t shell = 0;
     uint16_t smooth_step = 5;
     uint16_t slice_grid = 100;
-    uint8_t method = METHOD_SLICE_CONTOUR;
-    double thickness = 0.0;
     size_t minimum_grid_size = 100;
+    
+    double thickness = 0.0;
+    double qsim_percent = 0;
     double coff = pi;
     double minimum_diameter = 0.25;
+    
     Eigen::IOFormat CleanFmt(4, Eigen::DontAlignCols, ", ", "\n", "[", "]");
     Eigen::IOFormat CSVFmt(-1, Eigen::DontAlignCols, ", ", ", ");
+    
     // file parameters
-    std::string filename = "out";
-    std::string format = "ply";
+    std::string filename = "";
+    std::string format = "";
     std::string surface = "schwarzp";
     std::string input_file = "";
 
     try {
         cxxopts::Options options("Scaffolder", "Scaffolder - generate 3D scaffold from STL file");
-        options.positional_help("INPUT OUTPUT FORMAT").show_positional_help();
+        options.positional_help("INPUT OUTPUT").show_positional_help();
         options.add_options()
             ("h,help", "Print help")
             ("q,quiet", "Disable verbose output [default: false]")
             ("i,input", "Input file (STL)", cxxopts::value<std::string>(), "FILE")
-            ("o,output", "Output filename without extension [default: out]", cxxopts::value<std::string>(), "FILENAME")
-            ("f,format", "Output format (OFF,PLY,STL,OBJ) [default: ply]", cxxopts::value<std::string>())
-            ("c,coff", "default:4*PI", cxxopts::value<double>(), "DOUBLE")
-            ("s,shell", "[default:0]", cxxopts::value<uint16_t>(), "INT")
+            ("o,output", "Output filename with extension stl,ply,obj,off [default: out]", cxxopts::value<std::string>(), "FILENAME")
+            ("c,coff", "default:PI", cxxopts::value<double>(), "DOUBLE")
+            ("s,shell", "[default:0]", cxxopts::value<uint16_t>(), "INT (0..60000)")
             ("n,surface", "rectlinear, schwarzp, schwarzd, gyroid, double-p, double-d, double-gyroiod, lidinoid, schoen_iwp, neovius, bcc, tubular_g_ab, tubular_g_c [default: schwarzp]", cxxopts::value<std::string>(), "NAME")
             ("t,thickness", "Thickness [default: 0]", cxxopts::value<double>(), "DOUBLE")
-            ("g,grid_size", "Grid size [default: 100]", cxxopts::value<size_t>(), "INT")
-            ("grid_offset", "[default:3]", cxxopts::value<uint16_t>(), "INT")
-            ("smooth_step", "Smooth with laplacian (default: 5)", cxxopts::value<uint16_t>(), "INT")
-            ("m,microstructure", "Analysis microstructure ( [default: false]")
+            ("g,grid_size", "Grid size [default: 100]", cxxopts::value<size_t>(), "INT (0..60000)")
+            ("grid_offset", "[default:3]", cxxopts::value<uint16_t>(), "INT (0..60000)")
+            ("smooth_step", "Smooth with laplacian (default: 5)", cxxopts::value<uint16_t>(), "INT (0..60000)")
+            ("m,microstructure", "Analysis microstructure with Slice contour technique ( [default: false]")
             ("m1", "Export and analysis microstructure 1 (Image processing technique) [default: false]")
-            ("m2", "Export and analysis microstructure 2 (Slice coutour technique) [default: false]")
+            ("m2", "Export and analysis microstructure 2 (Slice contour technique) [default: false]")
             ("method", "Method of microstructure analysis: 0 (Image processing technique) or 1 (Slice contour technique) [default: 1]", cxxopts::value<uint8_t>(), "0,1")
-            ("slice_grid", "Slice Grid used in microstructure analysis [default: 100]", cxxopts::value<uint16_t>(), "INT")
+            ("slice_grid", "Slice Grid used in microstructure analysis [default: 100]", cxxopts::value<uint16_t>(), "INT (0..60000)")
             ("output_inverse", "additional output inverse scaffold [default: false]")
-            ("inverse", "Enable build inverse 3D scaffold (for pore connectivity analysis) [default: false]")
+            ("inverse", "Enable build inverse 3D scaffold [default: false]")
             ("dirty", "Disable autoclean [default false]")
             ("fix_self_intersect", "Experimental fix self-intersect faces [default: false]")
-            ("minimum_diameter", "used for removing small orphaned (between 0-1) [default: 0.25]", cxxopts::value<double>(), "DOUBLE");
-        options.parse_positional({ "input", "output", "format" });
+            ("qsim", "Experimental Quadric simplification [default: 0]", cxxopts::value<double>(), "DOUBLE (0..1)")
+            ("minimum_diameter", "used for removing small orphaned (between 0-1) [default: 0.25]", cxxopts::value<double>(), "DOUBLE (0..1)");
+        options.parse_positional({ "input", "output"});
         bool isEmptyOption = (argc == 1);
         cxxopts::ParseResult result = options.parse(argc, argv);
         if (isEmptyOption || result.count("help")) {
@@ -103,6 +109,10 @@ int main(int argc, char* argv[])
                 filename = filename.substr(0, filename.size()-ext.size());
                 format = ext.substr(1);
             }
+            if (format != "ply" && format != "obj" && format != "stl" && format != "off") {
+                std::cout << "Invalid format: " << format << std::endl;
+                return 1;
+            }
             no_output = false;
         }
         if (result.count("format")) format = result["format"].as<std::string>();
@@ -116,16 +126,12 @@ int main(int argc, char* argv[])
         if (result.count("smooth_step")) smooth_step = result["smooth_step"].as<uint16_t>();
         if (result.count("inverse")) is_build_inverse = result["inverse"].as<bool>();
         if (result.count("fix_self_intersect")) is_fix_self_intersect = result["fix_self_intersect"].as<bool>();
+        if (result.count("qsim")) qsim_percent = result["qsim"].as<double>();
         if (result.count("slice_grid")) slice_grid = result["slice_grid"].as<uint16_t>();
         
         util::to_lower(surface);
         util::to_lower(format);
         
-        if (format != "ply" && format != "obj" && format != "stl" && format != "off") {
-            std::cout << "Invalid format: " << format << std::endl;
-            return 1;
-        }
-
         if (surface == "rectlinear") {
             thickness = 0;
         }
@@ -151,6 +157,7 @@ int main(int argc, char* argv[])
             << "--   Minimum diameter: " << 100 * minimum_diameter << "%" << std::endl
             << "--   Smooth step: " << smooth_step << std::endl
             << "--   Fix self-intersect: " << (is_fix_self_intersect ? "True" : "False") << std::endl
+            << "--   Quadric Simplification: " << qsim_percent << std::endl
             << "-- Analysis microstructure: " << (is_analysis_microstructure ? "True" : "False") << std::endl
             << "--   Method: " << (method == METHOD_IMAGE_PROCESS ? "Image Processing" : "Contour Slicing") << std::endl
             << "--   Slice grid: " << slice_grid << std::endl
@@ -194,7 +201,13 @@ int main(int argc, char* argv[])
             {
                 TMesh stl;
                 int loadmark = 0;
-                vcg::tri::io::ImporterSTL<TMesh>::Open(stl, input_file.c_str(), loadmark);
+                int err = vcg::tri::io::Importer<TMesh>::Open(stl, input_file.c_str());
+                if (err)
+                {
+                    std::cout << "Unable to open mesh " << input_file << " : " << vcg::tri::io::Importer<TMesh>::ErrorMsg(err) << std::endl;
+                    exit(-1);
+                }
+                stl.face.EnableFFAdjacency();
                 vcg::tri::Clean<TMesh>::RemoveDuplicateFace(stl);
                 vcg::tri::Clean<TMesh>::RemoveDuplicateVertex(stl);
                 vcg::tri::Clean<TMesh>::RemoveUnreferencedVertex(stl);
@@ -203,6 +216,7 @@ int main(int argc, char* argv[])
                 vcg::tri::Clean<TMesh>::RemoveNonManifoldFace(stl);
                 vcg::tri::Clean<TMesh>::RemoveUnreferencedVertex(stl);
                 vcg::tri::UpdateTopology<TMesh>::FaceFace(stl);
+                stl.face.DisableFFAdjacency();
                 // Report Volume and surface area
                 int edgeNum = 0, edgeBorderNum = 0, edgeNonManifNum = 0;
                 vcg::tri::Clean<TMesh>::CountEdgeNum(stl, edgeNum, edgeBorderNum, edgeNonManifNum);
@@ -327,6 +341,7 @@ int main(int argc, char* argv[])
 
             // Create scaffolder and inverse mesh by dual marching cube
             marching_cube(mesh, Fxyz, grid_size, V1min1, grid_delta, verbose, dirty);
+            if (verbose) std::cout << "-- Info: " << mesh.VN() << " vertices " << mesh.FN() << " faces" << std::endl;
             if (is_build_inverse) marching_cube(inverse_mesh, IFxyz, grid_size, V1min1, grid_delta, false, false);
 
             if (!dirty) {
@@ -334,9 +349,21 @@ int main(int argc, char* argv[])
                 if (is_fix_self_intersect) fix_self_intersect_mesh(mesh, minimum_diameter, 5, verbose);
                 if (is_build_inverse) clean_mesh(inverse_mesh, minimum_diameter, 0, false);
             }
+
+            if (qsim_percent > 0) {
+                if (verbose) std::cout << "[Quadric Simplificaion: " << qsim_percent << "]" << std::endl;
+                qsim_progress.reset();
+                vcg::tri::mesh_quad_simplification(mesh, qsim_percent, qsim_callback);
+                qsim_progress.done();
+                if (verbose) std::cout << "-- Info: " << mesh.VN() << " vertices " << mesh.FN() << " faces" << std::endl;
+            }
+
             bool is_manifold = is_mesh_manifold(mesh);
+            if (verbose) std::cout << "-- is_manifold: " << is_manifold << std::endl;
             if (!is_manifold) {
-                is_manifold = fix_non_manifold(mesh, minimum_diameter, 3, verbose);
+                is_manifold = fix_non_manifold_vertices(mesh, minimum_diameter, 5, verbose);
+                is_manifold = is_manifold && fix_non_manifold_edges(mesh, minimum_diameter, 5, verbose);
+                if (verbose) std::cout << "-- is_manifold: " << is_manifold << std::endl;
             }
             if (!is_manifold && !verbose) {
                 std::cout << "[Warning] Mesh is not two manifold" << std::endl;
@@ -347,7 +374,6 @@ int main(int argc, char* argv[])
                 // Evaluating pore size by create 2D slice 8-bit image (0-blacks're pores and 255-whites're grains)
                 // Then an 8-bit image become a binary image by image thresholding (value of 150)
                 // The binary imaege'll be labeled and finally evaluated the feret diameter by chain coding
-            
                 // init filename
                 std::string dir;
                 std::stringstream filename;
@@ -551,11 +577,11 @@ int main(int argc, char* argv[])
                 std::cout << "[Scaffold properties]" << std::endl
                 << "-- Volume: " << abs(volume2) << std::endl
                 << "-- Surface Area: " << area2 << std::endl
-                << "-- Porosity: " << abs(volume2 / volume1) << std::endl
+                << "-- Porosity: " << 1 - abs(volume2 / volume1) << std::endl
                 << "-- Surface Area ratio: " << area2 / area1 << std::endl;
             else
                 result
-                << abs(volume2) << ',' << area2 << ',' << abs(volume2 / volume1) << ',' << area2 / area1 << ','
+                << abs(volume2) << ',' << area2 << ',' << 1 - abs(volume2 / volume1) << ',' << area2 / area1 << ','
                 << mesh.VN() << ',' << mesh.FN() <<  std::endl;
         }
         else {

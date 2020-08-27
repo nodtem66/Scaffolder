@@ -1,0 +1,9 @@
+{
+    "input_stl": "../../stl/cube20mm.stl",
+    "output": "result.txt",
+    "merge": "out_*.txt",
+    "pattern": ["neovius"],
+    "grid_size": [300],
+    "thickness": [-0.6 , -0.48, -0.36, -0.24, -0.12,  0  ,  0.12,  0.24,  0.36, 0.48,  0.6 ],
+    "coff": [1]
+}

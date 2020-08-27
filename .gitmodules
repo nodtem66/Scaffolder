@@ -8,7 +8,7 @@
 [submodule "external/vcglib"]
 	path = external/vcglib
 	url = https://github.com/cnr-isti-vclab/vcglib
-	branch = master
+	branch = devel
 [submodule "external/tbb"]
 	path = external/tbb
 	url = https://github.com/wjakob/tbb

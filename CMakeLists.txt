@@ -31,6 +31,11 @@ file(GLOB MAIN_SOURCES
 	"${PROJECT_SOURCE_DIR}/include/*/*.tpp"
 	"${PROJECT_SOURCE_DIR}/include/*/*.h"
 	"${PROJECT_SOURCE_DIR}/include/*/*.hpp"
+	"${PROJECT_SOURCE_DIR}/include/vcglib/*.h"
+	"${PROJECT_SOURCE_DIR}/include/vcglib/*/*.h"
+	"${PROJECT_SOURCE_DIR}/include/vcglib/*/*/*.h"
+	"${PROJECT_SOURCE_DIR}/include/vcglib/*/*/*/*.h"
+	"${VCG_INCLUDE_DIR}/wrap/ply/plylib.cpp"
 )
 include(update_deps_file)
 update_deps_file("main_sources" "${MAIN_SOURCES}")
@@ -42,13 +47,14 @@ if(MSVC)
 endif()
 
 add_definitions(-DDIP__IS_STATIC -DDIP__ENABLE_ASSERT -DDIP__HAS_JPEG -DDIP__EXCEPTIONS_RECORD_STACK_TRACE)
-add_executable(${PROJECT_NAME} ${MAIN_SOURCES} ${PROJECT_SOURCE_DIR}/src/Main.cpp ${VCG_INCLUDE_DIR}/wrap/ply/plylib.cpp)
-target_include_directories(${PROJECT_NAME} PRIVATE "${PROJECT_SOURCE_DIR}/include" ${TBB_INCLUDE_DIR} ${VCG_INCLUDE_DIR} ${DIPlib_INCLUDE_DIR})
+add_executable(${PROJECT_NAME} ${MAIN_SOURCES} ${PROJECT_SOURCE_DIR}/src/Main.cpp)
+target_include_directories(${PROJECT_NAME} PRIVATE "${PROJECT_SOURCE_DIR}/include" ${TBB_INCLUDE_DIR} ${VCG_INCLUDE_DIR} ${DIPlib_INCLUDE_DIR} ${EIGEN_INCLUDE_DIR})
 target_link_libraries(${PROJECT_NAME} PRIVATE igl::core DIP tbb_static)
 
 add_executable(SliceTest ${MAIN_SOURCES} ${PROJECT_SOURCE_DIR}/src/SliceTest.cpp)
-target_include_directories(SliceTest PRIVATE "${PROJECT_SOURCE_DIR}/include" ${TBB_INCLUDE_DIR} ${VCG_INCLUDE_DIR})
-target_link_libraries(SliceTest PRIVATE igl::core tbb_static)
+target_include_directories(SliceTest PRIVATE "${PROJECT_SOURCE_DIR}/include" ${TBB_INCLUDE_DIR} ${VCG_INCLUDE_DIR} ${EIGEN_INCLUDE_DIR})
+target_link_libraries(SliceTest PRIVATE tbb_static)
 
-add_executable(Fixer ${MAIN_SOURCES} ${PROJECT_SOURCE_DIR}/src/FixSelfIntersect.cpp ${VCG_INCLUDE_DIR}/wrap/ply/plylib.cpp)
-target_include_directories(Fixer PRIVATE "${PROJECT_SOURCE_DIR}/include" ${VCG_INCLUDE_DIR})
+add_executable(Fixer ${MAIN_SOURCES} ${PROJECT_SOURCE_DIR}/src/FixSelfIntersect.cpp)
+target_include_directories(Fixer PRIVATE "${PROJECT_SOURCE_DIR}/include" ${TBB_INCLUDE_DIR} ${VCG_INCLUDE_DIR} ${EIGEN_INCLUDE_DIR})
+target_link_libraries(Fixer tbb_static)
