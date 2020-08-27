@@ -1,0 +1,10 @@
+{
+    "input_stl": "../../stl/cube20mm.stl",
+    "output": "result.txt",
+    "merge": "_*.txt",
+    "pattern": ["tubular_g_ab"],
+    "grid_size": [300],
+    "thickness": [0],
+    "_coff": [0.1, 0.2, 0.4, 1, 2, 5, 10],
+    "coff": [0.15, 0.25, 0.3, 0.35, 0.5, 0.6, 0.8, 1.5, 3, 4, 6, 7, 8, 9]
+}

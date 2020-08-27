@@ -1,0 +1,9 @@
+{
+    "input_stl": "../../stl/cube20mm.stl",
+    "output": "result.txt",
+    "merge": "_*.txt",
+    "pattern": ["schoen_iwp"],
+    "grid_size": [300],
+    "thickness": [0.13, 0.16, 0.19],
+    "coff": [2.5, 3, 3.5, 4, 4.5]
+}

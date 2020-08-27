@@ -1,0 +1,5 @@
+out
+.vs
+CMakeSettings.json
+diplib/lib
+main_sources.cmake

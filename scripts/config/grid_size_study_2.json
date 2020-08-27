@@ -1,0 +1,29 @@
+{
+    "input_stl": "../../stl/cube2mm.stl",
+    "output": "result_2.txt",
+    "merge": "_*.txt",
+    "thickness": "0",
+    "pattern": [
+        "schwarzp",
+        "schwarzd",
+        "gyroid",
+        "double-p",
+        "double-d",
+        "double-gyroid",
+        "lidinoid",
+        "schoen_iwp",
+        "neovius",
+        "bcc",
+        "tubular_g_ab",
+        "tubular_g_c"
+    ],
+    "grid_size": [
+        500,
+        600
+    ],
+    "coff": [
+        1,
+        2.5,
+        5
+    ]
+}

@@ -1,0 +1,39 @@
+language: cpp
+os: linux
+dist: xenial
+branches:
+  only:
+  - master
+  - dev
+jobs:
+  include:
+    - os: linux
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - g++-7
+      env: COMPILER=g++-7 CPP_VER=11
+    - os: osx
+      osx_image: xcode10
+      env: COMPILER=g++-7 CPP_VER=11
+      before_install:
+        - brew update
+        - brew install gcc@7
+    - os: windows
+        
+install:
+  - if [[ "${COMPILER}" != "" ]]; then export CXX=${COMPILER}; fi
+  - ${CXX} --version
+
+before_script:
+  - mkdir -p -v build
+  - cd build
+  - cmake ..
+
+script:
+  - cmake --build .
+
+notifications:
+  email: off

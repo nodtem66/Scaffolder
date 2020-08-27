@@ -1,0 +1,116 @@
+solid model
+facet normal 0.0 0.0 -1.0
+outer loop
+vertex 20.0 0.0 0.0
+vertex 0.0 -20.0 0.0
+vertex 0.0 0.0 0.0
+endloop
+endfacet
+facet normal 0.0 0.0 -1.0
+outer loop
+vertex 0.0 -20.0 0.0
+vertex 20.0 0.0 0.0
+vertex 20.0 -20.0 0.0
+endloop
+endfacet
+facet normal -0.0 -1.0 -0.0
+outer loop
+vertex 20.0 -20.0 20.0
+vertex 0.0 -20.0 0.0
+vertex 20.0 -20.0 0.0
+endloop
+endfacet
+facet normal -0.0 -1.0 -0.0
+outer loop
+vertex 0.0 -20.0 0.0
+vertex 20.0 -20.0 20.0
+vertex 0.0 -20.0 20.0
+endloop
+endfacet
+facet normal 1.0 0.0 0.0
+outer loop
+vertex 20.0 0.0 0.0
+vertex 20.0 -20.0 20.0
+vertex 20.0 -20.0 0.0
+endloop
+endfacet
+facet normal 1.0 0.0 0.0
+outer loop
+vertex 20.0 -20.0 20.0
+vertex 20.0 0.0 0.0
+vertex 20.0 0.0 20.0
+endloop
+endfacet
+facet normal -0.0 -0.0 1.0
+outer loop
+vertex 20.0 -20.0 20.0
+vertex 0.0 0.0 20.0
+vertex 0.0 -20.0 20.0
+endloop
+endfacet
+facet normal -0.0 -0.0 1.0
+outer loop
+vertex 0.0 0.0 20.0
+vertex 20.0 -20.0 20.0
+vertex 20.0 0.0 20.0
+endloop
+endfacet
+facet normal -1.0 0.0 0.0
+outer loop
+vertex 0.0 0.0 20.0
+vertex 0.0 -20.0 0.0
+vertex 0.0 -20.0 20.0
+endloop
+endfacet
+facet normal -1.0 0.0 0.0
+outer loop
+vertex 0.0 -20.0 0.0
+vertex 0.0 0.0 20.0
+vertex 0.0 0.0 0.0
+endloop
+endfacet
+facet normal -0.0 1.0 0.0
+outer loop
+vertex 0.0 0.0 20.0
+vertex 20.0 0.0 0.0
+vertex 0.0 0.0 0.0
+endloop
+endfacet
+facet normal -0.0 1.0 0.0
+outer loop
+vertex 20.0 0.0 0.0
+vertex 0.0 0.0 20.0
+vertex 20.0 0.0 20.0
+endloop
+endfacet
+endsolid model
+//+
+SetFactory("OpenCASCADE");
+//+
+Surface Loop(1) = {1};
+//+
+Volume(1) = {1};
+//+
+Surface Loop(1) = {1};
+//+
+Surface Loop(1) = {1};
+//+
+Surface Loop(1) = {1};
+//+
+Surface Loop(1) = {1};
+//+
+Surface Loop(1) = {1};
+//+
+Surface Loop(1) = {1};
+//+
+Surface Loop(1) = {1};
+//+
+SetFactory("Built-in");
+//+
+SetFactory("Built-in");
+//+
+Physical Surface("1") = {1};
+//+
+Surface Loop(1) = {1};
+//+
+Volume(1) = {1};

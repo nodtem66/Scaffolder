@@ -1,0 +1,40 @@
+{
+    "input_stl": "../../stl/cube20mm.stl",
+    "output": "result_1.txt",
+    "merge": "_*.txt",
+    "result_folder": "results",
+    "thickness": "0.5",
+    "pattern": [
+        "schwarzp",
+        "schwarzd",
+        "gyroid",
+        "double-p",
+        "double-d",
+        "double-gyroid",
+        "lidinoid",
+        "schoen_iwp",
+        "neovius",
+        "bcc",
+        "tubular_g_ab",
+        "tubular_g_c"
+    ],
+    "grid_size": [
+        40,
+        60
+    ],
+    "grid_size_": [
+        100,
+        200,
+        300,
+        400,
+        500,
+        600
+    ],
+    "coff": [
+        0.1,
+        0.33,
+        0.5,
+        1,
+        2
+    ]
+}
