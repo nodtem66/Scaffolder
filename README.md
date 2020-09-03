@@ -1,5 +1,5 @@
 # Scaffolder 
-[![Build Status](https://travis-ci.org/nodtem66/Scaffolder.svg?branch=master)](https://travis-ci.org/nodtem66/Scaffolder) [![Build Status](https://travis-ci.org/nodtem66/Scaffolder.svg?branch=dev)](https://travis-ci.org/nodtem66/Scaffolder) [![Build Status](https://dev.azure.com/n66/Public%20CI/_apis/build/status/nodtem66.Scaffolder?branchName=master)](https://dev.azure.com/n66/Public%20CI/_build/latest?definitionId=1&branchName=master) [![Build Status](https://dev.azure.com/n66/Public%20CI/_apis/build/status/nodtem66.Scaffolder?branchName=dev)](https://dev.azure.com/n66/Public%20CI/_build/latest?definitionId=1&branchName=dev)
+[![Build Status](https://travis-ci.org/nodtem66/Scaffolder.svg?branch=master)](https://travis-ci.org/nodtem66/Scaffolder) [![Build Status](https://dev.azure.com/n66/Public%20CI/_apis/build/status/nodtem66.Scaffolder?branchName=master)](https://dev.azure.com/n66/Public%20CI/_build/latest?definitionId=1&branchName=master)
 
 Generate scaffold from STL file with implicit function (Schwarz P/ Gyroid).
 
@@ -68,6 +68,9 @@ Usage:
 - Clean up the duplicated vertices or faces, and abandon the group of connected faces having the diameter below the setting
 - Export to the target 3D format
 
+## coff and thickness study
+[Angular frequency and iso-level](https://colab.research.google.com/github/nodtem66/Scaffold/data/data_visualization.ipynb)
+
 ## Reference 
 - [dualmc](https://github.com/dominikwodniok/dualmc)
 - [cxxopts](https://github.com/jarro2783/cxxopts)
@@ -75,4 +78,5 @@ Usage:
 - [Minimal surface Blog](https://minimalsurfaces.blog/)
 
 ## Citation
+[![DOI](https://zenodo.org/badge/227950058.svg)](https://zenodo.org/badge/latestdoi/227950058)
 
