@@ -69,7 +69,7 @@ Usage:
 - Export to the target 3D format
 
 ## coff and thickness study
-[Angular frequency and iso-level](https://colab.research.google.com/github/nodtem66/Scaffold/data/data_visualization.ipynb)
+[Angular frequency and iso-level](https://colab.research.google.com/github/nodtem66/Scaffolder/blob/master/data/data_visualization.ipynb)
 
 ## Reference 
 - [dualmc](https://github.com/dominikwodniok/dualmc)
