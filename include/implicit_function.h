@@ -9,6 +9,7 @@
 #include <locale>
 #include <algorithm>
 #include <functional>
+#include <sol/sol.hpp>
 
 typedef double FT;
 const FT pi = 3.141592653589793238462643383279502884L;
@@ -20,6 +21,16 @@ class Function {
 public:
 	Function() {}
 	virtual FT operator()(FT, FT, FT) = 0;
+};
+
+class LuaFunction : public Function {
+private:
+	sol::function* fn;
+public:
+	LuaFunction(sol::function& f) : fn(&f) {}
+	FT operator()(FT x, FT y, FT z) {
+		return (FT) (*fn)(x, y, z);
+	}
 };
 
 class Fixed : public Function {

@@ -17,7 +17,7 @@
 
 #include "Mesh.h"
 #include "MaxHeap.hpp"
-#include "tbb/tbb.h"
+#include "oneapi/tbb.h"
 
 namespace slice {
     

@@ -1,5 +1,6 @@
 #pragma once
 #include <string>
+#include <iostream>
 #include <sstream>
 #include <algorithm>
 #include <ctime>
@@ -17,9 +18,10 @@
 #include "implicit_function.h"
 #include "MeshOperation.h"
 #include "utils.h"
-//#include "QuadricSimplification.h"
+#include "QuadricSimplification.h"
+#include "sol/sol.hpp"
 
-#define VERSION "v2.0-alpha"
+#define VERSION "v1.5.0-alpha"
 #define PROGRESS_BAR_COLUMN 40
 
 #define SCAFFOLDER_FORMAT_DEFAULT 0
@@ -146,4 +148,13 @@ bool qsim_callback(int pos, const char* str) {
     if (pos >= 100)
         qsim_progress.done();
     return true;
+}
+
+void set_shorten_function(sol::state& lua) {
+    lua.script("abs, acos, asin, atan, atan2 = math.abs, math.acos, math.atan, math.atan2");
+    lua.script("ceil, cos, deg, exp, floor = math.ceil, math.cos, math.deg, math.exp, math.floor");
+    lua.script("log, log10, max, min, mod = math.log, math.log10, math.max, math.min, math.mod");
+    lua.script("pow, rad, sin, sqrt, tan = math.pow, math.rad, math.sin, math.sqrt, math.tan");
+    lua.script("frexp, ldexp, random, randomseed = math.frexp, math.ldexp, math.random, math.randomseed");
+    lua.script("local pi = math.pi");
 }

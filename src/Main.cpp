@@ -31,7 +31,7 @@ int main(int argc, char* argv[])
 
     // file parameters
     std::string filename = "";
-    std::string surface = "schwarzp";
+    std::string surface_name = "schwarzp";
     std::string input_file = "";
     std::string output_format = "";
     std::uint8_t log_format = SCAFFOLDER_FORMAT_DEFAULT;
@@ -120,7 +120,7 @@ int main(int argc, char* argv[])
         if (result.count("params")) {
             std::vector<std::string> params = result["params"].as<std::vector<std::string>>();
             size_t n = params.size();
-            if (n >= 1) surface = params[0];
+            if (n >= 1) surface_name = params[0];
             if (n >= 2) coff = std::stod(params[1]);
             if (n >= 3) isolevel = std::stod(params[2]);
             if (n >= 4) minimum_grid_size = std::stoi(params[3]);
@@ -132,7 +132,7 @@ int main(int argc, char* argv[])
         if (result.count("grid_offset")) grid_offset = result["grid_offset"].as<uint16_t>();
         if (result.count("coff")) coff = result["coff"].as<double>();
         if (result.count("minimum_diameter")) minimum_diameter = result["minimum_diameter"].as<double>();
-        if (result.count("surface")) surface = result["surface"].as<std::string>();
+        if (result.count("surface")) surface_name = result["surface"].as<std::string>();
         if (result.count("shell")) shell = result["shell"].as<uint16_t>();
         if (result.count("smooth_step")) smooth_step = result["smooth_step"].as<uint16_t>();
         if (result.count("fix_self_intersect")) is_fix_self_intersect = result["fix_self_intersect"].as<bool>();
@@ -140,10 +140,10 @@ int main(int argc, char* argv[])
         if (result.count("k_slice")) k_slice = result["k_slice"].as<uint16_t>();
         if (result.count("k_polygon")) k_polygon = result["k_polygon"].as<uint16_t>();
 
-        util::to_lower(surface);
+        util::to_lower(surface_name);
         util::to_lower(output_format);
 
-        if (surface == "rectlinear") {
+        if (surface_name == "rectlinear") {
             isolevel = 0;
         }
     }
@@ -160,7 +160,7 @@ int main(int argc, char* argv[])
     }
     else {
         std::stringstream _name;
-        _name << filename << '_' << surface << std::time(nullptr) << "." << ((log_format == SCAFFOLDER_FORMAT_CSV) ? "csv" : "txt");
+        _name << filename << '_' << surface_name << std::time(nullptr) << "." << ((log_format == SCAFFOLDER_FORMAT_CSV) ? "csv" : "txt");
         log_file.open(_name.str(), std::ofstream::out);
         log_buffer = log_file.rdbuf();
     }
@@ -170,7 +170,7 @@ int main(int argc, char* argv[])
     LOG << "[Scaffolder " << VERSION << "]" << std::endl
         << "-- Input file: " << input_file << std::endl
         << "-- Output file: " << filename << '.' << output_format << std::endl
-        << "-- Surface (-n): " << surface << std::endl
+        << "-- Surface (-n): " << surface_name << std::endl
         << "-- Coff (-c): " << coff << std::endl
         << "-- Isolevel (-t): " << isolevel << std::endl
         << "-- Grid size (-g): " << minimum_grid_size << std::endl
@@ -196,7 +196,7 @@ int main(int argc, char* argv[])
         << "min_ellipse,q1_ellipse,q2_ellipse,q3_ellipse,max_ellipse,"
         << "min_elongation,q1_elongation,q2_elongation,q3_elongation,max_elongation,"
         << "volumn,surface_area,porosity,surface_area_ratio,vertices,faces" << std::endl
-        << surface << ',' << coff << ',' << shell << ',' << isolevel << ',' << minimum_grid_size << ',' << grid_offset << ',' << smooth_step << ','
+        << surface_name << ',' << coff << ',' << shell << ',' << isolevel << ',' << minimum_grid_size << ',' << grid_offset << ',' << smooth_step << ','
         << input_file << ',';
 
     // Next, we divided into two stages separated by scope because of the need of memory cleaning of unused variables
@@ -272,7 +272,8 @@ int main(int argc, char* argv[])
                     << "-- Length: " << L.format(CleanFmt) << std::endl
                     << "-- Grid delta: " << grid_delta << std::endl;
             }
-            Implicit_function fn(isosurface(surface, isolevel), coff);
+
+            // Generate Grid index (x,y,z)
             LOG << "[Generating grid] ";
             Eigen::MatrixXd GV(grid_size.prod(), 3);
             for (size_t k = 0; k < grid_size(2); k++) {
@@ -289,14 +290,15 @@ int main(int argc, char* argv[])
             LOG << "OK" << std::endl
                 << "-- Grid size: " << grid_size.prod() << " " << grid_size.format(CleanFmt) << std::endl
                 << "[Calculating Winding number] ";
-            Eigen::VectorXd W;
+            
+            Eigen::VectorXd W, D;
             {
                 igl::FastWindingNumberBVH bvh;
                 igl::fast_winding_number(V1, F1, 2, bvh);
                 igl::fast_winding_number(bvh, 2, GV, W);
             }
             LOG << "OK" << std::endl;
-
+            
             /*
             *  Shell generation
             *  Some application want to generate the porous scaffold with solid outer shell.
@@ -351,6 +353,36 @@ int main(int argc, char* argv[])
             }
             
             LOG << "[Generating isosurface Fxyz] ";
+            sol::state lua;
+            Function* surface;
+            sol::function f;
+            // Initialize surface
+            if (util::PathGetExtension(surface_name) == ".lua") {
+                lua.open_libraries(sol::lib::base, sol::lib::math, sol::lib::string);
+                set_shorten_function(lua);
+                sol::load_result lua_file = lua.load_file(surface_name);
+                if (!lua_file.valid()) {
+                    sol::error err = lua_file;
+                    std::cerr << "[Lua Error] " << err.what() << std::endl;
+                    exit(-1);
+                }
+                else {
+                    lua.set("w", coff);
+                    lua.set("t", isolevel);
+                    lua.set_function("v", [](double x, double y, double z)
+                    {
+                            return 2*x;
+                    });
+                    lua_file();
+                    f = lua["surface"];
+                    surface = new LuaFunction(f);
+                }
+            }
+            else {
+               surface = isosurface(surface_name, isolevel);
+            }
+            Implicit_function fn(surface, coff);
+            fn(0.1, 0.23, 0.45);
             Fxyz.resize(grid_size.prod(), 1);
             IFxyz.resize(grid_size.prod(), 1);
             for (size_t k = 0; k < grid_size(2); k++) {
