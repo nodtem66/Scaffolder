@@ -15,6 +15,13 @@
 #endif
 
 namespace util {
+    
+    class NullBuffer : public std::streambuf
+    {
+    public:
+        int overflow(int c) { return c; }
+    };
+
     int make_dir(std::string& str) {
         if (str.empty())
             return 0;
@@ -24,6 +31,8 @@ namespace util {
         return mkdir(str.c_str(), 0733);
 #endif
     }
+    NullBuffer null_buffer;
+    std::ostream null_stream(&null_buffer);
 
     /* Remove if already defined */
     typedef long long int64; typedef unsigned long long uint64;
@@ -36,7 +45,7 @@ namespace util {
 #ifdef _WIN32
         /* Windows */
         FILETIME ft;
-        LARGE_INTEGER li;
+        LARGE_INTEGER li{};
 
         /* Get the amount of 100 nano seconds intervals elapsed since January 1, 1601 (UTC) and copy it
          * to a LARGE_INTEGER structure. */
@@ -64,6 +73,14 @@ namespace util {
 
         return ret;
 #endif
+    }
+
+    std::string PathGetBasename(std::string const& path)
+    {
+        size_t firstindex = path.find_last_of("/\\");
+        firstindex = firstindex == std::string::npos ? 0 : firstindex + 1;
+        size_t lastindex = path.find_last_of(".");
+        return path.substr(firstindex, lastindex - firstindex);
     }
 
     std::string PathGetExtension(std::string const& path)

@@ -4,7 +4,7 @@ project ("Scaffolder")
 
 set(CGAL_DO_NOT_WARN_ABOUT_CMAKE_BUILD_TYPE ON)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
@@ -17,6 +17,7 @@ message(STATUS "PROJECT_SOURCE_DIR=${PROJECT_SOURCE_DIR}")
 find_package(LIBIGL REQUIRED)
 find_package(TBB REQUIRED)
 find_package(VCG REQUIRED)
+find_package(Sol2 REQUIRED)
 
 # Add your project files
 file(GLOB MAIN_SOURCES
@@ -47,8 +48,12 @@ endif()
 
 #add_definitions(-DDIP__IS_STATIC -DDIP__ENABLE_ASSERT -DDIP__HAS_JPEG -DDIP__EXCEPTIONS_RECORD_STACK_TRACE)
 add_executable(${PROJECT_NAME} ${MAIN_SOURCES} ${PROJECT_SOURCE_DIR}/src/Main.cpp)
-target_include_directories(${PROJECT_NAME} PRIVATE "${PROJECT_SOURCE_DIR}/include" ${TBB_INCLUDE_DIR} ${VCG_INCLUDE_DIR} ${DIPlib_INCLUDE_DIR} ${EIGEN_INCLUDE_DIR})
-target_link_libraries(${PROJECT_NAME} PRIVATE igl::core DIP tbb_static)
+target_include_directories(${PROJECT_NAME} PRIVATE "${PROJECT_SOURCE_DIR}/include" ${TBB_INCLUDE_DIR} ${VCG_INCLUDE_DIR} ${EIGEN_INCLUDE_DIR} ${SOL2_INCLUDE_DIR})
+target_link_libraries(${PROJECT_NAME} PRIVATE igl::core tbb_static Threads::Threads ${LUA_LIBRARIES})
+
+add_executable(Sol2_Test ${MAIN_SOURCES} ${PROJECT_SOURCE_DIR}/src/Sol2.cpp)
+target_include_directories(Sol2_Test PRIVATE "${PROJECT_SOURCE_DIR}/include" ${SOL2_INCLUDE_DIR} ${LUA_INCLUDE_DIRS})
+target_link_libraries(Sol2_Test PRIVATE Threads::Threads ${LUA_LIBRARIES})
 
 add_executable(SliceTest ${MAIN_SOURCES} ${PROJECT_SOURCE_DIR}/src/SliceTest.cpp)
 target_include_directories(SliceTest PRIVATE "${PROJECT_SOURCE_DIR}/include" ${TBB_INCLUDE_DIR} ${VCG_INCLUDE_DIR} ${EIGEN_INCLUDE_DIR})

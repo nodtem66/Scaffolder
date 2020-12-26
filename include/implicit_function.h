@@ -276,6 +276,6 @@ Function* isosurface(std::string name, FT t) {
 	else if (name == "tubular_g_c") {
 		return new TGc();
 	}
-	throw std::runtime_error(name + " doesn't exist");
+	throw std::runtime_error("Implicit surface called `" + name + "` doesn't exist");
 }
 #endif

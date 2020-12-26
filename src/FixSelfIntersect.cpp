@@ -104,6 +104,8 @@ int main(int argc, char* argv[])
         std::cout << "Error parsing options: " << ex.what() << std::endl;
         return 1;
     }
+
+    std::ostream verbose_stream((verbose ? std::cout.rdbuf() : &util::null_buffer));
     
     {
         TMesh mesh;
@@ -126,26 +128,26 @@ int main(int argc, char* argv[])
         }
         vcg::tri::UpdateBounding<TMesh>::Box(mesh);
 
-        clean_mesh(mesh, minimum_diameter, 0, verbose);
+        clean_mesh(mesh, minimum_diameter, 0, verbose_stream);
         bool is_success = false;
 
         if (is_interaction_mode) {
             char menu;
             bool is_not_exit = true;
             do {
-                report_mesh(mesh);
+                report_mesh(verbose_stream, mesh);
                 print_menu();
                 std::cin >> menu;
                 std::cout << std::endl;
                 switch (menu) {
                 case '1':
-                    fix_self_intersect_mesh(mesh, minimum_diameter, 1, verbose);
+                    fix_self_intersect_mesh(mesh, minimum_diameter, 1, verbose_stream);
                     break;
                 case '2':
-                    fix_non_manifold_vertices(mesh, minimum_diameter, 1, verbose);
+                    fix_non_manifold_vertices(mesh, minimum_diameter, 1, verbose_stream);
                     break;
                 case '3':
-                    fix_non_manifold_vertices(mesh, minimum_diameter, 1, verbose);
+                    fix_non_manifold_vertices(mesh, minimum_diameter, 1, verbose_stream);
                     break;
                 case 's':
                     is_success = true;
@@ -159,14 +161,14 @@ int main(int argc, char* argv[])
         }
         else {
             // Automatic repairing
-            is_success = fix_self_intersect_mesh(mesh, minimum_diameter, max_iteration, verbose);
+            is_success = fix_self_intersect_mesh(mesh, minimum_diameter, max_iteration, verbose_stream);
 
             bool is_manifold = is_mesh_manifold(mesh);
             if (!is_manifold) {
-                is_success = fix_non_manifold_vertices(mesh, minimum_diameter, max_iteration, verbose);
-                is_success = fix_non_manifold_edges(mesh, minimum_diameter, max_iteration, verbose);
+                is_success = fix_non_manifold_vertices(mesh, minimum_diameter, max_iteration, verbose_stream);
+                is_success = fix_non_manifold_edges(mesh, minimum_diameter, max_iteration, verbose_stream);
             }
-            if (verbose) report_mesh(mesh);
+            if (verbose) report_mesh(verbose_stream, mesh);
         }
 
         
