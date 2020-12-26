@@ -17,7 +17,6 @@ message(STATUS "PROJECT_SOURCE_DIR=${PROJECT_SOURCE_DIR}")
 find_package(LIBIGL REQUIRED)
 find_package(TBB REQUIRED)
 find_package(VCG REQUIRED)
-find_package(DIPlib REQUIRED)
 
 # Add your project files
 file(GLOB MAIN_SOURCES
@@ -46,7 +45,7 @@ if(MSVC)
   add_definitions(-DNOMINMAX -D_USE_MATH_DEFINES)
 endif()
 
-add_definitions(-DDIP__IS_STATIC -DDIP__ENABLE_ASSERT -DDIP__HAS_JPEG -DDIP__EXCEPTIONS_RECORD_STACK_TRACE)
+#add_definitions(-DDIP__IS_STATIC -DDIP__ENABLE_ASSERT -DDIP__HAS_JPEG -DDIP__EXCEPTIONS_RECORD_STACK_TRACE)
 add_executable(${PROJECT_NAME} ${MAIN_SOURCES} ${PROJECT_SOURCE_DIR}/src/Main.cpp)
 target_include_directories(${PROJECT_NAME} PRIVATE "${PROJECT_SOURCE_DIR}/include" ${TBB_INCLUDE_DIR} ${VCG_INCLUDE_DIR} ${DIPlib_INCLUDE_DIR} ${EIGEN_INCLUDE_DIR})
 target_link_libraries(${PROJECT_NAME} PRIVATE igl::core DIP tbb_static)

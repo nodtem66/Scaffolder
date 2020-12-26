@@ -21,11 +21,8 @@
 #include "utils.h"
 //#include "QuadricSimplification.h"
 
-#define VERSION "v1.3"
+#define VERSION "v2.0-alpha"
 #define PROGRESS_BAR_COLUMN 40
-
-#define METHOD_IMAGE_PROCESS 0
-#define METHOD_SLICE_CONTOUR 1
 
 typedef struct index_type {
     size_t x; size_t y; size_t z;

@@ -9,97 +9,90 @@ int main(int argc, char* argv[])
     bool is_analysis_microstructure = false;
     bool is_export_microstructure = false;
     bool is_export_feret = false;
-    bool is_export_inverse = false;
     bool is_build_inverse = false;
     bool is_fix_self_intersect = false;
     bool no_output = true;
-    
-    uint8_t method = METHOD_SLICE_CONTOUR;
+   
     uint16_t grid_offset = 3;
     uint16_t shell = 0;
     uint16_t smooth_step = 5;
-    uint16_t slice_grid = 100;
+    uint16_t k_slice = 100;
+    uint16_t k_polygon = 4;
     size_t minimum_grid_size = 100;
     
-    double thickness = 0.0;
+    double isolevel = 0.0;
     double qsim_percent = 0;
     double coff = pi;
     double minimum_diameter = 0.25;
     
+    // format Eigen object to readable text
     Eigen::IOFormat CleanFmt(4, Eigen::DontAlignCols, ", ", "\n", "[", "]");
     Eigen::IOFormat CSVFmt(-1, Eigen::DontAlignCols, ", ", ", ");
     
     // file parameters
     std::string filename = "";
-    std::string format = "";
     std::string surface = "schwarzp";
     std::string input_file = "";
+    std::string output_format = "";
+    std::string log_format = "default";
 
+    // TRY-CATCH block
+    // Parse the program options
     try {
-        cxxopts::Options options("Scaffolder", "Scaffolder - generate 3D scaffold from STL file");
-        options.positional_help("INPUT OUTPUT").show_positional_help();
+        cxxopts::Options options("Scaffolder", "Scaffolder - generate 3D scaffold from STL file based on implicit surface");
+        options.positional_help("INPUT OUTPUT PARAMETERS").show_positional_help();
         options.add_options()
             ("h,help", "Print help")
             ("q,quiet", "Disable verbose output [default: false]")
+            ("format", "Format of logging output [default: default]", cxxopts::value<std::string>(), "FORMAT (default, csv)")
             ("i,input", "Input file (STL)", cxxopts::value<std::string>(), "FILE")
             ("o,output", "Output filename with extension stl,ply,obj,off [default: out]", cxxopts::value<std::string>(), "FILENAME")
-            ("c,coff", "default:PI", cxxopts::value<double>(), "DOUBLE")
-            ("s,shell", "[default:0]", cxxopts::value<uint16_t>(), "INT (0..60000)")
-            ("n,surface", "rectlinear, schwarzp, schwarzd, gyroid, double-p, double-d, double-gyroiod, lidinoid, schoen_iwp, neovius, bcc, tubular_g_ab, tubular_g_c [default: schwarzp]", cxxopts::value<std::string>(), "NAME")
-            ("t,thickness", "Thickness [default: 0]", cxxopts::value<double>(), "DOUBLE")
-            ("g,grid_size", "Grid size [default: 100]", cxxopts::value<size_t>(), "INT (0..60000)")
-            ("grid_offset", "[default:3]", cxxopts::value<uint16_t>(), "INT (0..60000)")
-            ("smooth_step", "Smooth with laplacian (default: 5)", cxxopts::value<uint16_t>(), "INT (0..60000)")
-            ("m,microstructure", "Analysis microstructure with Slice contour technique ( [default: false]")
-            ("m1", "Export and analysis microstructure 1 (Image processing technique) [default: false]")
-            ("m2", "Export and analysis microstructure 2 (Slice contour technique) [default: false]")
-            ("method", "Method of microstructure analysis: 0 (Image processing technique) or 1 (Slice contour technique) [default: 1]", cxxopts::value<uint8_t>(), "0,1")
-            ("slice_grid", "Slice Grid used in microstructure analysis [default: 100]", cxxopts::value<uint16_t>(), "INT (0..60000)")
             ("output_inverse", "additional output inverse scaffold [default: false]")
-            ("inverse", "Enable build inverse 3D scaffold [default: false]")
+            ("c,coff", "Angular frequency (pore size adjustment) default:PI", cxxopts::value<double>(), "DOUBLE")
+            ("t,isolevel", "isolevel (porosity adjustment) [default: 0]", cxxopts::value<double>(), "DOUBLE")
+            ("n,surface", "implicit surface: rectlinear, schwarzp, schwarzd, gyroid, double-p, double-d, double-gyroiod, lidinoid, schoen_iwp, neovius, bcc, tubular_g_ab, tubular_g_c [default: schwarzp]", cxxopts::value<std::string>(), "NAME")
+            ("g,grid_size", "Grid size [default: 100]", cxxopts::value<size_t>(), "INT (0..60000)")
+            ("s,shell", "Outer thickness (layers) [default:0]", cxxopts::value<uint16_t>(), "INT (0..60000)")
+            ("grid_offset", "[default:3]", cxxopts::value<uint16_t>(), "INT (0..60000)")
+            ("m,microstructure", "Analysis microstructure with Slice contour technique ( [default: false]")
+            ("export_microstructure", "Analysis microstructure and export the 2D contours (for debugging) [default: false]")
+            ("k_slice", "K_slice: the number of slicing layers in each direction (used in microstructure analysis) [default: 100]", cxxopts::value<uint16_t>(), "INT (0..60000)")
+            ("k_polygon", "K_polygon: the number of closest outer contour (used in microstructure analysis) [default: 4]", cxxopts::value<uint16_t>(), "INT (>0)")
+            ("k,k_list", "Shorten option for K_slice, K_polygon", cxxopts::value<std::vector<double>>(), "K_slice,K_polygon")
+            ("z,size_optimize", "Experimental Quadric simplification [default: 0]", cxxopts::value<double>(), "DOUBLE (0..1)")
+            ("smooth_step", "Smooth with laplacian (default: 5)", cxxopts::value<uint16_t>(), "INT (0..60000)")
             ("dirty", "Disable autoclean [default false]")
-            ("fix_self_intersect", "Experimental fix self-intersect faces [default: false]")
-            ("qsim", "Experimental Quadric simplification [default: 0]", cxxopts::value<double>(), "DOUBLE (0..1)")
-            ("minimum_diameter", "used for removing small orphaned (between 0-1) [default: 0.25]", cxxopts::value<double>(), "DOUBLE (0..1)");
-        options.parse_positional({ "input", "output"});
+            ("minimum_diameter", "used for removing small orphaned (between 0-1) [default: 0.25]", cxxopts::value<double>(), "DOUBLE (0..1)")
+            ("fix_self_intersect", "Experimental fix self-intersect faces [default: false]");
+        options.parse_positional({ "input", "output", "params"});
         bool isEmptyOption = (argc == 1);
         cxxopts::ParseResult result = options.parse(argc, argv);
         if (isEmptyOption || result.count("help")) {
             std::cout << options.help() << std::endl;
             return 0;
         }
-        // Requirment
+        // Program requires at least one argument for specifying INPUT file
+        // Show error if there's no argument
         if (result.count("input")) input_file = result["input"].as<std::string>();
         else {
             std::cout << "Missing Input file" << std::endl;
             return 1;
         }
-        // get optional parameters
+        // Parse the optional parameters
         if (result.count("quiet")) verbose = !result["quiet"].as<bool>();
+        if (result.count("format")) log_format = result["format"].as<std::string>();
         if (result.count("dirty")) dirty = result["dirty"].as<bool>();
         if (result.count("microstructure")) {
             is_analysis_microstructure = result["microstructure"].as<bool>();
             no_output = true;
         }
-        if (result.count("method")) method = result["method"].as<uint8_t>();
-        if (method < 0 && method > 1) {
-            std::cout << "Invalid method option: " << method << ". The method option must be only 0 or 1, see --help";
-            return 1;
-        }
-        if (result.count("m1")) {
-            is_analysis_microstructure = result["m1"].as<bool>();
-            is_export_microstructure = result["m1"].as<bool>();
-            method = METHOD_IMAGE_PROCESS;
-            no_output = true;
-        }
-        if (result.count("m2")) {
+        if (result.count("export_microstructure")) {
             is_analysis_microstructure = result["m2"].as<bool>();
             is_export_microstructure = result["m2"].as<bool>();
-            method = METHOD_SLICE_CONTOUR;
             no_output = true;
         }
         if (result.count("output_inverse")) {
-            is_export_inverse = result["output_inverse"].as<bool>();
+            is_build_inverse = result["output_inverse"].as<bool>();
         }
         if (result.count("output")) {
             filename = result["output"].as<std::string>();
@@ -107,16 +100,19 @@ int main(int argc, char* argv[])
             std::string ext = util::PathGetExtension(filename);
             if (!ext.empty()) {
                 filename = filename.substr(0, filename.size()-ext.size());
-                format = ext.substr(1);
+                output_format = ext.substr(1);
             }
-            if (format != "ply" && format != "obj" && format != "stl" && format != "off") {
-                std::cout << "Invalid format: " << format << std::endl;
+            if (output_format != "ply" && output_format != "obj" && output_format != "stl" && output_format != "off") {
+                std::cout << "Invalid format: " << output_format << std::endl;
                 return 1;
             }
             no_output = false;
         }
-        if (result.count("format")) format = result["format"].as<std::string>();
-        if (result.count("thickness")) thickness = result["thickness"].as<double>();
+        if (result.count("params") >= 3) {
+            std::vector<double> params = result["params"].as<std::vector<double>>();
+            std::cout << params.size() << std::endl;
+        }
+        if (result.count("isolevel")) isolevel = result["isolevel"].as<double>();
         if (result.count("grid_size")) minimum_grid_size = result["grid_size"].as<size_t>();
         if (result.count("grid_offset")) grid_offset = result["grid_offset"].as<uint16_t>();
         if (result.count("coff")) coff = result["coff"].as<double>();
@@ -124,16 +120,16 @@ int main(int argc, char* argv[])
         if (result.count("surface")) surface = result["surface"].as<std::string>();
         if (result.count("shell")) shell = result["shell"].as<uint16_t>();
         if (result.count("smooth_step")) smooth_step = result["smooth_step"].as<uint16_t>();
-        if (result.count("inverse")) is_build_inverse = result["inverse"].as<bool>();
         if (result.count("fix_self_intersect")) is_fix_self_intersect = result["fix_self_intersect"].as<bool>();
-        if (result.count("qsim")) qsim_percent = result["qsim"].as<double>();
-        if (result.count("slice_grid")) slice_grid = result["slice_grid"].as<uint16_t>();
+        if (result.count("size_optimize")) qsim_percent = result["size_optimize"].as<double>();
+        if (result.count("k_slice")) k_slice = result["k_slice"].as<uint16_t>();
+        if (result.count("k_polygon")) k_polygon = result["k_polygon"].as<uint16_t>();
         
         util::to_lower(surface);
-        util::to_lower(format);
+        util::to_lower(output_format);
         
         if (surface == "rectlinear") {
-            thickness = 0;
+            isolevel = 0;
         }
     }
     catch (const cxxopts::OptionException & ex) {
@@ -146,10 +142,10 @@ int main(int argc, char* argv[])
     if (verbose) {
         std::cout << "[Scaffolder " << VERSION << "]" << std::endl
             << "-- Input file: " << input_file << std::endl
-            << "-- Output file: " << filename << '.' << format << std::endl
+            << "-- Output file: " << filename << '.' << output_format << std::endl
             << "-- Surface: " << surface << std::endl
             << "-- Coff: " << coff << std::endl
-            << "-- Thickness: " << thickness << std::endl
+            << "-- Isolevel: " << isolevel << std::endl
             << "-- Grid size: " << minimum_grid_size << std::endl
             << "--   Grid offset: " << grid_offset << std::endl
             << "--   Shell: " << shell << std::endl
@@ -159,11 +155,9 @@ int main(int argc, char* argv[])
             << "--   Fix self-intersect: " << (is_fix_self_intersect ? "True" : "False") << std::endl
             << "--   Quadric Simplification: " << qsim_percent << std::endl
             << "-- Analysis microstructure: " << (is_analysis_microstructure ? "True" : "False") << std::endl
-            << "--   Method: " << (method == METHOD_IMAGE_PROCESS ? "Image Processing" : "Contour Slicing") << std::endl
-            << "--   Slice grid: " << slice_grid << std::endl
+            << "--   Slice grid: " << k_slice << std::endl
             << "--   Export microstructure: " << (is_export_microstructure ? "True" : "False") << std::endl
-            << "-- Build Inverse: " << (is_build_inverse ? "True" : "False") << std::endl
-            << "--   Export Inverse: " << (is_export_inverse ? "True" : "False") << std::endl;
+            << "-- Build Inverse: " << (is_build_inverse ? "True" : "False") << std::endl;
     }
     else {
         std::stringstream _name;
@@ -179,13 +173,16 @@ int main(int argc, char* argv[])
             << "min_ellipse,q1_ellipse,q2_ellipse,q3_ellipse,max_ellipse,"
             << "min_elongation,q1_elongation,q2_elongation,q3_elongation,max_elongation,"
             << "volumn,surface_area,porosity,surface_area_ratio,vertices,faces" << std::endl;
-        result << surface << ',' << coff << ',' << shell << ',' << thickness << ',' << minimum_grid_size << ',' << grid_offset << ',' << smooth_step << ','
+        result << surface << ',' << coff << ',' << shell << ',' << isolevel << ',' << minimum_grid_size << ',' << grid_offset << ',' << smooth_step << ','
             << input_file << ',';
     }
 
-    // Stage 1:
+    // Next, we divided into two stages separated by scope because of the need of memory cleaning of unused variables
+    // Stage 1
     TMesh mesh, inverse_mesh;
-    uint64_t starttime, endtime;
+    // volumn1 and area1 is volumn and surface area of original mesh
+    // volumn2 and area2 is volumn and surface area of generated mesh
+    // we initialize these variables to a small number (epsilon) because of prevention of divided-by-zero exception
     double volume1 = eps, volume2 = eps;
     double area1 = eps, area2 = eps;
     {
@@ -195,7 +192,7 @@ int main(int argc, char* argv[])
         Eigen::RowVector3i grid_size;
         double grid_delta;
         try {
-            // Read FROM STL
+            // Read vertices and faces from STL 
             Eigen::MatrixXd V1;
             Eigen::MatrixXi F1;
             {
@@ -207,6 +204,7 @@ int main(int argc, char* argv[])
                     std::cout << "Unable to open mesh " << input_file << " : " << vcg::tri::io::Importer<TMesh>::ErrorMsg(err) << std::endl;
                     exit(-1);
                 }
+                // It's a good practice to clean STL mesh firstly (VCGLib)
                 stl.face.EnableFFAdjacency();
                 vcg::tri::Clean<TMesh>::RemoveDuplicateFace(stl);
                 vcg::tri::Clean<TMesh>::RemoveDuplicateVertex(stl);
@@ -217,12 +215,13 @@ int main(int argc, char* argv[])
                 vcg::tri::Clean<TMesh>::RemoveUnreferencedVertex(stl);
                 vcg::tri::UpdateTopology<TMesh>::FaceFace(stl);
                 stl.face.DisableFFAdjacency();
-                // Report Volume and surface area
+                // Check that the mesh is neither point cloud (has only vertices) nor non-watertight (has some self-intersacting faces).
                 int edgeNum = 0, edgeBorderNum = 0, edgeNonManifNum = 0;
                 vcg::tri::Clean<TMesh>::CountEdgeNum(stl, edgeNum, edgeBorderNum, edgeNonManifNum);
                 bool watertight = (edgeBorderNum == 0) && (edgeNonManifNum == 0);
                 bool pointcloud = (stl.fn == 0 && stl.vn != 0);
                 if (!pointcloud && watertight) {
+                    // Collect the volume and surface area of original mesh
                     area1 = vcg::tri::Stat<TMesh>::ComputeMeshArea(stl);
                     volume1 = vcg::tri::Stat<TMesh>::ComputeMeshVolume(stl);
                 }
@@ -252,7 +251,7 @@ int main(int argc, char* argv[])
                     << "-- Length: " << L.format(CleanFmt) << std::endl
                     << "-- Grid delta: " << grid_delta << std::endl;
             }
-            Implicit_function fn(isosurface(surface, thickness), coff);
+            Implicit_function fn(isosurface(surface, isolevel), coff);
             if (verbose) std::cout << "[Generating grid] ";
             Eigen::MatrixXd GV(grid_size.prod(), 3);
             for (size_t k = 0; k < grid_size(2); k++) {
@@ -371,16 +370,17 @@ int main(int argc, char* argv[])
             if (verbose) report_mesh(mesh);
 
             if (is_analysis_microstructure && is_manifold) {
-                // Evaluating pore size by create 2D slice 8-bit image (0-blacks're pores and 255-whites're grains)
-                // Then an 8-bit image become a binary image by image thresholding (value of 150)
-                // The binary imaege'll be labeled and finally evaluated the feret diameter by chain coding
-                // init filename
+                // Evaluating pore size by create 2D slice from 3D mesh
                 std::string dir;
                 std::stringstream filename;
                 std::vector<dip::dfloat> minFeret;
                 std::vector<dip::dfloat> maxFeret;
                 std::vector<dip::dfloat> podczeckShapes[5];
                 if (is_export_microstructure) {
+                    // Initialize filename and directory for logging
+                    // Get filename without extension from input_file.
+                    // Ex., input.stl -> input
+                    // then the folder `input_slice` will be created
                     size_t firstindex = input_file.find_last_of("/\\");
                     firstindex = firstindex == string::npos ? 0 : firstindex + 1;
                     size_t lastindex = input_file.find_last_of(".");
@@ -390,111 +390,68 @@ int main(int argc, char* argv[])
                 // init progress bar
                 ProgressBar progress(grid_size.sum(), PROGRESS_BAR_COLUMN);
                 
-                if (method == METHOD_IMAGE_PROCESS) {
-                    // init DIP MeasurementTool and DIP image
-                    dip::MeasurementTool tool;
-                    dip::Image img2d({ (dip::uint64)grid_size.maxCoeff(), (dip::uint64)grid_size.maxCoeff() }, 1, dip::DT_UINT8);
-                    dip::uint8* data = static_cast<dip::uint8*>(img2d.Origin());
-                    char axis = 'x';
-                    for (uint8_t main_axis = 0; main_axis < 3; main_axis++) {
-                        // main_axis: 0 = x, 1 = y, 2 = z
-                        size_t index;
-                        uint8_t axis2 = (main_axis + 1) % 3;
-                        uint8_t axis3 = (main_axis + 2) % 3;
-                        for (size_t k = grid_offset; k < grid_size(main_axis) - (size_t)(grid_offset); k++) {
-                            img2d.Fill(200);
-                            for (size_t j = grid_offset; j < grid_size(axis2) - (size_t)(grid_offset); j++) {
-                                for (size_t i = grid_offset; i < grid_size(axis3) - (size_t)(grid_offset); i++) {
-                                    if (main_axis == 0)
-                                        index = k + grid_size(0) * (j + grid_size(1) * i);
-                                    else if (main_axis == 1)
-                                        index = i + grid_size(0) * (k + grid_size(1) * j);
-                                    else
-                                        index = j + grid_size(0) * (i + grid_size(1) * k);
-                                    if (W(index) >= 0.8) {// inside STL mesh
-                                        if (Fxyz(index) > eps2)
-                                            data[i + grid_size(axis3) * j] = 0;
-                                    }
-                                }
-                            }
-                            // Measurement Feret diameter
-                            dip::Image label = dip::Label(img2d < 50, 2);
-                            dip::Measurement msr = tool.Measure(label, img2d, { "Feret", "PodczeckShapes" }, {}, 2);
-                            dip::Measurement::IteratorFeature it = msr["Feret"];
-                            dip::Measurement::IteratorFeature::Iterator feret = it.FirstObject();
-                            while (feret) {
-                                // From ref: https://diplib.github.io/diplib-docs/features.html#size_features_Feret
-                                maxFeret.push_back(feret[2] * grid_delta);
-                                minFeret.push_back(feret[1] * grid_delta);
-                                ++feret;
-                            }
-                            it = msr["PodczeckShapes"];
-                            dip::Measurement::IteratorFeature::Iterator shape = it.FirstObject();
-                            while (shape) {
-                                podczeckShapes[0].push_back(shape[0]);
-                                podczeckShapes[1].push_back(shape[1]);
-                                podczeckShapes[2].push_back(shape[2]);
-                                podczeckShapes[3].push_back(shape[3]);
-                                podczeckShapes[4].push_back(shape[4]);
-                                ++shape;
-                            }
-                            if (is_export_microstructure) {
-                                filename.str(std::string());
-                                filename << dir << '/' << axis << '_' << k << ".jpg";
-                                dip::ImageWriteJPEG(img2d, filename.str());
-                            }
-                            ++progress;
-                            progress.display();
-                        }
-                        axis++;
-                    }
-                } // End Image processing
-                else if (method == METHOD_SLICE_CONTOUR) {
-                    vcg::tri::UpdateBounding<TMesh>::Box(mesh);
-                    vcg::Box3d bbox = mesh.bbox;
-                    vcg::Point3d dim = bbox.Dim();
+                // Start measure pore size by Slice contour technique
+                vcg::tri::UpdateBounding<TMesh>::Box(mesh);
+                vcg::Box3d bbox = mesh.bbox;
+                vcg::Point3d dim = bbox.Dim();
                     
-                    char axis = 'x';
+                char axis = 'x';
+                progress.display();
+                // Loop for x, y, z axis
+                // main_axis: 0 = x, 1 = y, 2 = z
+                for (uint8_t main_axis = 0; main_axis < 3; main_axis++) {
+                    size_t index;
+                    // define next and prev axis by the cycled direction: X -> Y, Y -> Z, Z -> X
+                    int next_axis = ((main_axis + 1) % 3);
+                    int prev_axis = ((main_axis + 2) % 3);
+                    // define progress bar step based on gize size
+                    unsigned int progress_major_step = grid_size[main_axis] / 4;
+                    // Rodrigo's incremental slicing
+                    slice::Slice s = slice::incremental_slicing(mesh, k_slice, main_axis);
+                    // update progress bar
+                    progress += progress_major_step;
                     progress.display();
-                    for (uint8_t main_axis = 0; main_axis < 3; main_axis++) {
-                        // main_axis: 0 = x, 1 = y, 2 = z
-                        size_t index;
-                        int next_axis = ((main_axis + 1) % 3);
-                        int prev_axis = ((main_axis + 2) % 3);
-                        unsigned int progress_major_step = grid_size[main_axis] / 4;
-                        slice::Slice s = slice::incremental_slicing(mesh, slice_grid, main_axis);
-                        progress += progress_major_step;
-                        progress.display();
-                        slice::ContourSlice C = slice::contour_construct(s, main_axis);
-                        progress += progress_major_step;
-                        progress.display();
-                        slice::measure_feret_and_shape(C, minFeret, maxFeret, podczeckShapes);
-                        progress += progress_major_step;
-                        progress.display();
-                        if (is_export_microstructure) {
-                            filename.str(std::string());
-                            unsigned int minor_step = C.size() / progress_major_step, step = minor_step;
-                            for (slice::ContourSlice::const_iterator cs = C.begin(); cs != C.end(); cs++) {
-                                size_t index = (size_t)(cs - C.begin() + 1);
-                                std::stringstream name(dir);
-                                name << dir << "/" << axis << '_' << index << ".svg";
-                                slice::write_svg(name.str(), *cs, dim[next_axis], dim[prev_axis], bbox.min[next_axis], bbox.min[prev_axis]);
-                                step--;
-                                if (step == 0) {
-                                    step = minor_step;
-                                    ++progress;
-                                    progress.display();
-                                }
+                    // Rodrigo's contour construct
+                    slice::ContourSlice C = slice::contour_construct(s, main_axis);
+                    // update progress bar
+                    progress += progress_major_step;
+                    progress.display();
+                    // Measure pore size from C, and store the output in minFeret, maxFeret, and podczeckShapes
+                    slice::measure_feret_and_shape(C, minFeret, maxFeret, podczeckShapes);
+                    // update progress bar
+                    progress += progress_major_step;
+                    progress.display();
+                    // If export flag was defined, convert the 2D contours into SVG
+                    if (is_export_microstructure) {
+                        filename.str(std::string());
+                        unsigned int minor_step = C.size() / progress_major_step, step = minor_step;
+                        // Loop foreach 2D contours
+                        for (slice::ContourSlice::const_iterator cs = C.begin(); cs != C.end(); cs++) {
+                            // Get array index from iterator
+                            size_t index = (size_t)(cs - C.begin() + 1);
+                            std::stringstream name(dir);
+                            // Set the SVG filename to <axis>_<index>.svg
+                            // Ex. x_0.svg, x_1.svg, ..., z_0.svg 
+                            name << dir << "/" << axis << '_' << index << ".svg";
+                            slice::write_svg(name.str(), *cs, dim[next_axis], dim[prev_axis], bbox.min[next_axis], bbox.min[prev_axis]);
+                            step--;
+                            if (step == 0) {
+                                step = minor_step;
+                                ++progress;
+                                progress.display();
                             }
                         }
-                        else {
-                            progress += progress_major_step;
-                            progress.display();
-                        }
-                        axis++;
                     }
-                } // End Slice contour
+                    else {
+                        progress += progress_major_step;
+                        progress.display();
+                    }
+                    axis++;
+                }
+                // End Slice contour
                 progress.done();
+
+                // If we can measure pore sizes, then format the result
                 if (minFeret.size() > 0 && maxFeret.size() > 0) {
                     std::sort(minFeret.begin(), minFeret.end());
                     std::sort(maxFeret.begin(), maxFeret.end());
@@ -549,7 +506,7 @@ int main(int argc, char* argv[])
         }
     }
 
-    // Stage 2: Result
+    // Stage 2
     {
         // Report Volume and surface area
         int edgeNum = 0, edgeBorderNum = 0, edgeNonManifNum = 0;
@@ -594,23 +551,23 @@ int main(int argc, char* argv[])
         if (!no_output) {
             if (verbose) std::cout << "[Writing file] ";
             std::string filename2 = filename;
-            filename.append("." + format);
-            filename2.append("_inverse." + format);
-            if (format == "ply") {
+            filename.append("." + output_format);
+            filename2.append("_inverse." + output_format);
+            if (output_format == "ply") {
                 vcg::tri::io::ExporterPLY<TMesh>::Save(mesh, filename.c_str(), false);
-                if (is_build_inverse && is_export_inverse) vcg::tri::io::ExporterPLY<TMesh>::Save(inverse_mesh, filename2.c_str(), false);
+                if (is_build_inverse) vcg::tri::io::ExporterPLY<TMesh>::Save(inverse_mesh, filename2.c_str(), false);
             }
-            else if (format == "obj") {
+            else if (output_format == "obj") {
                 vcg::tri::io::ExporterOBJ<TMesh>::Save(mesh, filename.c_str(), 0);
-                if (is_build_inverse && is_export_inverse) vcg::tri::io::ExporterOBJ<TMesh>::Save(inverse_mesh, filename2.c_str(), 0);
+                if (is_build_inverse) vcg::tri::io::ExporterOBJ<TMesh>::Save(inverse_mesh, filename2.c_str(), 0);
             }
-            else if (format == "off") {
+            else if (output_format == "off") {
                 vcg::tri::io::ExporterOFF<TMesh>::Save(mesh, filename.c_str(), 0);
-                if (is_build_inverse && is_export_inverse) vcg::tri::io::ExporterOFF<TMesh>::Save(inverse_mesh, filename2.c_str(), 0);
+                if (is_build_inverse) vcg::tri::io::ExporterOFF<TMesh>::Save(inverse_mesh, filename2.c_str(), 0);
             }
-            else if (format == "stl") {
+            else if (output_format == "stl") {
                 vcg::tri::io::ExporterSTL<TMesh>::Save(mesh, filename.c_str(), 0);
-                if (is_build_inverse && is_export_inverse) vcg::tri::io::ExporterSTL<TMesh>::Save(inverse_mesh, filename2.c_str(), true, 0);
+                if (is_build_inverse) vcg::tri::io::ExporterSTL<TMesh>::Save(inverse_mesh, filename2.c_str(), true, 0);
             }
             if (verbose) std::cout << "OK" << std::endl;
         }
