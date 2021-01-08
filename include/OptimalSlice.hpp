@@ -506,14 +506,14 @@ namespace slice {
         return false;
     }
 
-    Slice incremental_slicing(TMesh& mesh, size_t grid_size, int direction = Direction::Z) {
+    Slice incremental_slicing(TMesh& mesh, size_t k_size, int direction = Direction::Z) {
         slice::Plane P;
         slice::Layer L;
-        slice::build_triangle_list(mesh, grid_size, P, L, direction);
-        Slice S(grid_size);
+        slice::build_triangle_list(mesh, k_size, P, L, direction);
+        Slice S(k_size);
         
         Triangles A;
-        for (size_t i = 1; i <= grid_size; i++) {
+        for (size_t i = 1; i <= k_size; i++) {
             if (L[i].size() > 0) {
                 A.reserve(A.size() + L[i].size());
                 A.insert(A.end(), L[i].begin(), L[i].end());
@@ -1162,7 +1162,7 @@ namespace slice {
     }
 
     // Measure feret diameter
-    void measure_feret_and_shape(const slice::ContourSlice& CS, std::vector<double>& minFeret, std::vector<double>& maxFeret, std::vector<double> (&shapes)[5]) {
+    void measure_feret_and_shape(const slice::ContourSlice& CS, size_t k_polygon, std::vector<double>& minFeret, std::vector<double>& maxFeret, std::vector<double> (&shapes)[5]) {
         // Foreach slice in 3D
 #ifndef USE_PARALLEL
         for (size_t cs_index = 0, cs_size = CS.size(); cs_index < cs_size; cs_index++) {
@@ -1248,7 +1248,7 @@ namespace slice {
                         std::vector<double> feret;
                         double _feret;
                         std::vector<DistanceIndexPair> pairs;
-                        int k = std::min(centerPolygonMap.size() - 1, (size_t)4);
+                        int k = std::min(centerPolygonMap.size() - 1, k_polygon);
                         if (p[index] == slice::PolygonSide::OUTSIDE) {
                             size_t i = 0;
                             // Take the first k in centerPolygonMap for initializing the MaxHeap

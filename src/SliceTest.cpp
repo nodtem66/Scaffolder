@@ -172,7 +172,7 @@ int main(int argc, char* argv[])
 #endif
                 std::vector<double> minFeret, maxFeret, shape[5];
                 std::ofstream result;
-                slice::measure_feret_and_shape(C, minFeret, maxFeret, shape);
+                slice::measure_feret_and_shape(C, 4, minFeret, maxFeret, shape);
                 if (minFeret.size() > 0) {
                     std::sort(minFeret.begin(), minFeret.end());
                     std::cout << "Min Feret (Min, Q1, Q2, Q3, Max) = (" << minFeret.at(0) << ',' << minFeret.at(minFeret.size() * 0.25) << ',' << minFeret.at(minFeret.size() / 2) << ',' << minFeret.at(minFeret.size() * 0.75) << ',' << minFeret.at(minFeret.size() - 1) << ')' << std::endl;

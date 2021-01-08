@@ -43,16 +43,14 @@ int main(int argc, char* argv[])
         options.positional_help("INPUT OUTPUT PARAMETERS").show_positional_help();
         options.add_options()
             ("h,help", "Print help")
+            ("i,input", "Input file (STL)", cxxopts::value<std::string>(), "INPUT")
+            ("o,output", "Output filename with extension stl,ply,obj,off [default: out]", cxxopts::value<std::string>(), "OUTPUT")
+            ("params", "Combined parameters list: surface[,coff,isolevel,grid_size,k_slice,k_polygon]", cxxopts::value<std::vector<std::string>>(), "PARAMETERS")
             ("q,quiet", "Disable verbose output [default: false]")
-            ("format", "Format of logging output [default: default]", cxxopts::value<std::string>(), "FORMAT (default, csv)")
-            ("i,input", "Input file (STL)", cxxopts::value<std::string>(), "FILE")
-            ("o,output", "Output filename with extension stl,ply,obj,off [default: out]", cxxopts::value<std::string>(), "FILENAME")
-            ("output_inverse", "additional output inverse scaffold [default: false]")
             ("c,coff", "Angular frequency (pore size adjustment) default:PI", cxxopts::value<double>(), "DOUBLE")
             ("t,isolevel", "isolevel (porosity adjustment) [default: 0]", cxxopts::value<double>(), "DOUBLE")
             ("n,surface", "implicit surface: rectlinear, schwarzp, schwarzd, gyroid, double-p, double-d, double-gyroiod, lidinoid, schoen_iwp, neovius, bcc, tubular_g_ab, tubular_g_c [default: schwarzp]", cxxopts::value<std::string>(), "NAME")
             ("g,grid_size", "Grid size [default: 100]", cxxopts::value<size_t>(), "INT (0..60000)")
-            ("params", "Combined parameters list", cxxopts::value<std::vector<std::string>>(), "surface[,coff,isolevel,grid_size,k_slice,k_polygon]")
             ("s,shell", "Outer thickness (layers) [default:0]", cxxopts::value<uint16_t>(), "INT (0..60000)")
             ("grid_offset", "[default:3]", cxxopts::value<uint16_t>(), "INT (0..60000)")
             ("m,microstructure", "Analysis microstructure with Slice contour technique ( [default: false]")
@@ -63,15 +61,35 @@ int main(int argc, char* argv[])
             ("smooth_step", "Smooth with laplacian (default: 5)", cxxopts::value<uint16_t>(), "INT (0..60000)")
             ("dirty", "Disable autoclean [default false]")
             ("minimum_diameter", "used for removing small orphaned (between 0-1) [default: 0.25]", cxxopts::value<double>(), "DOUBLE (0..1)")
+            ("format", "Format of logging output [default: default]", cxxopts::value<std::string>(), "FORMAT (default, csv)")
+            ("output_inverse", "additional output inverse scaffold [default: false]")
             ("fix_self_intersect", "Experimental fix self-intersect faces [default: false]");
         options.parse_positional({ "input", "output", "params" });
         bool isEmptyOption = (argc == 1);
         cxxopts::ParseResult result = options.parse(argc, argv);
         if (isEmptyOption || result.count("help")) {
             std::cout << options.help() << std::endl
-                << "Example: " << std::endl
+                << "Example: " << std::endl << std::endl
                 << "  " << util::PathGetBasename(argv[0]) << " input.stl output.stl bcc,3.14159,0,100" << std::endl
-                << "    " << "Generated BCC scaffold with w=3.14159 (PI), t=0, and grid size=100" << std::endl << std::endl;
+                << "    " << "Generated BCC scaffold with w=3.14159 (PI), t=0, and grid size=100" << std::endl << std::endl
+                << "  " << util::PathGetBasename(argv[0]) << " input.stl output.stl custom.lua,3.14159,0,100,100,4" << std::endl
+                << "    " << "Generated scaffold with custom.lua, w=3.14159 (PI), t=0, " << std::endl
+                << "    " << "grid size=100, k_slice=100, k_polygon=4" << std::endl << std::endl
+                << "  " << util::PathGetBasename(argv[0]) << " input.stl output.stl bcc,3.14159,0 -q --format csv" << std::endl
+                << "    " << "Generated BCC scaffold (w=3.14159, t=0) and reported in CSV" << std::endl << std::endl << std::endl
+                << "Lua file: " << std::endl << std::endl
+                << "  Define the \"surface\" function that return the implicit function" << std::endl
+                << "  -----------------------------------------------------------------" << std::endl
+                << "  function surface (x, y, z)" << std::endl
+                << "    return sin(x) * cos(y) + sin(y) * cos(z) + sin(z) * cos(x) - t" << std::endl
+                << "  end" << std::endl
+                << "  -----------------------------------------------------------------" << std::endl << std::endl
+                << "Special symbols can be used in lua file: " << std::endl << std::endl
+                << "  w: value from -c, or --coff" << std::endl
+                << "  t: value from -t, or --thickness" << std::endl
+                << "  winding(x,y,z): function returning the winding number of position x,y,z" << std::endl
+                << "  signed_distance(x,y,z): function returning signed distance of position x,y,z" << std::endl
+                << "  and all functions from math module" << std::endl << std::endl;
             return 0;
         }
         // Program requires at least one argument for specifying INPUT file
@@ -291,11 +309,14 @@ int main(int argc, char* argv[])
                 << "-- Grid size: " << grid_size.prod() << " " << grid_size.format(CleanFmt) << std::endl
                 << "[Calculating Winding number] ";
             
-            Eigen::VectorXd W, D;
+            Eigen::VectorXd W, D, Signed_Distance;
             {
                 igl::FastWindingNumberBVH bvh;
+                igl::AABB<Eigen::MatrixXd, 3> tree;
+                tree.init(V1, F1);
                 igl::fast_winding_number(V1, F1, 2, bvh);
                 igl::fast_winding_number(bvh, 2, GV, W);
+                igl::signed_distance_fast_winding_number(GV, V1, F1, tree, bvh, Signed_Distance);
             }
             LOG << "OK" << std::endl;
             
@@ -369,10 +390,26 @@ int main(int argc, char* argv[])
                 else {
                     lua.set("w", coff);
                     lua.set("t", isolevel);
-                    lua.set_function("v", [](double x, double y, double z)
+                    lua.set_function("winding", [W, V1min1, grid_delta, grid_size](double x, double y, double z) -> double
                     {
-                            return 2*x;
+                            auto i = floor(x - V1min1(0) / grid_delta);
+                            auto j = floor(y - V1min1(1) / grid_delta);
+                            auto k = floor(z - V1min1(2) / grid_delta);
+                            const size_t index = i + grid_size(0) * (j + grid_size(1) * k);
+                            if (index < 0 || index >= (size_t)grid_size(0) * grid_size(1) * grid_size(2))
+                                return (double)0;
+                            return W(index);
                     });
+                    lua.set_function("signed_distance", [Signed_Distance, V1min1, grid_delta, grid_size](double x, double y, double z) -> double
+                        {
+                            auto i = floor(x - V1min1(0) / grid_delta);
+                            auto j = floor(y - V1min1(1) / grid_delta);
+                            auto k = floor(z - V1min1(2) / grid_delta);
+                            const size_t index = i + grid_size(0) * (j + grid_size(1) * k);
+                            if (index < 0 || index >= (size_t)grid_size(0) * grid_size(1) * grid_size(2))
+                                return (double)0;
+                            return Signed_Distance(index);
+                        });
                     lua_file();
                     f = lua["surface"];
                     surface = new LuaFunction(f);
@@ -489,7 +526,7 @@ int main(int argc, char* argv[])
                     progress += progress_major_step;
                     progress.display();
                     // Measure pore size from C, and store the output in minFeret, maxFeret, and podczeckShapes
-                    slice::measure_feret_and_shape(C, minFeret, maxFeret, podczeckShapes);
+                    slice::measure_feret_and_shape(C, k_polygon, minFeret, maxFeret, podczeckShapes);
                     // update progress bar
                     progress += progress_major_step;
                     progress.display();
