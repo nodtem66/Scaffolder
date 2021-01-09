@@ -1,4 +1,4 @@
-name: CMake
+name: Build
 
 on:
   push:
@@ -39,5 +39,28 @@ jobs:
     - name: Upload binary
       uses: actions/upload-artifact@v2
       with:
-        name: binary
-        path: ${{github.workspace}}/build/**
+        name: ${{ matrix.os }}
+        retention-days: 1
+        path: ${{github.workspace}}/build/Release/**
+  release:
+    runs-on: ubuntu-latest
+    needs: [build]
+    steps:
+      - uses: actions/download-artifact@v2
+        with:
+          name: ubuntu-latest
+          path: ubuntu
+      - uses: actions/download-artifact@v2
+        with:
+          name: macos-latest
+          path: macos
+      - uses: actions/download-artifact@v2
+        with:
+          name: windows-latest
+          path: windows 
+      - name: List files
+        run: ls -R
+      - uses: actions/upload-artifact@v2
+        with:
+          name: bin64
+          path: ${{github.workspace}}/**
