@@ -690,7 +690,9 @@ namespace slice {
                         hash.erase(item);
                         for (size_t j = 1;; j++) {
                             item = hash.find(C[j]);
-                            // TODO: fixed this bugs
+                            // Sometimes, the program got unexpected errors
+                            // We prevented it by breaking the process
+                            // Perhaps, we have to investigate this incident
                             if (item == hash.end()) {
                                 CS[i].clear();
                                 break;

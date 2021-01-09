@@ -1,6 +1,5 @@
 # Scaffolder 
-[![Build Status](https://travis-ci.org/nodtem66/Scaffolder.svg?branch=master)](https://travis-ci.org/nodtem66/Scaffolder) [![Build Status](https://dev.azure.com/n66/Public%20CI/_apis/build/status/nodtem66.Scaffolder?branchName=master)](https://dev.azure.com/n66/Public%20CI/_build/latest?definitionId=1&branchName=master)
-
+![Build Status](https://github.com/nodtem66/Scaffolder/workflows/Cmake/badge.svg) [![Build Status](https://travis-ci.org/nodtem66/Scaffolder.svg?branch=master)](https://travis-ci.org/nodtem66/Scaffolder) [![Build Status](https://dev.azure.com/n66/Public%20CI/_apis/build/status/nodtem66.Scaffolder?branchName=master)](https://dev.azure.com/n66/Public%20CI/_build/latest?definitionId=1&branchName=master)
 Generate scaffold from STL file with implicit function (Schwarz P/ Gyroid).
 
 ```

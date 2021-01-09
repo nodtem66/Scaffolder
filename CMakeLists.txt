@@ -46,7 +46,7 @@ if(MSVC)
   add_definitions(-DNOMINMAX -D_USE_MATH_DEFINES -DWIN32_LEAN_AND_MEAN)
 endif()
 
-add_executable(${PROJECT_NAME} ${MAIN_SOURCES} ${PROJECT_SOURCE_DIR}/src/Main.cpp)
+add_executable(${PROJECT_NAME} ${MAIN_SOURCES} ${PROJECT_SOURCE_DIR}/src/Main.cpp )
 target_include_directories(${PROJECT_NAME} PRIVATE "${PROJECT_SOURCE_DIR}/include" ${TBB_INCLUDE_DIR} ${VCG_INCLUDE_DIR} ${EIGEN_INCLUDE_DIR} ${SOL2_INCLUDE_DIR} ${LUA_INCLUDE_DIRS})
 target_link_libraries(${PROJECT_NAME} PRIVATE igl::core tbb Threads::Threads ${LUA_LIBRARIES})
 
@@ -54,7 +54,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE igl::core tbb Threads::Threads ${L
 #target_include_directories(Sol2_Test PRIVATE "${PROJECT_SOURCE_DIR}/include" ${SOL2_INCLUDE_DIR} ${LUA_INCLUDE_DIRS})
 #target_link_libraries(Sol2_Test PRIVATE Threads::Threads ${LUA_LIBRARIES})
 
-add_executable(SliceTest ${MAIN_SOURCES} ${PROJECT_SOURCE_DIR}/src/SliceTest.cpp)
+add_executable(SliceTest ${MAIN_SOURCES} ${PROJECT_SOURCE_DIR}/src/SliceTest.cpp )
 target_include_directories(SliceTest PRIVATE "${PROJECT_SOURCE_DIR}/include" ${VCG_INCLUDE_DIR} ${EIGEN_INCLUDE_DIR})
 target_link_libraries(SliceTest PRIVATE tbb)
 
