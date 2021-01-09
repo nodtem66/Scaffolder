@@ -23,10 +23,10 @@ strategy:
       vmImage: 'macOS-latest'
       build_std: 11
     Windows17:
-      vmImage: 'vs2017-win2016'
+      vmImage: 'windows-latest'
       build_std: 17
     Windows11:
-      vmImage: 'vs2017-win2016'
+      vmImage: 'windows-latest'
       build_std: 11
 pool:
   vmImage: $(vmImage)
@@ -37,6 +37,6 @@ steps:
   inputs:
     cmakeArgs: .. -DCMAKE_CXX_STANDARD=$(build_std) -DCMAKE_BUILD_TYPE=$(build_type)
   displayName: 'Configure'
-- script: cmake --build .
+- script: cmake --build . --config $(build_type)
   displayName: 'Build'
   workingDirectory: build
