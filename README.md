@@ -1,5 +1,6 @@
 # Scaffolder 
-![Build Status](https://github.com/nodtem66/Scaffolder/workflows/Cmake/badge.svg) [![Build Status](https://travis-ci.org/nodtem66/Scaffolder.svg?branch=master)](https://travis-ci.org/nodtem66/Scaffolder) [![Build Status](https://dev.azure.com/n66/Public%20CI/_apis/build/status/nodtem66.Scaffolder?branchName=master)](https://dev.azure.com/n66/Public%20CI/_build/latest?definitionId=1&branchName=master)
+![Build Status](https://github.com/nodtem66/Scaffolder/workflows/Build/badge.svg) [![Build Status](https://travis-ci.org/nodtem66/Scaffolder.svg?branch=master)](https://travis-ci.org/nodtem66/Scaffolder) [![Build Status](https://dev.azure.com/n66/Public%20CI/_apis/build/status/nodtem66.Scaffolder?branchName=master)](https://dev.azure.com/n66/Public%20CI/_build/latest?definitionId=1&branchName=master)
+
 Generate scaffold from STL file with implicit function (Schwarz P/ Gyroid).
 
 ```
@@ -81,11 +82,11 @@ Special symbols can be used in lua file:
 
 ## Screenshots
 
-** The figure of patterns implemented in this program
+- **The figure of patterns implemented in this program**
 
 ![TPMS Patterns](https://github.com/nodtem66/Scaffolder/raw/master/images/patterns.jpg)
 
-** The examples of generated porous scaffold
+- **The examples of generated porous scaffold**
 
 ![Examples porous scaffold](https://github.com/nodtem66/Scaffolder/raw/master/images/examples.jpg)
 

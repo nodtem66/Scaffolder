@@ -19,6 +19,7 @@ const FT eps2 = 1e-2;
 
 class Function {
 public:
+	bool isLuaFunction = false;
 	Function() {}
 	virtual FT operator()(FT, FT, FT) = 0;
 };
@@ -27,6 +28,7 @@ class LuaFunction : public Function {
 private:
 	sol::function* fn;
 public:
+	bool isLuaFunction = true;
 	LuaFunction(sol::function& f) : fn(&f) {}
 	FT operator()(FT x, FT y, FT z) {
 		return (FT) (*fn)(x, y, z);
@@ -238,8 +240,11 @@ public:
 	Implicit_function(Function* isosurface, const double coff, const double thickness = 0):
 		isosurface(*isosurface), coff(coff), thickness(thickness) {}
 	FT operator ()(FT x, FT y, FT z) {
-		if (thickness <= eps)
+		if (thickness <= eps) {
+			if (isosurface.isLuaFunction)
+				return (isosurface)(x, y, z);
 			return (isosurface)(x * coff, y * coff, z * coff);
+		}
 		return IsoThicken(isosurface, x * coff, y * coff, z * coff, thickness);
 	}
 };
