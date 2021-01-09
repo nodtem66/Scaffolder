@@ -53,12 +53,12 @@ Example:
   Scaffolder input.stl output.stl bcc,3.14159,0,100
     Generated BCC scaffold with w=3.14159 (PI), t=0, and grid size=100
 
-  Scaffolder input.stl output.stl custom.lua,3.14159,0,100,100,4
-    Generated scaffold with custom.lua, w=3.14159 (PI), t=0,
+  Scaffolder input.stl output.stl custom.lua,3.14159,0,100,100,4 -m
+    Generated and evaluated scaffold with custom.lua, w=3.14159 (PI), t=0,
     grid size=100, k_slice=100, k_polygon=4
 
-  Scaffolder input.stl output.stl bcc,3.14159,0 -q --format csv
-    Generated BCC scaffold (w=3.14159, t=0) and reported in CSV
+  Scaffolder input.stl output.stl bcc,3.14159,0 -m -q --format csv
+    Generated and evaluated BCC scaffold (w=3.14159, t=0) and reported in CSV
 
 
 Lua file:

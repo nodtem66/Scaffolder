@@ -72,11 +72,11 @@ int main(int argc, char* argv[])
                 << "Example: " << std::endl << std::endl
                 << "  " << util::PathGetBasename(argv[0]) << " input.stl output.stl bcc,3.14159,0,100" << std::endl
                 << "    " << "Generated BCC scaffold with w=3.14159 (PI), t=0, and grid size=100" << std::endl << std::endl
-                << "  " << util::PathGetBasename(argv[0]) << " input.stl output.stl custom.lua,3.14159,0,100,100,4" << std::endl
-                << "    " << "Generated scaffold with custom.lua, w=3.14159 (PI), t=0, " << std::endl
+                << "  " << util::PathGetBasename(argv[0]) << " input.stl output.stl custom.lua,3.14159,0,100,100,4 -m" << std::endl
+                << "    " << "Generated and evaluated scaffold with custom.lua, w=3.14159 (PI), t=0, " << std::endl
                 << "    " << "grid size=100, k_slice=100, k_polygon=4" << std::endl << std::endl
-                << "  " << util::PathGetBasename(argv[0]) << " input.stl output.stl bcc,3.14159,0 -q --format csv" << std::endl
-                << "    " << "Generated BCC scaffold (w=3.14159, t=0) and reported in CSV" << std::endl << std::endl << std::endl
+                << "  " << util::PathGetBasename(argv[0]) << " input.stl output.stl bcc,3.14159,0 -m -q --format csv" << std::endl
+                << "    " << "Generated and evaluated BCC scaffold (w=3.14159, t=0) and reported in CSV" << std::endl << std::endl << std::endl
                 << "Lua file: " << std::endl << std::endl
                 << "  Define the \"surface\" function that return the implicit function" << std::endl
                 << "  -----------------------------------------------------------------" << std::endl

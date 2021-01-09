@@ -111,16 +111,4 @@ namespace util {
         for (std::string::size_type i = 0; i < s.length(); ++i)
             s[i] = std::tolower(s[i], loc);
     }
-
-    int get_console_width() {
-#ifdef _WIN32
-        CONSOLE_SCREEN_BUFFER_INFO csbi;
-        GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi);
-        return csbi.srWindow.Right - csbi.srWindow.Left + 1;
-#else
-        struct winsize w;
-        ioctl(STDOUT_FILENO, TIOCGWINSZ, &w);
-        return w.ws_col;
-#endif
-    }
 }
