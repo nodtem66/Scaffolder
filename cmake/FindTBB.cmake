@@ -20,9 +20,10 @@ find_path(TBB_INCLUDE_DIR tbb/tbb.h
 )
 set(TBB_ROOT_DIR ${TBB_INCLUDE_DIR}/../)
 
-set(TBB_BUILD_SHARED OFF CACHE INTERNAL "")
-set(TBB_BUILD_STATIC ON CACHE INTERNAL "")
-set(TBB_BUILD_TESTS OFF CACHE INTERNAL "")
+set(TBB_TEST OFF CACHE INTERNAL "turn off")
+set(TBB_EXAMPLES OFF CACHE INTERNAL "turn off")
+set(TBB_STRICT OFF CACHE INTERNAL "turn off")
+set(BUILD_SHARED_LIBS off CACHE INTERNAL "turn off dynamic LINK_DEPENDS (not recommended by intel)")
 
 include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(TBB

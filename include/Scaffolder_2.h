@@ -1,17 +1,16 @@
 #pragma once
 #include <string>
+#include <iostream>
 #include <sstream>
 #include <algorithm>
 #include <ctime>
+#include <numeric>
 
 #include <igl/fast_winding_number.h>
+#include <igl/signed_distance.h>
 #include <Eigen/Core>
 
 #include "cxxopts.hpp"
-#include "diplib.h"
-#include "diplib/file_io.h"
-#include "diplib/regions.h"
-#include "diplib/measurement.h"
 #include "dualmc/dualmc.h"
 
 #include "ProgressBar.hpp"
@@ -19,13 +18,17 @@
 #include "implicit_function.h"
 #include "MeshOperation.h"
 #include "utils.h"
-//#include "QuadricSimplification.h"
+#include "QuadricSimplification.h"
+#include "sol/sol.hpp"
 
-#define VERSION "v1.3"
+#define VERSION "v1.5.0-alpha"
 #define PROGRESS_BAR_COLUMN 40
 
-#define METHOD_IMAGE_PROCESS 0
-#define METHOD_SLICE_CONTOUR 1
+#define SCAFFOLDER_FORMAT_DEFAULT 0
+#define SCAFFOLDER_FORMAT_CSV     1
+
+#define LOG if (log_format == SCAFFOLDER_FORMAT_DEFAULT) log
+#define CSV if (log_format == SCAFFOLDER_FORMAT_CSV) log
 
 typedef struct index_type {
     size_t x; size_t y; size_t z;
@@ -39,7 +42,7 @@ inline size_t indexFromIJK(size_t i, size_t j, size_t k, Eigen::RowVector3i grid
 }
 
 inline void indexToIJK(size_t index, Eigen::RowVector3i grid_size, index_type& r) {
-    r.z = index / (grid_size(0) * grid_size(1));
+    r.z = index / grid_size(0) / grid_size(1);
     index -= r.z * grid_size(0) * grid_size(1);
     r.y = index / grid_size(0);
     r.x = index % grid_size(0);
@@ -145,4 +148,13 @@ bool qsim_callback(int pos, const char* str) {
     if (pos >= 100)
         qsim_progress.done();
     return true;
+}
+
+void set_shorten_function(sol::state& lua) {
+    lua.script("abs, acos, asin, atan, atan2 = math.abs, math.acos, math.atan, math.atan2");
+    lua.script("ceil, cos, deg, exp, floor = math.ceil, math.cos, math.deg, math.exp, math.floor");
+    lua.script("log, log10, max, min, mod = math.log, math.log10, math.max, math.min, math.mod");
+    lua.script("pow, rad, sin, sqrt, tan = math.pow, math.rad, math.sin, math.sqrt, math.tan");
+    lua.script("frexp, ldexp, random, randomseed = math.frexp, math.ldexp, math.random, math.randomseed");
+    lua.script("local pi = math.pi");
 }

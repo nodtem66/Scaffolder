@@ -1,14 +1,15 @@
-[submodule "external/diplib"]
-	path = external/diplib
-	url = https://github.com/DIPlib/diplib
 [submodule "external/libigl"]
 	path = external/libigl
 	url = https://github.com/libigl/libigl.git
-	branch = dev
+	branch = master
 [submodule "external/vcglib"]
 	path = external/vcglib
 	url = https://github.com/cnr-isti-vclab/vcglib
 	branch = devel
+[submodule "external/sol2"]
+	path = external/sol2
+	url = https://github.com/ThePhD/sol2.git
+	branch = develop
 [submodule "external/tbb"]
 	path = external/tbb
-	url = https://github.com/wjakob/tbb
+	url = https://github.com/oneapi-src/oneTBB.git
