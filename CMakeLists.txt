@@ -2,7 +2,6 @@
 
 project ("Scaffolder")
 
-set(CGAL_DO_NOT_WARN_ABOUT_CMAKE_BUILD_TYPE ON)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -11,8 +10,21 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 # libigl
 option(LIBIGL_WITH_OPENGL            "Use OpenGL"         OFF)
 option(LIBIGL_WITH_OPENGL_GLFW       "Use GLFW"           OFF)
+option(LIBIGL_USE_STATIC_LIBRARY "Use LibIGL as static library" ON)
 
 message(STATUS "PROJECT_SOURCE_DIR=${PROJECT_SOURCE_DIR}")
+if(NOT EXISTS "${PROJECT_SOURCE_DIR}/external/libigl/CMakeLists.txt" OR
+   NOT EXISTS "${PROJECT_SOURCE_DIR}/external/tbb/CMakeLists.txt" OR
+   NOT EXISTS "${PROJECT_SOURCE_DIR}/external/sol2/CMakeLists.txt" OR
+   NOT EXISTS "${PROJECT_SOURCE_DIR}/external/vcglib/wrap/")
+  include(download_external_files)
+  download_external_files(
+    https://github.com/nodtem66/Scaffolder/releases/download/v1.5.0-alpha/external.tar.gz
+	"${PROJECT_SOURCE_DIR}/scripts/external.tar.gz"
+	40575b7a8486ce66e2f2551cb94fff11d9f590fb5924d50db4b455a3bc1e299f
+  )
+  file(ARCHIVE_EXTRACT INPUT "${PROJECT_SOURCE_DIR}/scripts/external.tar.gz" DESTINATION ${PROJECT_SOURCE_DIR})
+endif()
 
 find_package(LIBIGL REQUIRED)
 find_package(TBB REQUIRED)
@@ -31,10 +43,6 @@ file(GLOB MAIN_SOURCES
 	"${PROJECT_SOURCE_DIR}/include/*/*.tpp"
 	"${PROJECT_SOURCE_DIR}/include/*/*.h"
 	"${PROJECT_SOURCE_DIR}/include/*/*.hpp"
-	"${PROJECT_SOURCE_DIR}/include/vcglib/*.h"
-	"${PROJECT_SOURCE_DIR}/include/vcglib/*/*.h"
-	"${PROJECT_SOURCE_DIR}/include/vcglib/*/*/*.h"
-	"${PROJECT_SOURCE_DIR}/include/vcglib/*/*/*/*.h"
 	"${VCG_INCLUDE_DIR}/wrap/ply/plylib.cpp"
 )
 include(update_deps_file)
