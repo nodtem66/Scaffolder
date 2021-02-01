@@ -1,7 +1,9 @@
 # Scaffolder 
-![Build Status](https://github.com/nodtem66/Scaffolder/workflows/Build/badge.svg) [![Build Status](https://travis-ci.org/nodtem66/Scaffolder.svg?branch=master)](https://travis-ci.org/nodtem66/Scaffolder) [![Build Status](https://dev.azure.com/n66/Public%20CI/_apis/build/status/nodtem66.Scaffolder?branchName=master)](https://dev.azure.com/n66/Public%20CI/_build/latest?definitionId=1&branchName=master)
+![Build Status](https://github.com/nodtem66/Scaffolder/workflows/Build/badge.svg) [![Build Status](https://dev.azure.com/n66/Public%20CI/_apis/build/status/nodtem66.Scaffolder?branchName=master)](https://dev.azure.com/n66/Public%20CI/_build/latest?definitionId=1&branchName=master)
 
-Generate scaffold from STL file with implicit function (Schwarz P/ Gyroid).
+![Scaffolder Logo](https://github.com/nodtem66/Scaffolder/raw/master/images/scaffolder_logo.jpg)
+
+Generate scaffold from STL/PLY/OFF/OBJ file with implicit function (e.g., Schwarz P/ Gyroid).
 
 ```
 Scaffolder - generate 3D scaffold from STL file
@@ -93,7 +95,8 @@ Special symbols can be used in lua file:
 ## Dependencies
 - [libigl](https://libigl.github.io/)
 - [vcglib](https://github.com/cnr-isti-vclab/vcglib)
-- [diplib](https://github.com/DIPlib/diplib)
+- [sol2](https://github.com/ThePhD/sol2)
+- [tbb](https://github.com/oneapi-src/oneTBB)
 
 ## How it works
 - Read STL file and finding the boundary box
@@ -104,10 +107,14 @@ Special symbols can be used in lua file:
 - Clean up the duplicated vertices or faces, and abandon the group of connected faces having the diameter below the setting
 - Export to the target 3D format
 
-## coff and thickness study
+## Coff and Thickness study
 [Angular frequency and iso-level](https://colab.research.google.com/github/nodtem66/Scaffolder/blob/master/data/data_visualization.ipynb)
 
-## Reference 
+## References
+- [libigl](https://github.com/libigl/libigl)
+- [vcglib](https://github.com/cnr-isti-vclab/vcglib)
+- [sol2](https://github.com/ThePhD/sol2)
+- [tbb](https://github.com/oneapi-src/oneTBB) 
 - [dualmc](https://github.com/dominikwodniok/dualmc)
 - [cxxopts](https://github.com/jarro2783/cxxopts)
 - [ProgressBar](https://github.com/prakhar1989/progress-cpp)

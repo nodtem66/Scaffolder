@@ -43,7 +43,7 @@ int main(int argc, char* argv[])
         options.positional_help("INPUT OUTPUT PARAMETERS").show_positional_help();
         options.add_options()
             ("h,help", "Print help")
-            ("i,input", "Input file (STL)", cxxopts::value<std::string>(), "INPUT")
+            ("i,input", "Input file (STL/PLY/OFF/OBJ/VMI)", cxxopts::value<std::string>(), "INPUT")
             ("o,output", "Output filename with extension stl,ply,obj,off [default: out]", cxxopts::value<std::string>(), "OUTPUT")
             ("params", "Combined parameters list: surface[,coff,isolevel,grid_size,k_slice,k_polygon]", cxxopts::value<std::vector<std::string>>(), "PARAMETERS")
             ("q,quiet", "Disable verbose output [default: false]")
