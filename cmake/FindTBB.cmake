@@ -3,6 +3,8 @@
 #
 #  TBB_FOUND - system has TBB
 #  TBB_INCLUDE_DIR - **the** TBB include directory
+cmake_minimum_required(VERSION 3.1)
+
 if(TBB_FOUND)
     return()
 endif()
@@ -23,7 +25,7 @@ set(TBB_ROOT_DIR ${TBB_INCLUDE_DIR}/../)
 set(TBB_TEST OFF CACHE INTERNAL "turn off")
 set(TBB_EXAMPLES OFF CACHE INTERNAL "turn off")
 set(TBB_STRICT OFF CACHE INTERNAL "turn off")
-set(BUILD_SHARED_LIBS off CACHE INTERNAL "turn off dynamic LINK_DEPENDS (not recommended by intel)")
+set(BUILD_SHARED_LIBS OFF CACHE INTERNAL "turn off dynamic LINK_DEPENDS (not recommended by intel)")
 
 include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(TBB

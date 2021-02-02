@@ -62,10 +62,14 @@ target_link_libraries(${PROJECT_NAME} PRIVATE igl::core tbb Threads::Threads ${L
 #target_include_directories(Sol2_Test PRIVATE "${PROJECT_SOURCE_DIR}/include" ${SOL2_INCLUDE_DIR} ${LUA_INCLUDE_DIRS})
 #target_link_libraries(Sol2_Test PRIVATE Threads::Threads ${LUA_LIBRARIES})
 
-add_executable(SliceTest ${MAIN_SOURCES} ${PROJECT_SOURCE_DIR}/src/SliceTest.cpp )
-target_include_directories(SliceTest PRIVATE "${PROJECT_SOURCE_DIR}/include" ${VCG_INCLUDE_DIR} ${EIGEN_INCLUDE_DIR})
-target_link_libraries(SliceTest PRIVATE tbb)
+add_executable("${PROJECT_NAME}.SliceTest" ${MAIN_SOURCES} ${PROJECT_SOURCE_DIR}/src/SliceTest.cpp )
+target_include_directories("${PROJECT_NAME}.SliceTest" PRIVATE "${PROJECT_SOURCE_DIR}/include" ${VCG_INCLUDE_DIR} ${EIGEN_INCLUDE_DIR})
+target_link_libraries("${PROJECT_NAME}.SliceTest" PRIVATE tbb)
 
 #add_executable(Fixer ${MAIN_SOURCES} ${PROJECT_SOURCE_DIR}/src/FixSelfIntersect.cpp)
 #target_include_directories(Fixer PRIVATE "${PROJECT_SOURCE_DIR}/include" ${VCG_INCLUDE_DIR} ${EIGEN_INCLUDE_DIR})
 #target_link_libraries(Fixer tbb)
+
+include(GNUInstallDirs)
+install(TARGETS "${PROJECT_NAME}" DESTINATION bin COMPONENT scaffolder)
+install(TARGETS "${PROJECT_NAME}.SliceTest" DESTINATION bin COMPONENT scaffolder)
