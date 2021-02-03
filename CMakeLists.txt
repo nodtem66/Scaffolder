@@ -54,6 +54,10 @@ if(MSVC)
   add_definitions(-DNOMINMAX -D_USE_MATH_DEFINES -DWIN32_LEAN_AND_MEAN)
 endif()
 
+if (APPLE AND CMAKE_CXX_COMPILER_ID MATCHES "Clang")	
+  add_definitions(-D_DARWIN_C_SOURCE -D_XOPEN_SOURCE=600)
+endif()
+
 add_executable(${PROJECT_NAME} ${MAIN_SOURCES} ${PROJECT_SOURCE_DIR}/src/Main.cpp )
 target_include_directories(${PROJECT_NAME} PRIVATE "${PROJECT_SOURCE_DIR}/include" ${TBB_INCLUDE_DIR} ${VCG_INCLUDE_DIR} ${EIGEN_INCLUDE_DIR} ${SOL2_INCLUDE_DIR} ${LUA_INCLUDE_DIRS})
 target_link_libraries(${PROJECT_NAME} PRIVATE igl::core tbb Threads::Threads ${LUA_LIBRARIES})

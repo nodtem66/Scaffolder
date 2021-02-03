@@ -14,20 +14,12 @@ variables:
 
 strategy:
   matrix:
-    Linux14:
+    Linux11:
       vmImage: 'ubuntu-latest'
-    macOS17:
-      vmImage: 'macOS-latest'
-      build_std: 17
     macOS11:
       vmImage: 'macOS-latest'
-      build_std: 11
-    Windows17:
-      vmImage: 'windows-latest'
-      build_std: 17
     Windows11:
       vmImage: 'windows-latest'
-      build_std: 11
 pool:
   vmImage: $(vmImage)
 steps:
