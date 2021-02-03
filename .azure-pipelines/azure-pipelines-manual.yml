@@ -1,0 +1,18 @@
+parameters:
+  - name: upload_to_anaconda
+    displayName: Upload to Anaconda?
+    type: string
+    default: 'False'
+
+trigger: none
+
+jobs:
+  - template: azure-pipelines-linux.yml
+    parameters:
+      UPLOAD_PACKAGES: ${{ parameters.upload_to_anaconda }}
+  - template: azure-pipelines-win.yml
+    parameters:
+      UPLOAD_PACKAGES: ${{ parameters.upload_to_anaconda }}
+  - template: azure-pipelines-osx.yml
+    parameters:
+      UPLOAD_PACKAGES: ${{ parameters.upload_to_anaconda }}

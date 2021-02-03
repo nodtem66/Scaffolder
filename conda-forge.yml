@@ -1,0 +1,32 @@
+recipe_dir: recipe
+skip_render:
+  - README.md
+  - LICENSE
+  - .gitattributes
+  - .gitignore
+  - build-locally.py
+  - scripts
+  - images
+  - external
+  - data
+  - LICENSE
+  - .github/CONTRIBUTING.md
+  - .github/ISSUE_TEMPLATE.md
+  - .github/PULL_REQUEST_TEMPLATE.md
+  - .github/workflows
+provider:
+  linux: azure
+  osx: azure
+  win: azure
+  linux_ppc64le: None
+  linux_aarch64: None
+github:
+  user_or_org: nodtem66
+  repo_name: ""
+  branch_name: master
+channels:
+  sources:
+    - conda-forge
+    - defaults
+  targets:
+    - ["nodtem66", "main"]
