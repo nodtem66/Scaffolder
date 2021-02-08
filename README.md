@@ -1,5 +1,7 @@
 # Scaffolder 
-![Build Status](https://github.com/nodtem66/Scaffolder/workflows/Build/badge.svg) [![Build Status](https://dev.azure.com/n66/Public%20CI/_apis/build/status/nodtem66.Scaffolder?branchName=master)](https://dev.azure.com/n66/Public%20CI/_build/latest?definitionId=1&branchName=master)
+![Build Status](https://github.com/nodtem66/Scaffolder/workflows/Build/badge.svg) [![Build Status](https://dev.azure.com/n66/Public%20CI/_apis/build/status/nodtem66.Scaffolder?branchName=conda-forge)](https://dev.azure.com/n66/Public%20CI/_build/latest?definitionId=1&branchName=conda-forge)
+
+[![Anaconda](https://anaconda.org/nodtem66/scaffolder/badges/version.svg)](https://anaconda.org/nodtem66/scaffolder) ![Last update](https://anaconda.org/nodtem66/scaffolder/badges/latest_release_date.svg) ![Platform](https://anaconda.org/nodtem66/scaffolder/badges/platforms.svg) ![Install](https://anaconda.org/nodtem66/scaffolder/badges/installer/conda.svg)
 
 ![Scaffolder Logo](https://github.com/nodtem66/Scaffolder/raw/master/images/scaffolder_logo.jpg)
 
@@ -80,6 +82,29 @@ Special symbols can be used in lua file:
   winding(x,y,z): function returning the winding number of position x,y,z
   signed_distance(x,y,z): function returning signed distance of position x,y,z
   and all functions from math module
+```
+## Installation
+1. Download from [Github Releases page](https://github.com/nodtem66/Scaffolder/releases)
+2. Install from Anaconda
+```bash
+conda install -c nodtem66 scaffolder
+```
+
+## Conda Setup 
+- Install [miniconda](https://docs.conda.io/en/latest/miniconda.html)
+- [Create a new environment](https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html) for `Scaffolder` because some dependencies may be conflicted.
+```bash
+conda create -n scaffolder
+conda activate scaffolder
+```
+- Install `Scaffolder` from anaconda
+```bash
+conda install -n scaffolder -c nodtem66 scaffolder
+```
+- Test the program with `--help`
+```bash
+Scaffolder --help
+Scaffolder.SliceTest --help
 ```
 
 ## Screenshots
