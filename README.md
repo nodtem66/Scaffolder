@@ -83,7 +83,7 @@ Special symbols can be used in lua file:
   signed_distance(x,y,z): function returning signed distance of position x,y,z
   and all functions from math module
 ```
-## Installation
+## Two ways of Binary installation
 1. Download from [Github Releases page](https://github.com/nodtem66/Scaffolder/releases)
 2. Install from Anaconda
 ```bash
