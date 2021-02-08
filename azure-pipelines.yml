@@ -1,6 +1,6 @@
-trigger: conda-forge
-
-pr: none
+trigger: 
+  branches:
+    exclude: [ 'master' ]
 
 jobs:
   - template: ./.azure-pipelines/azure-pipelines-linux.yml
