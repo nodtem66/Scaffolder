@@ -3,3 +3,7 @@ out
 CMakeSettings.json
 diplib/lib
 main_sources.cmake
+external/
+scripts/external.tar.gz
+*.pyc
+build_artifacts

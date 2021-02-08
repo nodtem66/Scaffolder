@@ -11,6 +11,25 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 option(LIBIGL_WITH_OPENGL            "Use OpenGL"         OFF)
 option(LIBIGL_WITH_OPENGL_GLFW       "Use GLFW"           OFF)
 option(LIBIGL_USE_STATIC_LIBRARY "Use LibIGL as static library" ON)
+option(IGL_STATIC_RUNTIME	"Use LibIGL as static library"	ON)
+
+if(MSVC)
+  # Enable parallel compilation for Visual Studio
+  add_compile_options(/MP /bigobj)
+  add_definitions(-DNOMINMAX -D_USE_MATH_DEFINES -DWIN32_LEAN_AND_MEAN)
+endif()
+
+message(STATUS "CMAKE SYSTEM NAME: ${CMAKE_SYSTEM_NAME}")
+
+if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+  message(STATUS "OSX Detected")	
+  add_definitions(-D_DARWIN_C_SOURCE -D_GNU_SOURCE)
+  add_compile_options(-D_XOPEN_SOURCE=600 -faligned-allocation)
+endif()
+
+if(${CMAKE_CXX_COMPILER_ID} MATCHES "Clang")
+  message(STATUS "CLANG Detected")
+endif()
 
 message(STATUS "PROJECT_SOURCE_DIR=${PROJECT_SOURCE_DIR}")
 if(NOT EXISTS "${PROJECT_SOURCE_DIR}/external/libigl/CMakeLists.txt" OR
@@ -26,6 +45,7 @@ if(NOT EXISTS "${PROJECT_SOURCE_DIR}/external/libigl/CMakeLists.txt" OR
   file(ARCHIVE_EXTRACT INPUT "${PROJECT_SOURCE_DIR}/scripts/external.tar.gz" DESTINATION ${PROJECT_SOURCE_DIR})
 endif()
 
+find_package(Threads REQUIRED)
 find_package(LIBIGL REQUIRED)
 find_package(TBB REQUIRED)
 find_package(VCG REQUIRED)
@@ -47,16 +67,6 @@ file(GLOB MAIN_SOURCES
 )
 include(update_deps_file)
 update_deps_file("main_sources" "${MAIN_SOURCES}")
-
-if(MSVC)
-  # Enable parallel compilation for Visual Studio
-  add_compile_options(/MP /bigobj)
-  add_definitions(-DNOMINMAX -D_USE_MATH_DEFINES -DWIN32_LEAN_AND_MEAN)
-endif()
-
-if (APPLE AND CMAKE_CXX_COMPILER_ID MATCHES "Clang")	
-  add_definitions(-D_DARWIN_C_SOURCE -D_XOPEN_SOURCE=600)
-endif()
 
 add_executable(${PROJECT_NAME} ${MAIN_SOURCES} ${PROJECT_SOURCE_DIR}/src/Main.cpp )
 target_include_directories(${PROJECT_NAME} PRIVATE "${PROJECT_SOURCE_DIR}/include" ${TBB_INCLUDE_DIR} ${VCG_INCLUDE_DIR} ${EIGEN_INCLUDE_DIR} ${SOL2_INCLUDE_DIR} ${LUA_INCLUDE_DIRS})

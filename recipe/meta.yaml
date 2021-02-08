@@ -1,0 +1,49 @@
+{% set name = "scaffolder" %}
+{% set version = environ.get('GIT_DESCRIBE_TAG', 'untagged')|string|replace('-','_')|replace('v','') %}
+{% set build_number = environ.get('GIT_DESCRIBE_NUMBER', '0') %}
+
+package:
+  name: {{ name|lower }}
+  version: {{ version }}
+
+source:
+  git_url: {{ environ.get('FEEDSTOCK_ROOT', '..') }}
+
+build:
+  number: {{ build_number }}
+  string: {{ [build_number, ('h' + PKG_HASH), environ.get('GIT_DESCRIBE_HASH', '')]|join('_') }}
+  script:
+    - echo "This package can't be built on VC<16" # [win and vc<14]
+    - exit 1 # [win and vc<14]
+
+requirements:
+  build:
+    - {{ compiler('cxx') }}
+    - cmake
+    - ninja
+    - pkg-config # [unix]
+  host:
+    - vc # [win]
+
+test:
+  commands:
+    - Scaffolder --help
+    - Scaffolder.SliceTest --help
+
+about:
+  home: https://github.com/nodtem66/Scaffolder
+  license: MIT
+  license_family: MIT
+  license_file: LICENSE
+  summary: 'Generate scaffold from STL/PLY/OFF/OBJ file with implicit function'
+  description: |
+    Scaffolder is a simple, fast, and complete CLI program to generate
+    3D scaffold design for tissue engineering. It is pure C++ code linked
+    with dependencies by github submodules. Scaffolder supports predefined
+    implit surfaces and custom implicit function though LUA script.  
+  doc_url: https://github.com/nodtem66/Scaffolder
+  dev_url: https://github.com/nodtem66/Scaffolder
+
+extra:
+  recipe-maintainers:
+    - nodtem66

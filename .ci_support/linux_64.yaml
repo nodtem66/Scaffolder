@@ -1,0 +1,18 @@
+cdt_name:
+- cos6
+channel_sources:
+- conda-forge
+- defaults
+channel_targets:
+- nodtem66 main
+cxx_compiler:
+- gxx
+cxx_compiler_version:
+- '9'
+docker_image:
+- quay.io/condaforge/linux-anvil-comp7
+target_platform:
+- linux-64
+zip_keys:
+- - cdt_name
+  - docker_image

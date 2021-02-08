@@ -2,7 +2,10 @@ name: Build
 
 on:
   push:
-    branches: [ master, v2 ]
+    tags:
+      - 'v*'
+  release:
+    types: [published]
 
 env:
   # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
