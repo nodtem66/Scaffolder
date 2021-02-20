@@ -3,6 +3,7 @@ out
 CMakeSettings.json
 diplib/lib
 main_sources.cmake
+python_sources.cmake
 external/
 scripts/external.tar.gz
 *.pyc

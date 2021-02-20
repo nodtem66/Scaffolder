@@ -1,4 +1,6 @@
 #pragma once
+#ifndef SCAFFOLDER_INCLUDED
+#define SCAFFOLDER_INCLUDED
 #include <string>
 #include <iostream>
 #include <sstream>
@@ -116,41 +118,11 @@ inline void marching_cube(TMesh &mesh, Eigen::MatrixXd &Fxyz, Eigen::RowVector3i
     }
 }
 
-inline void mesh_to_eigen_vector(TMesh& mesh, Eigen::MatrixXd& V, Eigen::MatrixXi& F) {
-    V.resize(mesh.VN(), 3);
-    size_t i = 0;
-    std::vector<size_t> vertexId(mesh.vert.size());
-    for (TMesh::VertexIterator it = mesh.vert.begin(); it != mesh.vert.end(); ++it) if (!it->IsD()) {
-        vertexId[it - mesh.vert.begin()] = i;
-        vcg::Point3d point = it->P();
-        V(i, 0) = point[0];
-        V(i, 1) = point[1];
-        V(i, 2) = point[2];
-        i++;
-    }
-    // Faces to Eigen matrixXi F1
-    i = 0;
-    F.resize(mesh.FN(), mesh.face.begin()->VN());
-    for (TMesh::FaceIterator it = mesh.face.begin(); it != mesh.face.end(); ++it) if (!it->IsD()) {
-        for (int k = 0; k < it->VN(); k++) {
-            F(i, k) = vertexId[vcg::tri::Index(mesh, it->V(k))];
-        }
-        i++;
-    }
-}
-
-ProgressBar qsim_progress(100, 40);
-bool qsim_callback(int pos, const char* str) {
-    if (pos >= 0 && pos <= 100) {
-        qsim_progress.update(pos);
-        qsim_progress.display();
-    }
-    if (pos >= 100)
-        qsim_progress.done();
+inline bool null_callback(int pos, const char* str) {
     return true;
 }
 
-void set_shorten_function(sol::state& lua) {
+inline void set_shorten_function(sol::state& lua) {
     lua.script("abs, acos, asin, atan, atan2 = math.abs, math.acos, math.atan, math.atan2");
     lua.script("ceil, cos, deg, exp, floor = math.ceil, math.cos, math.deg, math.exp, math.floor");
     lua.script("log, log10, max, min, mod = math.log, math.log10, math.max, math.min, math.mod");
@@ -158,3 +130,5 @@ void set_shorten_function(sol::state& lua) {
     lua.script("frexp, ldexp, random, randomseed = math.frexp, math.ldexp, math.random, math.randomseed");
     lua.script("local pi = math.pi");
 }
+
+#endif

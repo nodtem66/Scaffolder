@@ -1,6 +1,17 @@
 ﻿#include "Scaffolder_2.h"
 #include "QuadricSimplification.h"
 
+ProgressBar qsim_progress(100, 40);
+inline bool qsim_callback(int pos, const char* str) {
+    if (pos >= 0 && pos <= 100) {
+        qsim_progress.update(pos);
+        qsim_progress.display();
+    }
+    if (pos >= 100)
+        qsim_progress.done();
+    return true;
+}
+
 int main(int argc, char* argv[])
 {
     // Define default parameters
@@ -183,7 +194,8 @@ int main(int argc, char* argv[])
         log_buffer = log_file.rdbuf();
     }
     std::ostream log(log_buffer);
-    std::ostream verbose_stream((verbose ? log_buffer : &util::null_buffer));
+    util::NullBuffer null_buffer;
+    std::ostream verbose_stream((verbose ? log_buffer : &null_buffer));
 
     LOG << "[Scaffolder " << VERSION << "]" << std::endl
         << "-- Input file: " << input_file << std::endl
@@ -516,17 +528,17 @@ int main(int argc, char* argv[])
                     // define progress bar step based on gize size
                     unsigned int progress_major_step = grid_size[main_axis] / 4;
                     // Rodrigo's incremental slicing
-                    slice::Slice s = slice::incremental_slicing(mesh, k_slice, main_axis);
+                    optimal_slice::Slice s = optimal_slice::incremental_slicing(mesh, k_slice, main_axis);
                     // update progress bar
                     progress += progress_major_step;
                     progress.display();
                     // Rodrigo's contour construct
-                    slice::ContourSlice C = slice::contour_construct(s, main_axis);
+                    optimal_slice::ContourSlice C = optimal_slice::contour_construct(s, main_axis);
                     // update progress bar
                     progress += progress_major_step;
                     progress.display();
                     // Measure pore size from C, and store the output in minFeret, maxFeret, and podczeckShapes
-                    slice::measure_feret_and_shape(C, k_polygon, minFeret, maxFeret, podczeckShapes);
+                    optimal_slice::measure_feret_and_shape(C, k_polygon, minFeret, maxFeret, podczeckShapes);
                     // update progress bar
                     progress += progress_major_step;
                     progress.display();
@@ -535,14 +547,14 @@ int main(int argc, char* argv[])
                         filename.str(std::string());
                         unsigned int minor_step = C.size() / progress_major_step, step = minor_step;
                         // Loop foreach 2D contours
-                        for (slice::ContourSlice::const_iterator cs = C.begin(); cs != C.end(); cs++) {
+                        for (optimal_slice::ContourSlice::const_iterator cs = C.begin(); cs != C.end(); cs++) {
                             // Get array index from iterator
                             size_t index = (size_t)(cs - C.begin() + 1);
                             std::stringstream name(dir);
                             // Set the SVG filename to <axis>_<index>.svg
                             // Ex. x_0.svg, x_1.svg, ..., z_0.svg 
                             name << dir << "/" << axis << '_' << index << ".svg";
-                            slice::write_svg(name.str(), *cs, dim[next_axis], dim[prev_axis], bbox.min[next_axis], bbox.min[prev_axis]);
+                            optimal_slice::write_svg(name.str(), *cs, dim[next_axis], dim[prev_axis], bbox.min[next_axis], bbox.min[prev_axis]);
                             step--;
                             if (step == 0) {
                                 step = minor_step;

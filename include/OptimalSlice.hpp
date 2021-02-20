@@ -3,6 +3,8 @@
  * which is claimed to be faster than slic3r and CGAL method.
  */
 #pragma once
+#ifndef OPTIMALSLICE_INCLUDED
+#define OPTIMALSLICE_INCLUDED
 #ifndef SLICE_PRECISION
 // There's a problem of double hashing with the precision less than 1e-8 (e.g. 1e-10)
 // when performed contour constructing
@@ -19,7 +21,7 @@
 #include "MaxHeap.hpp"
 #include "oneapi/tbb.h"
 
-namespace slice {
+namespace optimal_slice {
     
     enum Direction {X = 0,Y,Z};
     enum PolygonSide {OUTSIDE = 0, INSIDE = 1, PAIRED = 2, UNDEFINED = 3};
@@ -354,8 +356,8 @@ namespace slice {
 }
 
 namespace std {
-    template<> struct hash<slice::Point2d> {
-        size_t operator()(const slice::Point2d& p) const noexcept {
+    template<> struct hash<optimal_slice::Point2d> {
+        size_t operator()(const optimal_slice::Point2d& p) const noexcept {
             size_t x = hash<long long>()(llround(p.x/SLICE_PRECISION));
             size_t y = hash<long long>()(llround(p.y/SLICE_PRECISION));
             return x ^ (y << 1);
@@ -363,7 +365,7 @@ namespace std {
     };
 }
 
-namespace slice {
+namespace optimal_slice {
     
     inline void build_triangle_list(TMesh& mesh, size_t grid_size, Plane& P, Layer& L, int direction = Direction::Z) {
         // Uniform slicing with delta > 0
@@ -507,9 +509,9 @@ namespace slice {
     }
 
     Slice incremental_slicing(TMesh& mesh, size_t k_size, int direction = Direction::Z) {
-        slice::Plane P;
-        slice::Layer L;
-        slice::build_triangle_list(mesh, k_size, P, L, direction);
+        optimal_slice::Plane P;
+        optimal_slice::Layer L;
+        optimal_slice::build_triangle_list(mesh, k_size, P, L, direction);
         Slice S(k_size);
         
         Triangles A;
@@ -871,7 +873,7 @@ namespace slice {
             Point2d current = p.back();
             Point2d next = points[i];
             // check if clockwise (Turn right), then remove current point from convexhull polygon
-            while (slice::orientation(prev, current, next) > 0) {
+            while (optimal_slice::orientation(prev, current, next) > 0) {
                 p.pop_back();
                 if (p.size() < 2) break;
                 current = p.back();
@@ -1119,7 +1121,7 @@ namespace slice {
     }
 }
 
-namespace slice {
+namespace optimal_slice {
     // Export the contour to SVG
     bool write_svg(std::string filename, const Polygons &C, const int width, const int height, const int min_x, const int min_y, bool show_convexhull = false) {
         if (C.empty()) return false;
@@ -1164,7 +1166,7 @@ namespace slice {
     }
 
     // Measure feret diameter
-    void measure_feret_and_shape(const slice::ContourSlice& CS, size_t k_polygon, std::vector<double>& minFeret, std::vector<double>& maxFeret, std::vector<double> (&shapes)[5]) {
+    void measure_feret_and_shape(const optimal_slice::ContourSlice& CS, size_t k_polygon, std::vector<double>& minFeret, std::vector<double>& maxFeret, std::vector<double> (&shapes)[5]) {
         // Foreach slice in 3D
 #ifndef USE_PARALLEL
         for (size_t cs_index = 0, cs_size = CS.size(); cs_index < cs_size; cs_index++) {
@@ -1177,14 +1179,14 @@ namespace slice {
                 if (CS[cs_index].empty()) continue;
                 // Inside or outside testing
                 std::vector<std::pair<size_t, size_t>> pairPolygons;
-                slice::PolygonSides p = contour_inside_test(CS[cs_index], pairPolygons);
+                optimal_slice::PolygonSides p = contour_inside_test(CS[cs_index], pairPolygons);
 
                 assert(p.size() == CS[cs_index].size());
                 // For each contour in slice, calculate min max of contour
                 std::vector< Point2d > polygonCenters;
                 std::vector< std::pair<Point2d, size_t> > centerPolygonMap;
                 size_t n_outside = 0, n_inside = 0;
-                for (slice::Polygons::const_iterator c = CS[cs_index].begin(); c != CS[cs_index].end(); c++) {
+                for (optimal_slice::Polygons::const_iterator c = CS[cs_index].begin(); c != CS[cs_index].end(); c++) {
                     // the polygon must have more-than 2 lines
                     if (c->size() <= 2) {
                         polygonCenters.push_back({ 0, 0 });
@@ -1193,7 +1195,7 @@ namespace slice {
                     size_t index_polygon = (size_t)(c - CS[cs_index].begin());
 
                     // Loop for each point to find max min in polygon
-                    slice::Polygon::const_iterator l = c->begin();
+                    optimal_slice::Polygon::const_iterator l = c->begin();
                     double _x = 0, _y = 0;
                     for (l++; l != c->end(); l++) {
                         _x += l->x;
@@ -1203,14 +1205,14 @@ namespace slice {
                     _y /= c->size();
                     polygonCenters.push_back({ _x, _y });
 
-                    if (p[index_polygon] == slice::PolygonSide::OUTSIDE) {
+                    if (p[index_polygon] == optimal_slice::PolygonSide::OUTSIDE) {
                         // the polygon is the boundary of solid;
                         // count the outside polygon
                         n_outside++;
                         centerPolygonMap.push_back(std::make_pair(Point2d{ _x, _y }, index_polygon));
                     }
                     // 1. Rotating caliber for INSIDE polygon
-                    else if (p[index_polygon] == slice::PolygonSide::INSIDE) {
+                    else if (p[index_polygon] == optimal_slice::PolygonSide::INSIDE) {
                         n_inside++;
                         double area = measure_polygon_area(*c);
                         FeretDiameter feret = measure_polygon_feret_diameter(*c);
@@ -1244,14 +1246,14 @@ namespace slice {
                 // 2. GJK distance for OUTSIDE polygon
                 if (n_outside > 1 && centerPolygonMap.size() > 1) {
                     // For each Polygon in slice layer, find 4 minimum-distance polygon
-                    for (slice::Polygons::const_iterator c = CS[cs_index].begin(); c != CS[cs_index].end(); c++) {
+                    for (optimal_slice::Polygons::const_iterator c = CS[cs_index].begin(); c != CS[cs_index].end(); c++) {
                         if (c->size() <= 2) continue;
                         size_t index = (size_t)(c - CS[cs_index].begin());
                         std::vector<double> feret;
                         double _feret;
                         std::vector<DistanceIndexPair> pairs;
                         int k = std::min(centerPolygonMap.size() - 1, k_polygon);
-                        if (p[index] == slice::PolygonSide::OUTSIDE) {
+                        if (p[index] == optimal_slice::PolygonSide::OUTSIDE) {
                             size_t i = 0;
                             // Take the first k in centerPolygonMap for initializing the MaxHeap
                             for (size_t j = 0; j < k; i++) {
@@ -1302,3 +1304,4 @@ namespace slice {
 #endif
     }
 }
+#endif

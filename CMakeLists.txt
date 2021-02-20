@@ -12,6 +12,7 @@ option(LIBIGL_WITH_OPENGL            "Use OpenGL"         OFF)
 option(LIBIGL_WITH_OPENGL_GLFW       "Use GLFW"           OFF)
 option(LIBIGL_USE_STATIC_LIBRARY "Use LibIGL as static library" ON)
 option(IGL_STATIC_RUNTIME	"Use LibIGL as static library"	ON)
+option(BUILD_PYSCAFFOLDER   "Build python library" ON)
 
 if(MSVC)
   # Enable parallel compilation for Visual Studio
@@ -22,19 +23,20 @@ endif()
 message(STATUS "CMAKE SYSTEM NAME: ${CMAKE_SYSTEM_NAME}")
 
 if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
-  message(STATUS "OSX Detected")	
+  message(STATUS "[OSX Detected]")	
   add_definitions(-D_DARWIN_C_SOURCE -D_GNU_SOURCE)
   add_compile_options(-D_XOPEN_SOURCE=600 -faligned-allocation)
 endif()
 
 if(${CMAKE_CXX_COMPILER_ID} MATCHES "Clang")
-  message(STATUS "CLANG Detected")
+  message(STATUS "[CLANG Detected]")
 endif()
 
 message(STATUS "PROJECT_SOURCE_DIR=${PROJECT_SOURCE_DIR}")
 if(NOT EXISTS "${PROJECT_SOURCE_DIR}/external/libigl/CMakeLists.txt" OR
    NOT EXISTS "${PROJECT_SOURCE_DIR}/external/tbb/CMakeLists.txt" OR
    NOT EXISTS "${PROJECT_SOURCE_DIR}/external/sol2/CMakeLists.txt" OR
+   NOT EXISTS "${PROJECT_SOURCE_DIR}/external/pybind11/CMakeLists.txt" OR
    NOT EXISTS "${PROJECT_SOURCE_DIR}/external/vcglib/wrap/")
   include(download_external_files)
   download_external_files(
@@ -63,27 +65,40 @@ file(GLOB MAIN_SOURCES
 	"${PROJECT_SOURCE_DIR}/include/*/*.tpp"
 	"${PROJECT_SOURCE_DIR}/include/*/*.h"
 	"${PROJECT_SOURCE_DIR}/include/*/*.hpp"
+	"${PROJECT_SOURCE_DIR}/src/utils.cpp"
 	"${VCG_INCLUDE_DIR}/wrap/ply/plylib.cpp"
 )
 include(update_deps_file)
 update_deps_file("main_sources" "${MAIN_SOURCES}")
 
-add_executable(${PROJECT_NAME} ${MAIN_SOURCES} ${PROJECT_SOURCE_DIR}/src/Main.cpp )
-target_include_directories(${PROJECT_NAME} PRIVATE "${PROJECT_SOURCE_DIR}/include" ${TBB_INCLUDE_DIR} ${VCG_INCLUDE_DIR} ${EIGEN_INCLUDE_DIR} ${SOL2_INCLUDE_DIR} ${LUA_INCLUDE_DIRS})
+# Build binary
+add_executable(${PROJECT_NAME} ${MAIN_SOURCES} ${PROJECT_SOURCE_DIR}/src/Main.cpp)
+target_include_directories(${PROJECT_NAME} PRIVATE "${PROJECT_SOURCE_DIR}/include" ${TBB_INCLUDE_DIR} ${VCG_INCLUDE_DIR} ${EIGEN_INCLUDE_DIR} ${SOL2_INCLUDE_DIR} ${LUA_INCLUDE_DIR})
 target_link_libraries(${PROJECT_NAME} PRIVATE igl::core tbb Threads::Threads ${LUA_LIBRARIES})
 
-#add_executable(Sol2_Test ${MAIN_SOURCES} ${PROJECT_SOURCE_DIR}/src/Sol2.cpp)
-#target_include_directories(Sol2_Test PRIVATE "${PROJECT_SOURCE_DIR}/include" ${SOL2_INCLUDE_DIR} ${LUA_INCLUDE_DIRS})
-#target_link_libraries(Sol2_Test PRIVATE Threads::Threads ${LUA_LIBRARIES})
-
-add_executable("${PROJECT_NAME}.SliceTest" ${MAIN_SOURCES} ${PROJECT_SOURCE_DIR}/src/SliceTest.cpp )
+add_executable("${PROJECT_NAME}.SliceTest" ${MAIN_SOURCES} ${PROJECT_SOURCE_DIR}/src/SliceTest.cpp)
 target_include_directories("${PROJECT_NAME}.SliceTest" PRIVATE "${PROJECT_SOURCE_DIR}/include" ${VCG_INCLUDE_DIR} ${EIGEN_INCLUDE_DIR})
 target_link_libraries("${PROJECT_NAME}.SliceTest" PRIVATE tbb)
 
-#add_executable(Fixer ${MAIN_SOURCES} ${PROJECT_SOURCE_DIR}/src/FixSelfIntersect.cpp)
-#target_include_directories(Fixer PRIVATE "${PROJECT_SOURCE_DIR}/include" ${VCG_INCLUDE_DIR} ${EIGEN_INCLUDE_DIR})
-#target_link_libraries(Fixer tbb)
-
+# Install binary
 include(GNUInstallDirs)
 install(TARGETS "${PROJECT_NAME}" DESTINATION bin COMPONENT scaffolder)
 install(TARGETS "${PROJECT_NAME}.SliceTest" DESTINATION bin COMPONENT scaffolder)
+
+if(BUILD_PYSCAFFOLDER)
+	message(STATUS "[Build PyScaffolder]")
+	find_package(PyBind11 REQUIRED)
+
+	file(GLOB PYTHON_SOURCES
+		"${PROJECT_SOURCE_DIR}/src/python/*.cpp"
+		"${PROJECT_SOURCE_DIR}/src/python/*.hpp"
+		"${PROJECT_SOURCE_DIR}/src/utils.cpp"
+	)
+	include(update_deps_file)
+	update_deps_file("python_sources" "${PYTHON_SOURCES}")
+
+	pybind11_add_module("Py${PROJECT_NAME}" ${PYTHON_SOURCES})
+	target_include_directories("Py${PROJECT_NAME}" PRIVATE "${PROJECT_SOURCE_DIR}/include" ${TBB_INCLUDE_DIR} ${VCG_INCLUDE_DIR} ${EIGEN_INCLUDE_DIR} ${SOL2_INCLUDE_DIR} ${LUA_INCLUDE_DIR} ${PyBind11_INCLUDE_DIR})
+	target_link_libraries("Py${PROJECT_NAME}" PRIVATE igl::core tbb Threads::Threads ${LUA_LIBRARIES})
+	install(TARGETS "Py${PROJECT_NAME}" DESTINATION lib)
+endif()

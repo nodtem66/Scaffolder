@@ -1,8 +1,51 @@
 #pragma once
+#ifndef MESHOPERATION_INCLUDED
+#define MESHOPERATION_INCLUDED
 #include "Mesh.h"
 #include "utils.h"
 
-inline void clean_mesh(TMesh& mesh, double minimum_diameter, uint16_t smooth_step, std::ostream& log) {
+inline void mesh_to_eigen_vector(TMesh& mesh, Eigen::MatrixXd& V, Eigen::MatrixXi& F) {
+    V.resize(mesh.VN(), 3);
+    size_t i = 0;
+    std::vector<size_t> vertexId(mesh.vert.size());
+    for (TMesh::VertexIterator it = mesh.vert.begin(); it != mesh.vert.end(); ++it) if (!it->IsD()) {
+        vertexId[it - mesh.vert.begin()] = i;
+        vcg::Point3d point = it->P();
+        V(i, 0) = point[0];
+        V(i, 1) = point[1];
+        V(i, 2) = point[2];
+        i++;
+    }
+    // Faces to Eigen matrixXi F1
+    i = 0;
+    F.resize(mesh.FN(), mesh.face.begin()->VN());
+    for (TMesh::FaceIterator it = mesh.face.begin(); it != mesh.face.end(); ++it) if (!it->IsD()) {
+        for (int k = 0; k < it->VN(); k++) {
+            F(i, k) = vertexId[vcg::tri::Index(mesh, it->V(k))];
+        }
+        i++;
+    }
+}
+
+inline void eigen_vector_to_mesh(Eigen::MatrixXd& V, Eigen::MatrixXi& F, TMesh& mesh) { 
+    TMesh::VertexIterator vi = vcg::tri::Allocator<TMesh>::AddVertices(mesh, V.rows());
+    TMesh::FaceIterator fi = vcg::tri::Allocator<TMesh>::AddFaces(mesh, F.rows());
+    std::vector<TMesh::VertexPointer> vp(V.rows());
+    for (size_t i = 0, len = V.rows(); i < len; i++, ++vi) {
+        vp[i] = &(*vi);
+        vi->P() = TMesh::CoordType(V(i, 0), V(i, 1), V(i, 2));
+    }
+    for (size_t i = 0, len = F.rows(); i < len; i++, ++fi) {
+        fi->V(0) = vp[F(i, 0)];
+        fi->V(1) = vp[F(i, 1)];
+        fi->V(2) = vp[F(i, 2)];
+    }
+    vcg::tri::Clean<TMesh>::RemoveDuplicateFace(mesh);
+    vcg::tri::Clean<TMesh>::RemoveDuplicateVertex(mesh);
+    vcg::tri::Clean<TMesh>::RemoveUnreferencedVertex(mesh);
+}
+
+inline void clean_mesh(TMesh& mesh, double minimum_diameter, uint16_t smooth_step, std::ostream& log = util::NullStream::getInstance()) {
     log << "[libVCG Cleaning] ";
     vcg::tri::Clean<TMesh>::RemoveDuplicateVertex(mesh);
     vcg::tri::Clean<TMesh>::RemoveDuplicateFace(mesh);
@@ -28,7 +71,7 @@ inline void clean_mesh(TMesh& mesh, double minimum_diameter, uint16_t smooth_ste
     vcg::tri::UpdateTopology<TMesh>::FaceFace(mesh);
 }
 
-inline bool fix_non_manifold_edges(TMesh& mesh, double minimum_diameter, uint16_t max_iteration = 5, std::ostream& log = util::null_stream) {
+inline bool fix_non_manifold_edges(TMesh& mesh, double minimum_diameter, uint16_t max_iteration = 5, std::ostream& log = util::NullStream::getInstance()) {
     size_t nf = 1;
     int maxSize = mesh.bbox.SquaredDiag();
 
@@ -105,7 +148,7 @@ inline bool fix_non_manifold_edges(TMesh& mesh, double minimum_diameter, uint16_
     return true;
 }
 
-inline bool fix_non_manifold_vertices(TMesh& mesh, double minimum_diameter, uint16_t max_iteration = 5, std::ostream& log = util::null_stream) {
+inline bool fix_non_manifold_vertices(TMesh& mesh, double minimum_diameter, uint16_t max_iteration = 5, std::ostream& log = util::NullStream::getInstance()) {
     vcg::tri::UpdateTopology<TMesh>::FaceFace(mesh);
     
     int maxSize = mesh.bbox.SquaredDiag();
@@ -138,7 +181,8 @@ inline bool fix_non_manifold_vertices(TMesh& mesh, double minimum_diameter, uint
     return true;
 }
 
-inline bool fix_self_intersect_mesh(TMesh& mesh, double minimum_diameter, uint16_t max_iteration = 10, std::ostream& log = util::null_stream) {
+inline bool fix_self_intersect_mesh(TMesh& mesh, double minimum_diameter, uint16_t max_iteration = 10, std::ostream& log = util::NullStream::getInstance())
+{
 
     mesh.face.EnableVFAdjacency();
 
@@ -292,3 +336,4 @@ inline bool is_mesh_manifold(TMesh& mesh) {
     int vertManifNum = vcg::tri::Clean<TMesh>::CountNonManifoldVertexFF(mesh, false);
     return (edgeNonManifoldNum == 0 && vertManifNum == 0);
 }
+#endif

@@ -11,6 +11,7 @@
 
 ProgressBar import_progress(100, 40);
 ProgressBar qsim_progress(100, 40);
+
 int _pos = 0;
 bool import_callback(int pos, const char* str) {
     if (pos % 10 == 0 && _pos != pos / 10) {
@@ -138,8 +139,8 @@ int main(int argc, char* argv[])
                 std::cout << "Genus is " << genus << std::endl;
             }
 
-            slice::Slice s = slice::incremental_slicing(mesh, slice, direction);
-            slice::ContourSlice C = slice::contour_construct(s, direction);
+            optimal_slice::Slice s = optimal_slice::incremental_slicing(mesh, slice, direction);
+            optimal_slice::ContourSlice C = optimal_slice::contour_construct(s, direction);
             
             // create output directory
             if (!C.empty()) {
@@ -165,14 +166,14 @@ int main(int argc, char* argv[])
                         for (size_t index = r.begin(); index < r.end(); index++) {
                             std::stringstream name(dir);
                             name << dir << "/" << (index) << ".svg";
-                            slice::write_svg(name.str(), C[index], dim[next_direction], dim[prev_direction], bbox.min[next_direction], bbox.min[prev_direction], is_export_convexhull);
+                            optimal_slice::write_svg(name.str(), C[index], dim[next_direction], dim[prev_direction], bbox.min[next_direction], bbox.min[prev_direction], is_export_convexhull);
                         }
                     }
                 );
 #endif
                 std::vector<double> minFeret, maxFeret, shape[5];
                 std::ofstream result;
-                slice::measure_feret_and_shape(C, 4, minFeret, maxFeret, shape);
+                optimal_slice::measure_feret_and_shape(C, 4, minFeret, maxFeret, shape);
                 if (minFeret.size() > 0) {
                     std::sort(minFeret.begin(), minFeret.end());
                     std::cout << "Min Feret (Min, Q1, Q2, Q3, Max) = (" << minFeret.at(0) << ',' << minFeret.at(minFeret.size() * 0.25) << ',' << minFeret.at(minFeret.size() / 2) << ',' << minFeret.at(minFeret.size() * 0.75) << ',' << minFeret.at(minFeret.size() - 1) << ')' << std::endl;

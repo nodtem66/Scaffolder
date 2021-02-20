@@ -1,4 +1,6 @@
 #pragma once
+#ifndef MESH_INCLUDED
+#define MESH_INCLUDED
 #include <vcg/complex/complex.h>
 #include <vcg/complex/algorithms/update/halfedge_indexed.h>
 #include <vcg/complex/algorithms/clean.h>
@@ -43,3 +45,4 @@ class TFace : public vcg::Face<TUsedTypes,
 
 /* the mesh is a container of vertices and a container of faces */
 class TMesh : public vcg::tri::TriMesh< vcg::vertex::vector_ocf<TVertex>, vcg::face::vector_ocf<TFace> > {};
+#endif
