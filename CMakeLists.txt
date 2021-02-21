@@ -42,7 +42,7 @@ if(NOT EXISTS "${PROJECT_SOURCE_DIR}/external/libigl/CMakeLists.txt" OR
   download_external_files(
     https://github.com/nodtem66/Scaffolder/releases/download/v1.5.0-alpha/external.tar.gz
 	"${PROJECT_SOURCE_DIR}/scripts/external.tar.gz"
-	e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+	759bfde68d3a8653fc429be2021d3a289ca1fc9833a3521bc179ee9778036932
   )
   file(ARCHIVE_EXTRACT INPUT "${PROJECT_SOURCE_DIR}/scripts/external.tar.gz" DESTINATION ${PROJECT_SOURCE_DIR})
 endif()
