@@ -1,7 +1,7 @@
 if(PyBind11_FOUND)
     return()
 endif()
-find_path(PyBind11_INCLUDE_DIR PyBind11/PyBind11.h
+find_path(PyBind11_INCLUDE_DIR pybind11/pybind11.h
     HINTS
         ${PyBind11_DIR}
         ENV PyBind11_DIR
