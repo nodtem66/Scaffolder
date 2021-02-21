@@ -12,6 +12,7 @@ option(LIBIGL_WITH_OPENGL            "Use OpenGL"         OFF)
 option(LIBIGL_WITH_OPENGL_GLFW       "Use GLFW"           OFF)
 option(LIBIGL_USE_STATIC_LIBRARY "Use LibIGL as static library" ON)
 option(IGL_STATIC_RUNTIME	"Use LibIGL as static library"	ON)
+option(BUILD_SCAFFOLDER     "Build binary" ON)
 option(BUILD_PYSCAFFOLDER   "Build python library" ON)
 
 if(MSVC)
@@ -53,37 +54,39 @@ find_package(TBB REQUIRED)
 find_package(VCG REQUIRED)
 find_package(Sol2 REQUIRED)
 
-# Add your project files
-file(GLOB MAIN_SOURCES
-	"${PROJECT_SOURCE_DIR}/include/*.c"
-	"${PROJECT_SOURCE_DIR}/include/*.cpp"
-	"${PROJECT_SOURCE_DIR}/include/*.tpp"
-	"${PROJECT_SOURCE_DIR}/include/*.h"
-	"${PROJECT_SOURCE_DIR}/include/*.hpp"
-	"${PROJECT_SOURCE_DIR}/include/*/*.c"
-	"${PROJECT_SOURCE_DIR}/include/*/*.cpp"
-	"${PROJECT_SOURCE_DIR}/include/*/*.tpp"
-	"${PROJECT_SOURCE_DIR}/include/*/*.h"
-	"${PROJECT_SOURCE_DIR}/include/*/*.hpp"
-	"${PROJECT_SOURCE_DIR}/src/utils.cpp"
-	"${VCG_INCLUDE_DIR}/wrap/ply/plylib.cpp"
-)
-include(update_deps_file)
-update_deps_file("main_sources" "${MAIN_SOURCES}")
+if(BUILD_SCAFFOLDER)
+	# Add your project files
+	file(GLOB MAIN_SOURCES
+		"${PROJECT_SOURCE_DIR}/include/*.c"
+		"${PROJECT_SOURCE_DIR}/include/*.cpp"
+		"${PROJECT_SOURCE_DIR}/include/*.tpp"
+		"${PROJECT_SOURCE_DIR}/include/*.h"
+		"${PROJECT_SOURCE_DIR}/include/*.hpp"
+		"${PROJECT_SOURCE_DIR}/include/*/*.c"
+		"${PROJECT_SOURCE_DIR}/include/*/*.cpp"
+		"${PROJECT_SOURCE_DIR}/include/*/*.tpp"
+		"${PROJECT_SOURCE_DIR}/include/*/*.h"
+		"${PROJECT_SOURCE_DIR}/include/*/*.hpp"
+		"${PROJECT_SOURCE_DIR}/src/utils.cpp"
+		"${VCG_INCLUDE_DIR}/wrap/ply/plylib.cpp"
+	)
+	include(update_deps_file)
+	update_deps_file("main_sources" "${MAIN_SOURCES}")
 
-# Build binary
-add_executable(${PROJECT_NAME} ${MAIN_SOURCES} ${PROJECT_SOURCE_DIR}/src/Main.cpp)
-target_include_directories(${PROJECT_NAME} PRIVATE "${PROJECT_SOURCE_DIR}/include" ${TBB_INCLUDE_DIR} ${VCG_INCLUDE_DIR} ${EIGEN_INCLUDE_DIR} ${SOL2_INCLUDE_DIR} ${LUA_INCLUDE_DIR})
-target_link_libraries(${PROJECT_NAME} PRIVATE igl::core tbb Threads::Threads ${LUA_LIBRARIES})
+	# Build binary
+	add_executable(${PROJECT_NAME} ${MAIN_SOURCES} ${PROJECT_SOURCE_DIR}/src/Main.cpp)
+	target_include_directories(${PROJECT_NAME} PRIVATE "${PROJECT_SOURCE_DIR}/include" ${TBB_INCLUDE_DIR} ${VCG_INCLUDE_DIR} ${EIGEN_INCLUDE_DIR} ${SOL2_INCLUDE_DIR} ${LUA_INCLUDE_DIR})
+	target_link_libraries(${PROJECT_NAME} PRIVATE igl::core tbb Threads::Threads ${LUA_LIBRARIES})
 
-add_executable("${PROJECT_NAME}.SliceTest" ${MAIN_SOURCES} ${PROJECT_SOURCE_DIR}/src/SliceTest.cpp)
-target_include_directories("${PROJECT_NAME}.SliceTest" PRIVATE "${PROJECT_SOURCE_DIR}/include" ${VCG_INCLUDE_DIR} ${EIGEN_INCLUDE_DIR})
-target_link_libraries("${PROJECT_NAME}.SliceTest" PRIVATE tbb)
+	add_executable("${PROJECT_NAME}.SliceTest" ${MAIN_SOURCES} ${PROJECT_SOURCE_DIR}/src/SliceTest.cpp)
+	target_include_directories("${PROJECT_NAME}.SliceTest" PRIVATE "${PROJECT_SOURCE_DIR}/include" ${VCG_INCLUDE_DIR} ${EIGEN_INCLUDE_DIR})
+	target_link_libraries("${PROJECT_NAME}.SliceTest" PRIVATE tbb)
 
-# Install binary
-include(GNUInstallDirs)
-install(TARGETS "${PROJECT_NAME}" DESTINATION bin COMPONENT scaffolder)
-install(TARGETS "${PROJECT_NAME}.SliceTest" DESTINATION bin COMPONENT scaffolder)
+	# Install binary
+	include(GNUInstallDirs)
+	install(TARGETS "${PROJECT_NAME}" DESTINATION bin COMPONENT scaffolder)
+	install(TARGETS "${PROJECT_NAME}.SliceTest" DESTINATION bin COMPONENT scaffolder)
+endif()
 
 if(BUILD_PYSCAFFOLDER)
 	message(STATUS "[Build PyScaffolder]")
