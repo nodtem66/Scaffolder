@@ -28,8 +28,7 @@ class LuaFunction : public Function {
 private:
 	sol::function* fn;
 public:
-	bool isLuaFunction = true;
-	LuaFunction(sol::function& f) : fn(&f) {}
+	LuaFunction(sol::function& f) : fn(&f) { isLuaFunction = true; }
 	FT operator()(FT x, FT y, FT z) {
 		return (FT) (*fn)(x, y, z);
 	}
@@ -236,14 +235,19 @@ private:
 	Function& isosurface;
 	const double coff;
 	const double thickness;
+	const bool isLuaFunction;
 public:
 	Implicit_function(Function* isosurface, const double coff, const double thickness = 0):
-		isosurface(*isosurface), coff(coff), thickness(thickness) {}
+		isosurface(*isosurface), coff(coff), thickness(thickness), isLuaFunction(isosurface->isLuaFunction) {}
 	FT operator ()(FT x, FT y, FT z) {
+		// Since we use FREP where F(x,y,z) >= 0 defined as a solid
+		// then we inversed the implicit function to match FREP
+		// For example, f(x,y,z) = x^2+y^2+z^2 - 1, We want the solid region of f(x, y, z) <= 0
+		// so that F(x,y,z) = -f(x,y,z) >= 0
 		if (thickness <= eps) {
-			if (isosurface.isLuaFunction)
+			if (isLuaFunction)
 				return (isosurface)(x, y, z);
-			return (isosurface)(x * coff, y * coff, z * coff);
+			return -(isosurface)(x * coff, y * coff, z * coff);
 		}
 		return IsoThicken(isosurface, x * coff, y * coff, z * coff, thickness);
 	}

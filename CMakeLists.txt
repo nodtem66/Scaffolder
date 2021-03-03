@@ -14,11 +14,16 @@ option(LIBIGL_USE_STATIC_LIBRARY "Use LibIGL as static library" ON)
 option(IGL_STATIC_RUNTIME	"Use LibIGL as static library"	ON)
 option(BUILD_SCAFFOLDER     "Build binary" ON)
 option(BUILD_PYSCAFFOLDER   "Build python library" ON)
-
+option(BUILD_WITH_OPENMP   "USE OpenMP" ON)
+add_definitions(-DOPENCTM_STATIC)
 if(MSVC)
   # Enable parallel compilation for Visual Studio
-  add_compile_options(/MP /bigobj)
+  add_compile_options(/MP /bigobj /D_CRT_SECURE_NO_WARNINGS)
   add_definitions(-DNOMINMAX -D_USE_MATH_DEFINES -DWIN32_LEAN_AND_MEAN)
+endif()
+
+if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+  add_compile_options(-pedantic)
 endif()
 
 message(STATUS "CMAKE SYSTEM NAME: ${CMAKE_SYSTEM_NAME}")
@@ -38,12 +43,13 @@ if(NOT EXISTS "${PROJECT_SOURCE_DIR}/external/libigl/CMakeLists.txt" OR
    NOT EXISTS "${PROJECT_SOURCE_DIR}/external/tbb/CMakeLists.txt" OR
    NOT EXISTS "${PROJECT_SOURCE_DIR}/external/sol2/CMakeLists.txt" OR
    NOT EXISTS "${PROJECT_SOURCE_DIR}/external/pybind11/CMakeLists.txt" OR
-   NOT EXISTS "${PROJECT_SOURCE_DIR}/external/vcglib/wrap/")
+   NOT EXISTS "${PROJECT_SOURCE_DIR}/external/vcglib/wrap/" OR
+   NOT EXISTS "${PROJECT_SOURCE_DIR}/external/OpenCTM-1.0.3/lib/openctm.h")
   include(download_external_files)
   download_external_files(
     https://github.com/nodtem66/Scaffolder/releases/download/v1.5.0-alpha/external.tar.gz
 	"${PROJECT_SOURCE_DIR}/scripts/external.tar.gz"
-	759bfde68d3a8653fc429be2021d3a289ca1fc9833a3521bc179ee9778036932
+	cfa2a747d4f9e99fec6b7db073c7a71077e6aaaf5f98ff56a5be49de5b7d5042
   )
   file(ARCHIVE_EXTRACT INPUT "${PROJECT_SOURCE_DIR}/scripts/external.tar.gz" DESTINATION ${PROJECT_SOURCE_DIR})
 endif()
@@ -53,6 +59,13 @@ find_package(LIBIGL REQUIRED)
 find_package(TBB REQUIRED)
 find_package(VCG REQUIRED)
 find_package(Sol2 REQUIRED)
+find_package(OpenCTM REQUIRED)
+if(BUILD_WITH_OPENMP)
+    find_package(OpenMP REQUIRED)
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
+endif()
 
 if(BUILD_SCAFFOLDER)
 	# Add your project files
@@ -69,17 +82,19 @@ if(BUILD_SCAFFOLDER)
 		"${PROJECT_SOURCE_DIR}/include/*/*.hpp"
 		"${PROJECT_SOURCE_DIR}/src/utils.cpp"
 		"${VCG_INCLUDE_DIR}/wrap/ply/plylib.cpp"
+		"${OpenCTM_INCLUDE_DIR}/*.c"
+		"${OpenCTM_INCLUDE_DIR}/liblzma/*.c"
 	)
 	include(update_deps_file)
 	update_deps_file("main_sources" "${MAIN_SOURCES}")
 
 	# Build binary
 	add_executable(${PROJECT_NAME} ${MAIN_SOURCES} ${PROJECT_SOURCE_DIR}/src/Main.cpp)
-	target_include_directories(${PROJECT_NAME} PRIVATE "${PROJECT_SOURCE_DIR}/include" ${TBB_INCLUDE_DIR} ${VCG_INCLUDE_DIR} ${EIGEN_INCLUDE_DIR} ${SOL2_INCLUDE_DIR} ${LUA_INCLUDE_DIR})
+	target_include_directories(${PROJECT_NAME} PRIVATE "${PROJECT_SOURCE_DIR}/include" ${TBB_INCLUDE_DIR} ${VCG_INCLUDE_DIR} ${EIGEN_INCLUDE_DIR} ${SOL2_INCLUDE_DIR} ${LUA_INCLUDE_DIR} ${OpenCTM_INCLUDE_DIR} "${OpenCTM_INCLUDE_DIR}/liblzma/")
 	target_link_libraries(${PROJECT_NAME} PRIVATE igl::core tbb Threads::Threads ${LUA_LIBRARIES})
 
 	add_executable("${PROJECT_NAME}.SliceTest" ${MAIN_SOURCES} ${PROJECT_SOURCE_DIR}/src/SliceTest.cpp)
-	target_include_directories("${PROJECT_NAME}.SliceTest" PRIVATE "${PROJECT_SOURCE_DIR}/include" ${VCG_INCLUDE_DIR} ${EIGEN_INCLUDE_DIR})
+	target_include_directories("${PROJECT_NAME}.SliceTest" PRIVATE "${PROJECT_SOURCE_DIR}/include" ${VCG_INCLUDE_DIR} ${EIGEN_INCLUDE_DIR} ${OpenCTM_INCLUDE_DIR} "${OpenCTM_INCLUDE_DIR}/liblzma/")
 	target_link_libraries("${PROJECT_NAME}.SliceTest" PRIVATE tbb)
 
 	# Install binary
@@ -101,8 +116,8 @@ if(BUILD_PYSCAFFOLDER)
 	update_deps_file("python_sources" "${PYTHON_SOURCES}")
 
 	pybind11_add_module("Py${PROJECT_NAME}" ${PYTHON_SOURCES})
-	target_include_directories("Py${PROJECT_NAME}" PRIVATE "${PROJECT_SOURCE_DIR}/include" ${TBB_INCLUDE_DIR} ${VCG_INCLUDE_DIR} ${EIGEN_INCLUDE_DIR} ${SOL2_INCLUDE_DIR} ${LUA_INCLUDE_DIR} ${PyBind11_INCLUDE_DIR})
-	target_link_libraries("Py${PROJECT_NAME}" PRIVATE igl::core tbb Threads::Threads ${LUA_LIBRARIES})
+	target_include_directories("Py${PROJECT_NAME}" PRIVATE "${PROJECT_SOURCE_DIR}/include" ${TBB_INCLUDE_DIR} ${VCG_INCLUDE_DIR} ${EIGEN_INCLUDE_DIR} ${SOL2_INCLUDE_DIR} ${LUA_INCLUDE_DIR} ${PyBind11_INCLUDE_DIR} ${OpenCTM_INCLUDE_DIR} "${OpenCTM_INCLUDE_DIR}/liblzma/")
+	target_link_libraries("Py${PROJECT_NAME}" PRIVATE igl::core tbb Threads::Threads OpenMP::OpenMP_CXX ${LUA_LIBRARIES})
 	include(GNUInstallDirs)
 	install(TARGETS "Py${PROJECT_NAME}"
 		COMPONENT python

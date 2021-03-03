@@ -106,8 +106,8 @@ int main(int argc, char* argv[])
             std::cout << "Mesh Imported" << std::endl;
             vcg::tri::UpdateBounding<TMesh>::Box(mesh);
             
-            vcg::Box3d bbox = mesh.bbox;
-            vcg::Point3d dim = bbox.Dim();
+            vcg::Box3f bbox = mesh.bbox;
+            vcg::Point3f dim = bbox.Dim();
             int next_direction = ((direction + 1) % 3);
             int prev_direction = ((direction + 2) % 3);
 

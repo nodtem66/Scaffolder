@@ -17,6 +17,9 @@ if [ ! -e external.tar.gz ]; then
       --exclude=external/libigl/tests \
       --exclude=external/libigl/external \
       --exclude=external/pybind11/docs \
+      --exclude=external/OpenCTM-1.0.3/tools \
+      --exclude=external/OpenCTM-1.0.3/plugins \
+      --exclude=external/OpenCTM-1.0.3/bindings \
       --exclude-vcs --exclude-vcs-ignores \
       -czf external.tar.gz external && echo "[OK]"
 else

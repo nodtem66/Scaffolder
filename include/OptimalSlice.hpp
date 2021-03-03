@@ -372,10 +372,10 @@ namespace optimal_slice {
         // in this case, grid_size = k from Rodrigo paper
         assert(grid_size > 1 && direction <= 2 && direction >= 0);
         vcg::tri::UpdateBounding<TMesh>::Box(mesh);
-        vcg::Box3d bbox = mesh.bbox;
+        vcg::Box3f bbox = mesh.bbox;
         double minBBox = bbox.min[direction];
         double maxBBox = bbox.max[direction];
-        vcg::Point3d dim = bbox.Dim();
+        vcg::Point3f dim = bbox.Dim();
         double delta = dim[direction] / (grid_size - 1);
         // build Plane vector P[0...k+1]
         P.resize(grid_size + 2);

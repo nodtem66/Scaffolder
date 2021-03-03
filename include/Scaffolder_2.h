@@ -10,10 +10,15 @@
 
 #include <igl/fast_winding_number.h>
 #include <igl/signed_distance.h>
+#include <igl/cotmatrix.h>
+#include <igl/massmatrix.h>
+#include <igl/invert_diag.h>
 #include <Eigen/Core>
 
 #include "cxxopts.hpp"
 #include "dualmc/dualmc.h"
+#include "sol/sol.hpp"
+#include "toojpeg/toojpeg.h"
 
 #include "ProgressBar.hpp"
 #include "OptimalSlice.hpp"
@@ -21,7 +26,6 @@
 #include "MeshOperation.h"
 #include "utils.h"
 #include "QuadricSimplification.h"
-#include "sol/sol.hpp"
 
 #define VERSION "v1.5.0-alpha"
 #define PROGRESS_BAR_COLUMN 40
