@@ -10,7 +10,7 @@ inline void mesh_to_eigen_vector(TMesh& mesh, Eigen::MatrixXd& V, Eigen::MatrixX
     std::vector<size_t> vertexId(mesh.vert.size());
     for (TMesh::VertexIterator it = mesh.vert.begin(); it != mesh.vert.end(); ++it) if (!it->IsD()) {
         vertexId[it - mesh.vert.begin()] = i;
-        vcg::Point3d point = it->P();
+        vcg::Point3f point = it->P();
         V(i, 0) = point[0];
         V(i, 1) = point[1];
         V(i, 2) = point[2];

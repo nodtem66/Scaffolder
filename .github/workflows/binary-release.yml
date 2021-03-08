@@ -11,7 +11,7 @@ env:
   # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
   BUILD_TYPE: Release
   CMAKE_BUILD_PARALLEL_LEVEL: 4
-  MAKEFLAGS: "-j2"
+  MAKEFLAGS: "-j4"
 
 jobs:
   build:
@@ -31,6 +31,13 @@ jobs:
     - uses: actions/checkout@v2
       with:
         submodules: true
+    
+    - name: Install libomp for macos
+      if: matrix.os == 'macos-latest'
+      run: |
+        brew install libomp
+        brew info libomp
+        brew --prefix libomp
 
     - name: Create Build Environment
       run: cmake -E make_directory ${{github.workspace}}/build

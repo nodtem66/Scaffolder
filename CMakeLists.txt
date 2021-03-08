@@ -18,7 +18,7 @@ option(BUILD_WITH_OPENMP   "USE OpenMP" ON)
 add_definitions(-DOPENCTM_STATIC)
 if(MSVC)
   # Enable parallel compilation for Visual Studio
-  add_compile_options(/MP /bigobj /D_CRT_SECURE_NO_WARNINGS)
+  add_compile_options(/MP /bigobj /D_CRT_SECURE_NO_WARNINGS /Zc:__cplusplus)
   add_definitions(-DNOMINMAX -D_USE_MATH_DEFINES -DWIN32_LEAN_AND_MEAN)
 endif()
 
@@ -31,7 +31,7 @@ message(STATUS "CMAKE SYSTEM NAME: ${CMAKE_SYSTEM_NAME}")
 if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
   message(STATUS "[OSX Detected]")	
   add_definitions(-D_DARWIN_C_SOURCE -D_GNU_SOURCE)
-  add_compile_options(-D_XOPEN_SOURCE=600 -faligned-allocation)
+  add_compile_options(-faligned-allocation)
 endif()
 
 if(${CMAKE_CXX_COMPILER_ID} MATCHES "Clang")
@@ -49,7 +49,7 @@ if(NOT EXISTS "${PROJECT_SOURCE_DIR}/external/libigl/CMakeLists.txt" OR
   download_external_files(
 	https://github.com/nodtem66/Scaffolder/releases/download/v1.5.1/external.tar.gz
 	"${PROJECT_SOURCE_DIR}/scripts/external.tar.gz"
-	cfa2a747d4f9e99fec6b7db073c7a71077e6aaaf5f98ff56a5be49de5b7d5042
+	b39bc68845e863abd4ee2c068e6199a490a5cde2d67ddd54080826b938efa8d1
   )
   file(ARCHIVE_EXTRACT INPUT "${PROJECT_SOURCE_DIR}/scripts/external.tar.gz" DESTINATION ${PROJECT_SOURCE_DIR})
 endif()
@@ -61,10 +61,16 @@ find_package(VCG REQUIRED)
 find_package(Sol2 REQUIRED)
 find_package(OpenCTM REQUIRED)
 if(BUILD_WITH_OPENMP)
-    find_package(OpenMP REQUIRED)
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
-    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
+  find_package(OpenMP REQUIRED)
+  if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin" AND ${CMAKE_CXX_COMPILER_ID} MATCHES "Clang")
+	set(OpenMP_CXX_FLAGS "-Xpreprocessor -fopenmp -I/usr/local/opt/libomp/include" CACHE INTERNAL "OpenMP flags for Xcode toolchain.")
+	set(OpenMP_CXX_LIB_NAMES "omp" CACHE INTERNAL "OpenMP lib name for Xcode toolchain.")
+	set(OpenMP_omp_LIBRARY "/usr/local/opt/libomp/lib/libomp.dylib" CACHE INTERNAL "OpenMP lib name for Xcode toolchain.")
+  endif()
+  message(STATUS "OpenMP: ${OpenMP_CXX_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
 endif()
 
 if(BUILD_SCAFFOLDER)
@@ -91,11 +97,11 @@ if(BUILD_SCAFFOLDER)
 	# Build binary
 	add_executable(${PROJECT_NAME} ${MAIN_SOURCES} ${PROJECT_SOURCE_DIR}/src/Main.cpp)
 	target_include_directories(${PROJECT_NAME} PRIVATE "${PROJECT_SOURCE_DIR}/include" ${TBB_INCLUDE_DIR} ${VCG_INCLUDE_DIR} ${EIGEN_INCLUDE_DIR} ${SOL2_INCLUDE_DIR} ${LUA_INCLUDE_DIR} ${OpenCTM_INCLUDE_DIR} "${OpenCTM_INCLUDE_DIR}/liblzma/")
-	target_link_libraries(${PROJECT_NAME} PRIVATE igl::core tbb Threads::Threads ${LUA_LIBRARIES})
+	target_link_libraries(${PROJECT_NAME} PRIVATE igl::core tbb Threads::Threads OpenMP::OpenMP_CXX ${LUA_LIBRARIES})
 
 	add_executable("${PROJECT_NAME}.SliceTest" ${MAIN_SOURCES} ${PROJECT_SOURCE_DIR}/src/SliceTest.cpp)
 	target_include_directories("${PROJECT_NAME}.SliceTest" PRIVATE "${PROJECT_SOURCE_DIR}/include" ${VCG_INCLUDE_DIR} ${EIGEN_INCLUDE_DIR} ${OpenCTM_INCLUDE_DIR} "${OpenCTM_INCLUDE_DIR}/liblzma/")
-	target_link_libraries("${PROJECT_NAME}.SliceTest" PRIVATE tbb)
+	target_link_libraries("${PROJECT_NAME}.SliceTest" PRIVATE tbb OpenMP::OpenMP_CXX)
 
 	# Install binary
 	include(GNUInstallDirs)

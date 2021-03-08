@@ -85,3 +85,22 @@ void util::to_lower(std::string& s) {
     for (std::string::size_type i = 0; i < s.length(); ++i)
         s[i] = std::tolower(s[i], loc);
 }
+
+#if defined(__clang__) && (__cplusplus >= 201500L)
+template <class RandomAccessIterator>
+inline void std::random_shuffle(RandomAccessIterator first, RandomAccessIterator last) {
+    std::shuffle(first, last, std::mt19937(std::random_device()()));
+}
+
+template <class RandomAccessIterator, class RandomNumberGenerator>
+inline void std::random_shuffle(RandomAccessIterator first, RandomAccessIterator last,
+    RandomNumberGenerator& gen) {
+    std::shuffle(first, last, std::mt19937(std::random_device()()));
+}
+
+template <class RandomAccessIterator, class RandomNumberGenerator>
+inline void std::random_shuffle(RandomAccessIterator first, RandomAccessIterator last,
+    RandomNumberGenerator&& gen) {
+    std::shuffle(first, last, std::mt19937(std::random_device()()));
+}
+#endif

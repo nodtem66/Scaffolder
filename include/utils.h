@@ -47,4 +47,21 @@ namespace util {
 
     void to_lower(std::string& s);
 }
+
+#if defined(__clang__) && (__cplusplus >= 201500L)
+#include <algorithm>
+#include <random>
+namespace std {
+    template <class RandomAccessIterator>
+    inline void random_shuffle(RandomAccessIterator first, RandomAccessIterator last);
+    
+    template <class RandomAccessIterator, class RandomNumberGenerator>
+    inline void random_shuffle(RandomAccessIterator first, RandomAccessIterator last,
+        RandomNumberGenerator& gen);
+
+    template <class RandomAccessIterator, class RandomNumberGenerator>
+    inline void random_shuffle(RandomAccessIterator first, RandomAccessIterator last,
+        RandomNumberGenerator&& gen);
+}
+#endif
 #endif

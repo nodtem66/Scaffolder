@@ -1,12 +1,16 @@
 #pragma once
 #ifndef SCAFFOLDER_INCLUDED
 #define SCAFFOLDER_INCLUDED
+#ifndef _XOPEN_SOURCE
+#define _XOPEN_SOURCE 600
+#endif
 #include <string>
 #include <iostream>
 #include <sstream>
 #include <algorithm>
 #include <ctime>
 #include <numeric>
+#include <functional>
 
 #include <igl/fast_winding_number.h>
 #include <igl/signed_distance.h>
@@ -134,5 +138,4 @@ inline void set_shorten_function(sol::state& lua) {
     lua.script("frexp, ldexp, random, randomseed = math.frexp, math.ldexp, math.random, math.randomseed");
     lua.script("local pi = math.pi");
 }
-
 #endif

@@ -57,9 +57,9 @@ namespace optimal_slice {
         }
         bool operator< (const Point3d& ls) const {
             if (x < ls.x) return true;
-            else if DOUBLE_EQ(x, ls.x)
-                if (y < ls.y) return true;
-                else if (DOUBLE_EQ(y, ls.y)) {
+            else if (DOUBLE_EQ(x, (ls.x)))
+                if (y < ls.y) { return true; }
+                else if (DOUBLE_EQ(y, (ls.y))) {
                     return (z < ls.z);
                 }
             return false;
@@ -78,7 +78,7 @@ namespace optimal_slice {
         double min[3], max[3];
         Triangle(TMesh::FaceType face) {
             assert(face.VN() == 3);
-            vcg::Point3d point = face.P(0);
+            vcg::Point3f point = face.P(0);
             v[0].x = point[0];
             v[0].y = point[1];
             v[0].z = point[2];
@@ -129,12 +129,13 @@ namespace optimal_slice {
         }
 
         bool operator< (const Triangle& ls) const {
-            if (v[0] < ls.v[0]) return true;
-            else if (v[0] == ls.v[0])
-                if (v[1] < ls.v[1]) return true;
+            if (v[0] < ls.v[0]) { return true; }
+            else if (v[0] == ls.v[0]) {
+                if (v[1] < ls.v[1]) { return true; }
                 else if (v[1] == ls.v[1]) {
                     return (v[2] < ls.v[2]);
                 }
+            }
             return false;
         }
     };
