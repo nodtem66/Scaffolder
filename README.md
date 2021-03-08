@@ -7,7 +7,7 @@
 
 Generate scaffold from STL/PLY/OFF/OBJ file with implicit function (e.g., Schwarz P/ Gyroid).
 
-```
+```lua
 Scaffolder - generate 3D scaffold from STL file
 Usage:
   Scaffolder [OPTION...] INPUT OUTPUT PARAMETERS
@@ -83,8 +83,8 @@ Special symbols can be used in lua file:
   signed_distance(x,y,z): function returning signed distance of position x,y,z
   and all functions from math module
 ```
-## Two ways of Binary installation
-1. Download from [Github Releases page](https://github.com/nodtem66/Scaffolder/releases)
+## Binary installation
+1. Download from [Github Releases page](https://github.com/nodtem66/Scaffolder/releases) or
 2. Install from Anaconda
 ```bash
 conda install -c nodtem66 scaffolder

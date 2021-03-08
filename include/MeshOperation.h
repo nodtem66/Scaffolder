@@ -330,6 +330,26 @@ inline void report_mesh(std::ostream& log, TMesh& mesh) {
 
 }
 
+void ComputePerVertexQualityHistogram(TMesh& m, vcg::Histogramf& h, int HistSize = 10000)
+{
+    vcg::tri::RequirePerVertexQuality(m);
+    std::vector<float> QV;
+    QV.reserve(m.vn);
+    for (TMesh::VertexIterator vi = m.vert.begin(); vi != m.vert.end(); ++vi)
+        if (!(*vi).IsD()) QV.push_back((*vi).Q());
+
+    std::nth_element(QV.begin(), QV.begin() + m.vn / 100, QV.end());
+    float newmin = *(QV.begin() + m.vn / 10);
+    std::nth_element(QV.begin(), QV.begin() + m.vn - m.vn / 10, QV.end());
+    float newmax = *(QV.begin() + m.vn - m.vn / 100);
+
+    h.Clear();
+    h.SetRange(newmin, newmax, HistSize);
+    for (auto& i : QV) {
+        h.Add(i);
+    }
+}
+
 inline bool is_mesh_manifold(TMesh& mesh) {
     int edgeNum = 0, edgeBorderNum = 0, edgeNonManifoldNum = 0;
     vcg::tri::Clean<TMesh>::CountEdgeNum(mesh, edgeNum, edgeBorderNum, edgeNonManifoldNum);

@@ -7,6 +7,7 @@
 #include <vcg/complex/algorithms/update/curvature.h>
 #include <vcg/complex/algorithms/clean.h>
 #include <vcg/complex/algorithms/hole.h>
+#include <vcg/math/histogram.h>
 #include <wrap/io_trimesh/import.h>
 #include <wrap/io_trimesh/export_ctm.h>
 #include <wrap/io_trimesh/export.h>

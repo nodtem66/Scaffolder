@@ -17,6 +17,7 @@
 #define DOUBLE_LT_EQ(x,y) (DOUBLE_EQ(x,y) || DOUBLE_LT(x,y))
 #define USE_PARALLEL
 
+#include <iomanip>  
 #include "Mesh.h"
 #include "MaxHeap.hpp"
 #include "oneapi/tbb.h"
@@ -1123,14 +1124,16 @@ namespace optimal_slice {
 
 namespace optimal_slice {
     // Export the contour to SVG
-    bool write_svg(std::string filename, const Polygons &C, const int width, const int height, const int min_x, const int min_y, bool show_convexhull = false) {
+    bool write_svg(std::string filename, const Polygons &C, const float width, const float height, const int min_x, const int min_y, bool show_convexhull = false) {
         if (C.empty()) return false;
         PolygonSides p = contour_inside_test(C);
         assert(p.size() == C.size());
         std::ofstream svg(filename, std::ofstream::out);
+        float strokeWidth = (width + height) / 400.0f;
         svg << "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" << std::endl;
         svg << "<!DOCTYPE svg PUBLIC \" -//W3C//DTD SVG 1.0//EN\" \"http://www.w3.org/TR/2001/REC-SVG-20010904/DTD/svg10.dtd\">" << std::endl;
-        svg << "<svg viewBox=\"" << min_x-1 << " " << min_y-1 << " " << width+1 << " " << height+1 << "\" xmlns=\"http://www.w3.org/2000/svg\">" << std::endl;
+        svg << "<svg viewBox=\"" << min_x-strokeWidth << " " << min_y-strokeWidth << " " << width+4*strokeWidth << " " << height+4*strokeWidth << "\" xmlns=\"http://www.w3.org/2000/svg\">" << std::endl;
+       
         for (Polygons::const_iterator t = C.begin(); t != C.end(); t++) {
             if (t->size() < 2) continue;
             size_t index = (size_t)(t - C.begin());
@@ -1145,7 +1148,7 @@ namespace optimal_slice {
             for (; c != t->end(); c++) {
                 svg << c->x << "," << c->y << " ";
             }
-            svg << "z\" fill=\"transparent\" stroke=\"#" << color << "\" stroke-width=\"0.1\" stroke-linejoin=\"round\"/>" << std::endl;
+            svg << "z\" fill=\"transparent\" stroke=\"#" << color << "\" stroke-width=\""<< std::fixed << std::setprecision(4) << strokeWidth << "\" stroke-linejoin=\"round\"/>" << std::endl;
             // Write a convex-hull polygon
             if (show_convexhull) {
                 Polygon convex = convexhull(*t);
@@ -1156,7 +1159,7 @@ namespace optimal_slice {
                     for (; c != convex.end(); c++) {
                         svg << c->x << "," << c->y << " ";
                     }
-                    svg << "z\" stroke-dasharray=\"1,1\" fill=\"transparent\" stroke=\"#d33\" stroke-width=\"0.1\" stroke-linejoin=\"round\"/>" << std::endl;
+                    svg << "z\" stroke-dasharray=\"1,1\" fill=\"transparent\" stroke=\"#d33\" stroke-width=\"" << std::fixed << std::setprecision(4) << strokeWidth << "\" stroke-linejoin=\"round\"/>" << std::endl;
                 }
             }
         }

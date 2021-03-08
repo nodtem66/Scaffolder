@@ -22,8 +22,8 @@ int main(int argc, char* argv[])
     bool is_mean_curvature = false;
     bool is_export_feret = false;
     bool is_build_inverse = false;
-    bool is_fix_self_intersect = false;
     bool is_export_jpeg = false;
+    bool is_intersect = true;
     bool no_output = true;
 
     uint8_t export_axis = 'X';
@@ -33,6 +33,8 @@ int main(int argc, char* argv[])
     uint16_t k_slice = 100;
     uint16_t k_polygon = 4;
     size_t minimum_grid_size = 100;
+    int histogram_size = 200;
+    int fix_self_intersect = 0;
 
     double isolevel = 0.0;
     double qsim_percent = 0;
@@ -78,8 +80,9 @@ int main(int argc, char* argv[])
             ("minimum_diameter", "used for removing small orphaned (between 0-1) [default: 0.25]", cxxopts::value<double>(), "DOUBLE (0..1)")
             ("format", "Format of logging output [default: default]", cxxopts::value<std::string>(), "FORMAT (default, csv)")
             ("output_inverse", "additional output inverse scaffold [default: false]")
-            ("fix_self_intersect", "Experimental fix self-intersect faces [default: false]")
-            ("mean_curvature", "Experimental calculate mean curvature");
+            ("fix_self_intersect", "Experimental fix self-intersect faces [default: 0]", cxxopts::value<int>()->default_value("0"), "INT")
+            ("mean_curvature", "Size of mean curvature histogram", cxxopts::value<int>()->default_value("0"), "INT")
+            ("intersect", "Generate 3D mesh without intersect with original mesh [default: true]", cxxopts::value<bool>()->default_value("true"), "");
         options.parse_positional({ "input", "output", "params" });
         bool isEmptyOption = (argc == 1);
         cxxopts::ParseResult result = options.parse(argc, argv);
@@ -125,13 +128,14 @@ int main(int argc, char* argv[])
             }
         }
         if (result.count("dirty")) dirty = result["dirty"].as<bool>();
+        if (result.count("intersect")) is_intersect = result["intersect"].as<bool>();
         if (result.count("microstructure")) {
             is_analysis_microstructure = result["microstructure"].as<bool>();
             no_output = true;
         }
         if (result.count("export_microstructure")) {
-            is_analysis_microstructure = result["m2"].as<bool>();
-            is_export_microstructure = result["m2"].as<bool>();
+            is_analysis_microstructure = true;
+            is_export_microstructure = true;
             no_output = true;
         }
         if (result.count("output_inverse")) {
@@ -176,11 +180,16 @@ int main(int argc, char* argv[])
         if (result.count("surface")) surface_name = result["surface"].as<std::string>();
         if (result.count("shell")) shell = result["shell"].as<uint16_t>();
         if (result.count("smooth_step")) smooth_step = result["smooth_step"].as<uint16_t>();
-        if (result.count("fix_self_intersect")) is_fix_self_intersect = result["fix_self_intersect"].as<bool>();
+        if (result.count("fix_self_intersect")) fix_self_intersect = result["fix_self_intersect"].as<int>();
         if (result.count("size_optimize")) qsim_percent = result["size_optimize"].as<double>();
         if (result.count("k_slice")) k_slice = result["k_slice"].as<uint16_t>();
         if (result.count("k_polygon")) k_polygon = result["k_polygon"].as<uint16_t>();
-        if (result.count("mean_curvature")) is_mean_curvature = result["mean_curvature"].as<bool>();
+        if (result.count("mean_curvature")) {
+            histogram_size = result["mean_curvature"].as<int>();
+            if (histogram_size > 0) {
+                is_mean_curvature = true;
+            }
+        }
 
         util::to_lower(surface_name);
         util::to_lower(output_format);
@@ -232,7 +241,7 @@ int main(int argc, char* argv[])
         << "-- Autoclean: " << (dirty ? "False" : "True") << std::endl
         << "--   Minimum diameter: " << 100 * minimum_diameter << "%" << std::endl
         << "--   Smooth step: " << smooth_step << std::endl
-        << "--   Fix self-intersect: " << (is_fix_self_intersect ? "True" : "False") << std::endl
+        << "--   Fix self-intersect: " << (fix_self_intersect > 0 ? "True" : "False") << std::endl
         << "--   Quadric Simplification (-z): " << qsim_percent << std::endl
         << "-- Analysis microstructure (-m): " << (is_analysis_microstructure ? "True" : "False") << std::endl
         << "--   Slice grid (k_slice): " << k_slice << std::endl
@@ -241,7 +250,7 @@ int main(int argc, char* argv[])
         << "--   Mean curvature: " << (is_mean_curvature ? "True" : "False") << std::endl
         << "-- Export JPEG: " << (is_export_jpeg ? "Yes" : "No") << std::endl
         << "--   Axis: " << export_axis << std::endl
-        << "-- Build: " << (no_output ? "No" : "Yes") << (is_build_inverse ? " (Inverse)" : "") << std::endl;
+        << "-- Build: " << (no_output ? "No" : "Yes") << (is_build_inverse ? " (Inverse)" : "") << (is_intersect ? "(Intersect)" : "") << std::endl;
     else
     CSV << "Surface,coff,shell,thickness,grid_size,grid_offset,smooth_step,input_file,";
 
@@ -441,19 +450,31 @@ int main(int argc, char* argv[])
                     const double s = Signed_Distance(index);
                     const double w = W(index);
                     const double fv = fn(x, y, z);
-                    if (w < 0.5) {
+                    if (is_intersect && w < 0.8) {
+                        Fxyz(index) = -1.0;
+                        IFxyz(index) = -1.0;
+                    }
+                    else if (is_intersect && shell > 0 && s <= shell) {
+                        Fxyz(index) = s;
+                        IFxyz(index) = s;
+                    }
+                    else if (
+                        !is_intersect &&
+                        (
+                            i < grid_offset ||
+                            i >= grid_size(0)-grid_offset ||
+                            j < grid_offset ||
+                            j >= grid_size(1)-grid_offset ||
+                            k < grid_offset ||
+                            k >= grid_size(2)-grid_offset
+                        )
+                    ) {
                         Fxyz(index) = -1.0;
                         IFxyz(index) = -1.0;
                     }
                     else {
-                        if (shell > 0 && s <= shell) {
-                            Fxyz(index) = s;
-                            IFxyz(index) = s;
-                        }
-                        else {
-                            Fxyz(index) = fv;
-                            IFxyz(index) = -fv;
-                        }
+                        Fxyz(index) = fv;
+                        IFxyz(index) = -fv;
                     }
                 }
             }
@@ -504,9 +525,14 @@ int main(int argc, char* argv[])
         LOG << "-- Info: " << mesh.VN() << " vertices " << mesh.FN() << " faces" << std::endl;
         if (is_build_inverse) marching_cube(inverse_mesh, IFxyz, grid_size, V1min1, grid_delta, false, false);
 
+        if (mesh.VN() == 0 || mesh.FN() == 0) {
+            LOG << "[Error] Empty mesh. Check the FREP function that F(x,y,z) >= 0 defines solid or increase grid_size more than " << minimum_grid_size << std::endl;
+            exit(-1);
+        }
+
         if (!dirty) {
             clean_mesh(mesh, minimum_diameter, smooth_step, verbose_stream);
-            if (is_fix_self_intersect) fix_self_intersect_mesh(mesh, minimum_diameter, 5, verbose_stream);
+            if (fix_self_intersect > 0) fix_self_intersect_mesh(mesh, minimum_diameter, fix_self_intersect, verbose_stream);
             if (is_build_inverse) clean_mesh(inverse_mesh, minimum_diameter, 0, verbose_stream);
         }
 
@@ -670,12 +696,12 @@ int main(int argc, char* argv[])
                 vcg::tri::UpdateCurvature<TMesh>::MeanAndGaussian(mesh);
                 vcg::tri::UpdateQuality<TMesh>::VertexFromMeanCurvatureHG(mesh);
                 vcg::Histogramf H;
-                vcg::tri::Stat<TMesh>::ComputePerVertexQualityHistogram(mesh, H);
-                H.SetRange(H.Percentile(0.1f), H.Percentile(0.9f), 100);
+                ComputePerVertexQualityHistogram(mesh, H, histogram_size);
                 std::stringstream _name;
                 _name << filename << '_' << surface_name << run_timestamp << "_histogram.txt";
                 H.FileWrite(_name.str());
-                LOG << "-- Median curvature: " << H.Percentile(0.1f) << "," << H.Percentile(0.25f) << "," << H.Percentile(0.5f) << "," << H.Percentile(0.75f) << "," << H.Percentile(0.9f) << std::endl;
+                LOG << "-- Mean curvature: " << H.Percentile(0.1f) << "," << H.Percentile(0.25f) << "," << H.Percentile(0.5f) << "," << H.Percentile(0.75f) << "," << H.Percentile(0.9f) << std::endl
+                    << "--    Range(-3,3) = " << H.BinCount(0,6)/H.Cnt() << "     Mean = " << H.Avg() << "    SD = " << H.StandardDeviation() << std::endl;
         else
             CSV << H.Percentile(0.1f) << "," << H.Percentile(0.25f) << "," << H.Percentile(0.5f) << "," << H.Percentile(0.75f) << "," << H.Percentile(0.9f) << ",";
             }
