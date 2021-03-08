@@ -27,7 +27,7 @@
 #include "utils.h"
 #include "QuadricSimplification.h"
 
-#define VERSION "v1.5.0-alpha"
+#define VERSION "v1.5.1"
 #define PROGRESS_BAR_COLUMN 40
 
 #define SCAFFOLDER_FORMAT_DEFAULT 0
