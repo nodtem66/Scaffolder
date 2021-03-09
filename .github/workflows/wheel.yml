@@ -67,7 +67,7 @@ jobs:
       env:
         # Python 2.7 on Windows requires a workaround for C++11 support,
         # built separately below
-        CIBW_SKIP: "pp* cp27-win* cp35-* *-win32 *-manylinux_i686"
+        CIBW_SKIP: pp* cp27-win* cp35-* *-win32 *-manylinux_i686
 
     - name: Show files
       run: ls -lh wheelhouse
