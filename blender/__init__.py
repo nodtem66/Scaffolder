@@ -16,7 +16,7 @@ bl_info = {
     "author" : "Jirawat I.",
     "description" : "Wrapper for Scaffolder program",
     "blender" : (2, 80, 0),
-    "version" : (0, 0, 1),
+    "version" : (1, 5, 1),
     "location" : "View3D",
     "category" : "Object",
     "tracker_url": "https://github.com/nodtem66/Scaffolder"

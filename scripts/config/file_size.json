@@ -1,9 +1,10 @@
 {
     "input_stl": "../../stl/cube20mm.stl",
+    "output_stl": "out.stl",
     "output": "result_1.txt",
     "merge": "_*.txt",
     "result_folder": "results",
-    "thickness": "0.5",
+    "thickness": "0",
     "pattern": [
         "schwarzp",
         "schwarzd",
@@ -18,7 +19,7 @@
         "tubular_g_ab",
         "tubular_g_c"
     ],
-    "grid_size_": [
+    "grid_size": [
         40,
         60,
         100,

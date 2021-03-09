@@ -1,14 +1,12 @@
-name: Wheels
+name: Manually Build Wheels
 
 on:
   workflow_dispatch:
-  pull_request:
-  push:
-    tags:
-      - 'v*'
-  release:
-    types:
-      - published
+    inputs:
+      upload:
+        description: 'Upload to PyPI?'
+        required: false
+        default: false
 
 env:
   CIBW_TEST_COMMAND: python {project}/src/python/test.py
@@ -135,7 +133,7 @@ jobs:
     name: Upload if release
     needs: [build_wheels, build_win27_wheels, build_sdist]
     runs-on: ubuntu-latest
-    if: github.event_name == 'release' && github.event.action == 'published'
+    if: github.event.inputs.upload != false
 
     steps:
     - uses: actions/setup-python@v2

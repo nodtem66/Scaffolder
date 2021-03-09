@@ -31,14 +31,20 @@ def bytes2human(n):
             return '%.3f%s' % (value, s)
     return "%sB" % n
 
-def run_scaffolder(input_stl, pattern, grid, coff, thickness=None, cwd=None, options=[]):
+def run_scaffolder(input_stl, pattern, grid, coff, thickness=None, cwd=None, options=[], config=None):
     start_time = time.time()
     peak_memory = 0
-    arg = [os.path.join('..', '..', 'scaffolder.exe'), str(input_stl), '-n', str(pattern), '-c', str(round(math.pi*coff, 5)), '-g', str(grid), '-m', '-q']
+    # coff = round(math.pi*coff, 5)
+    if config.get('output_stl'):
+        arg = [os.path.join('..', '..', 'Scaffolder.exe'), str(input_stl), str(config['output_stl']), '-n', str(pattern), '-c', str(coff), '-g', str(grid)]
+    else:
+        arg = [os.path.join('..', '..', 'Scaffolder.exe'), str(input_stl), '-n', str(pattern), '-c', str(coff), '-g', str(grid)]
     if thickness:
         arg.extend(['-t', str(thickness)])
     if options and type(options) is list:
         arg.extend(options)
+    else:
+        arg.extend(['-m', '-q', '--format', 'csv'])
     try:
         process = subprocess.Popen(arg, cwd=cwd, shell=True)
         _ps = psutil.Process(process.pid)
@@ -56,7 +62,14 @@ def run_scaffolder(input_stl, pattern, grid, coff, thickness=None, cwd=None, opt
         pass
     elapsed = (time.time() - start_time)
     mem = bytes2human(peak_memory)
-    return (elapsed, mem)
+    filesize = 0
+    if config.get('output_stl'):
+        output_stl_path = os.path.join(cwd, config['output_stl'])
+        if os.path.exists(output_stl_path):
+            filestat = os.stat(output_stl_path)
+            filesize = bytes2human(filestat.st_size)
+            os.remove(output_stl_path)
+    return (elapsed, mem, filesize)
 
 def run_batch(config, result='time_memory.txt', result_dir=None):
     input_stl = config['input_stl']
@@ -75,13 +88,13 @@ def run_batch(config, result='time_memory.txt', result_dir=None):
                     for t in thickness:
                         try:
                             # tracking infomation
-                            print(f'{i}/{total} name={p} grid={grid} coff={_coff}pi thickness={t}: ', end='')
+                            print(f'{i}/{total} name={p} grid={grid} coff={_coff} thickness={t}: ', end='')
                             out.write(f'{p},{grid},{_coff*math.pi:.6},{t},')
                             # Run process
-                            elapsed, mem = run_scaffolder(input_stl, p, grid, _coff, t, cwd=result_dir, options=config.get('options'))
+                            elapsed, mem, filesize = run_scaffolder(input_stl, p, grid, _coff, t, cwd=result_dir, options=config.get('options'), config=config)
                             # print result
-                            print(f'elapsed={elapsed:.3} mem={mem}')
-                            out.write(f'{elapsed:.3},{mem}\n')
+                            print(f'elapsed={elapsed:.3} mem={mem} filesize={filesize}')
+                            out.write(f'{elapsed:.3},{mem},{filesize}\n')
                             out.flush()
                         except Exception as e:
                             print(e)
@@ -106,13 +119,13 @@ def run_list(config, result='time_memory_.txt', result_dir=None):
             coff = float(param.get('coff'))
             try:
                 # tracking infomation
-                print(f'{i}/{total} name={p} grid={grid} coff={coff}pi thickness={thickness}: ', end='')
+                print(f'{i}/{total} name={p} grid={grid} coff={coff} thickness={thickness}: ', end='')
                 out.write(f'{p},{grid},{coff*math.pi:.6},{thickness},')
                 # Run process
-                elapsed, mem = run_scaffolder(input_stl, p, grid, coff, thickness, cwd=result_dir, options=config.get('options'))
+                elapsed, mem, filesize = run_scaffolder(input_stl, p, grid, coff, thickness, cwd=result_dir, options=config.get('options'), config=config)
                 # print result
-                print(f'elapsed={elapsed:.3} mem={mem}')
-                out.write(f'{elapsed:.3},{mem}\n')
+                print(f'elapsed={elapsed:.3} mem={mem} filesize={filesize}')
+                out.write(f'{elapsed:.3},{mem},{filesize}\n')
                 out.flush()
             except Exception as e:
                 print(e)
@@ -135,6 +148,7 @@ if __name__ == '__main__':
             os.makedirs(result_dir)
         else:
             _old_files = glob.glob(os.path.join(result_dir, '*.txt'))
+            _old_files.extend(glob.glob(os.path.join(result_dir, '*.csv')))
             _old_files_size = len(_old_files)
             if _old_files_size > 0:
                 print(f'There are {_old_files_size} result files in directory {result_dir}')

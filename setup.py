@@ -42,9 +42,11 @@ class CMakeBuild(build_ext):
         # EXAMPLE_VERSION_INFO shows you how to pass a value into the C++ code
         # from Python.
         cmake_args = [
-            "-DBUILD_SCAFFOLDER:BOOL=False"
-            "-DBUILD_PYSCAFFOLDLER:BOOL=True"
+            "-DBUILD_SCAFFOLDER:BOOL=False",
+            "-DBUILD_PYSCAFFOLDLER:BOOL=True",
+            "-DCMAKE_ARCHIVE_OUTPUT_DIRECTORY={}".format(extdir),
             "-DCMAKE_LIBRARY_OUTPUT_DIRECTORY={}".format(extdir),
+            "-DCMAKE_RUNTIME_OUTPUT_DIRECTORY={}".format(extdir),
             "-DPYTHON_EXECUTABLE={}".format(sys.executable),
             "-DEXAMPLE_VERSION_INFO={}".format(self.distribution.get_version()),
             "-DCMAKE_BUILD_TYPE={}".format(cfg),  # not used on MSVC, but no harm
@@ -77,7 +79,9 @@ class CMakeBuild(build_ext):
             # Multi-config generators have a different way to specify configs
             if not single_config:
                 cmake_args += [
-                    "-DCMAKE_LIBRARY_OUTPUT_DIRECTORY_{}={}".format(cfg.upper(), extdir)
+                    "-DCMAKE_ARCHIVE_OUTPUT_DIRECTORY_{}={}".format(cfg.upper(), extdir),
+                    "-DCMAKE_LIBRARY_OUTPUT_DIRECTORY_{}={}".format(cfg.upper(), extdir),
+                    "-DCMAKE_RUNTIME_OUTPUT_DIRECTORY_{}={}".format(cfg.upper(), extdir)
                 ]
                 build_args += ["--config", cfg]
 
@@ -105,7 +109,7 @@ class CMakeBuild(build_ext):
 # logic and declaration, and simpler if you include description/version in a file.
 setup(
     name="PyScaffolder",
-    version="0.0.1",
+    version="1.5.1",
     author="Jirawat Iamsamang",
     author_email="nodtem66@gmail.com",
     description="Python wrapper for scaffolder program",
