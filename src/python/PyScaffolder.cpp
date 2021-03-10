@@ -21,6 +21,7 @@ PYBIND11_MODULE(PyScaffolder, m) {
     py::class_<PyScaffolder::Parameter>(m, "Parameter", py::dynamic_attr())
         .def(py::init<>())
         .def_readwrite("is_build_inverse", &PyScaffolder::Parameter::is_build_inverse)
+        .def_readwrite("is_intersect", &PyScaffolder::Parameter::is_intersect)
         .def_readwrite("coff", &PyScaffolder::Parameter::coff)
         .def_readwrite("grid_offset", &PyScaffolder::Parameter::grid_offset)
         .def_readwrite("grid_size", &PyScaffolder::Parameter::grid_size)
@@ -30,6 +31,7 @@ PYBIND11_MODULE(PyScaffolder, m) {
         .def_readwrite("minimum_diameter", &PyScaffolder::Parameter::minimum_diameter)
         .def_readwrite("qsim_percent", &PyScaffolder::Parameter::qsim_percent)
         .def_readwrite("smooth_step", &PyScaffolder::Parameter::smooth_step)
+        .def_readwrite("fix_self_intersect", &PyScaffolder::Parameter::fix_self_intersect)
         .def_readwrite("surface_name", &PyScaffolder::Parameter::surface_name);
 
     m.def("slice_test", &PyScaffolder::slice_test, "A function to slice input mesh into pore sizes",

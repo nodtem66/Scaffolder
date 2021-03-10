@@ -29,10 +29,13 @@ namespace PyScaffolder {
 
 	struct Parameter {
 		bool is_build_inverse = false;
+		bool is_intersect = true;
+		uint16_t shell = 0;
 		uint16_t grid_offset = 5;
 		uint16_t smooth_step = 5;
 		uint16_t k_slice = 100;
 		uint16_t k_polygon = 4;
+		uint16_t fix_self_intersect = 0;
 		size_t grid_size = 100;
 		double isolevel = 0.0;
 		double qsim_percent = 0;

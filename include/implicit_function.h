@@ -245,8 +245,9 @@ public:
 		// For example, f(x,y,z) = x^2+y^2+z^2 - 1, We want the solid region of f(x, y, z) <= 0
 		// so that F(x,y,z) = -f(x,y,z) >= 0
 		if (thickness <= eps) {
-			if (isLuaFunction)
+			if (isLuaFunction) {
 				return (isosurface)(x, y, z);
+			}
 			return -(isosurface)(x * coff, y * coff, z * coff);
 		}
 		return IsoThicken(isosurface, x * coff, y * coff, z * coff, thickness);

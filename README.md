@@ -68,17 +68,17 @@ Example:
 
 Lua file:
 
-  Define the "surface" function that return the implicit function
+  Define the "surface" function that return the FRep
   -----------------------------------------------------------------
   function surface (x, y, z)
-    return sin(x) * cos(y) + sin(y) * cos(z) + sin(z) * cos(x) - t
+    return -(sin(x) * cos(y) + sin(y) * cos(z) + sin(z) * cos(x) - t)
   end
   -----------------------------------------------------------------
 
 Special symbols can be used in lua file:
 
-  w: value from -c, or --coff
-  t: value from -t, or --thickness
+  params = { coff, isolevel, k_splice, k_polygon }
+  bbox = { min, max, length, grid_density }
   winding(x,y,z): function returning the winding number of position x,y,z
   signed_distance(x,y,z): function returning signed distance of position x,y,z
   and all functions from math module
@@ -107,11 +107,25 @@ Scaffolder --help
 Scaffolder.SliceTest --help
 ```
 
+## Python supports
+```bash
+pip install PyScaffolder
+```
+
+## Blender addon
+- **Window**: The addon zip can be downloaded at [Release](https://github.com/nodtem66/Scaffolder/releases/tag/v1.5.1)
+- Otherwise, create a "Scaffolder" folder in blender scripts direction
+- Copy all files in blender folder of this project to that path
+- Since blender did not ship with pip, the [PyScaffolder wheel](https://pypi.org/manage/project/PyScaffolder/release/1.5.1/) must be downloaded and unpacked at that path
+
 ## Screenshots
 
 - **The figure of patterns implemented in this program**
 
 ![TPMS Patterns](https://github.com/nodtem66/Scaffolder/raw/master/images/patterns.jpg)
+
+- Blender plugin with PyScaffolder
+![Blender plugin](https://github.com/nodtem66/Scaffolder/raw/master/images/blender-plugin.gif)
 
 - **The examples of generated porous scaffold**
 
