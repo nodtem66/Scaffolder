@@ -1,5 +1,5 @@
 # Scaffolder 
-![Build Status](https://github.com/nodtem66/Scaffolder/workflows/Build/badge.svg) [![Build Status](https://dev.azure.com/n66/Public%20CI/_apis/build/status/nodtem66.Scaffolder?branchName=conda-forge)](https://dev.azure.com/n66/Public%20CI/_build/latest?definitionId=1&branchName=conda-forge)
+![Build Status](https://github.com/nodtem66/Scaffolder/workflows/Build/badge.svg) [![Build Status](https://dev.azure.com/n66/PublicCI/_apis/build/status/nodtem66.Scaffolder%20(Anaconda)?branchName=master)](https://dev.azure.com/n66/PublicCI/_build/latest?definitionId=6&branchName=master)
 
 [![Anaconda](https://anaconda.org/nodtem66/scaffolder/badges/version.svg)](https://anaconda.org/nodtem66/scaffolder) ![Last update](https://anaconda.org/nodtem66/scaffolder/badges/latest_release_date.svg) ![Platform](https://anaconda.org/nodtem66/scaffolder/badges/platforms.svg) ![Install](https://anaconda.org/nodtem66/scaffolder/badges/installer/conda.svg)
 
@@ -116,16 +116,18 @@ pip install PyScaffolder
 - **Window**: The addon zip can be downloaded at [Release](https://github.com/nodtem66/Scaffolder/releases/tag/v1.5.1)
 - Otherwise, create a "Scaffolder" folder in blender scripts direction
 - Copy all files in blender folder of this project to that path
-- Since blender did not ship with pip, the [PyScaffolder wheel](https://pypi.org/manage/project/PyScaffolder/release/1.5.1/) must be downloaded and unpacked at that path
+- Since blender did not ship with pip, the [PyScaffolder wheel](https://pypi.org/manage/project/PyScaffolder) must be downloaded and unpacked at that path
 
 ## Screenshots
+
+- **Blender plugin with PyScaffolder**
+
+![Blender plugin](https://github.com/nodtem66/Scaffolder/raw/master/images/blender-plugin.gif)
 
 - **The figure of patterns implemented in this program**
 
 ![TPMS Patterns](https://github.com/nodtem66/Scaffolder/raw/master/images/patterns.jpg)
 
-- Blender plugin with PyScaffolder
-![Blender plugin](https://github.com/nodtem66/Scaffolder/raw/master/images/blender-plugin.gif)
 
 - **The examples of generated porous scaffold**
 

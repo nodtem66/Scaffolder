@@ -5,6 +5,7 @@ cmake -G Ninja ^
       -DCMAKE_INSTALL_PREFIX:PATH="%PREFIX%" ^
       -DCMAKE_BUILD_TYPE:STRING=Release ^
       -DCMAKE_CXX_STANDARD=11 ^
+      -DBUILD_PYSCAFFOLDER:BOOL=OFF ^
       -S . -B build
 if errorlevel 1 goto DEBUG
 

@@ -1,10 +1,10 @@
-out
+out*
+build*
 .vs
 CMakeSettings.json
 diplib/lib
 main_sources.cmake
 python_sources.cmake
-external/
+external*/
 scripts/external.tar.gz
 *.pyc
-build_artifacts

@@ -15,7 +15,7 @@ if [ ! -e external.tar.gz ]; then
       --exclude=external/vcglib/apps \
       --exclude=external/libigl/tutorial \
       --exclude=external/libigl/tests \
-      --exclude=external/libigl/external \
+      --exclude=external/libigl/external/.cache \
       --exclude=external/pybind11/docs \
       --exclude=external/OpenCTM-1.0.3/tools \
       --exclude=external/OpenCTM-1.0.3/plugins \

@@ -109,7 +109,7 @@ class CMakeBuild(build_ext):
 # logic and declaration, and simpler if you include description/version in a file.
 setup(
     name="PyScaffolder",
-    version="1.5.1",
+    version="1.5.1.dev1",
     author="Jirawat Iamsamang",
     author_email="nodtem66@gmail.com",
     description="Python wrapper for scaffolder program",
