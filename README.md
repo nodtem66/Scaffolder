@@ -114,9 +114,9 @@ pip install PyScaffolder
 
 ## Blender addon
 - **Window**: The addon zip can be downloaded at [Release](https://github.com/nodtem66/Scaffolder/releases/tag/v1.5.1)
-- Otherwise, create a "Scaffolder" folder in blender scripts direction
+- Otherwise, create a "Scaffolder" folder in blender scripts directory
 - Copy all files in blender folder of this project to that path
-- Since blender did not ship with pip, the [PyScaffolder wheel](https://pypi.org/manage/project/PyScaffolder) must be downloaded and unpacked at that path
+- Since blender did not ship with pip, the [PyScaffolder wheel](https://pypi.org/project/PyScaffolder/) must be downloaded and unpacked at that path
 
 ## Screenshots
 
