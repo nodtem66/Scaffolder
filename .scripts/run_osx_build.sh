@@ -50,7 +50,7 @@ make_build_number ./ ./recipe ./.ci_support/${CONFIG}.yaml
 
 conda build ./recipe -m ./.ci_support/${CONFIG}.yaml --suppress-variables --clobber-file ./.ci_support/clobber_${CONFIG}.yaml ${EXTRA_CB_OPTIONS:-}
 
-if [[ "${UPLOAD_PACKAGES}" -ne 'False' ]]; then
+if [[ ${UPLOAD_PACKAGES} -ne "False" ]]; then
   echo -e "\n\nUploading the packages."
   upload_package  ./ ./recipe ./.ci_support/${CONFIG}.yaml
 fi
