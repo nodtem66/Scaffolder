@@ -162,5 +162,18 @@ pip install PyScaffolder
 - [Minimal surface Blog](https://minimalsurfaces.blog/)
 
 ## Citation
-[![DOI](https://zenodo.org/badge/227950058.svg)](https://zenodo.org/badge/latestdoi/227950058)
-
+[Computational method and program for generating a porous scaffold based on implicit surfaces](https://doi.org/10.1016/j.cmpb.2021.106088)
+```bibtex
+@article{IAMSAMANG2021106088,
+title = {Computational method and program for generating a porous scaffold based on implicit surfaces},
+journal = {Computer Methods and Programs in Biomedicine},
+volume = {205},
+pages = {106088},
+year = {2021},
+issn = {0169-2607},
+doi = {https://doi.org/10.1016/j.cmpb.2021.106088},
+url = {https://www.sciencedirect.com/science/article/pii/S0169260721001632},
+author = {Jirawat Iamsamang and Phornphop Naiyanetr},
+keywords = {Triply periodic minimal surface (TPMS), Implicit surface, Porous scaffold, Pore size, Porosity}
+}
+```
