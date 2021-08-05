@@ -3,7 +3,7 @@
 
 [![Anaconda](https://anaconda.org/nodtem66/scaffolder/badges/version.svg)](https://anaconda.org/nodtem66/scaffolder) ![Last update](https://anaconda.org/nodtem66/scaffolder/badges/latest_release_date.svg) ![Platform](https://anaconda.org/nodtem66/scaffolder/badges/platforms.svg) ![Install](https://anaconda.org/nodtem66/scaffolder/badges/installer/conda.svg)
 
-![Scaffolder Logo](https://github.com/nodtem66/Scaffolder/raw/master/images/scaffolder_logo.jpg)
+![Scaffolder Logo](https://github.com/nodtem66/Scaffolder/raw/master/docs/images/scaffolder_logo.jpg)
 
 Generate scaffold from STL/PLY/OFF/OBJ file with implicit function (e.g., Schwarz P/ Gyroid).
 
@@ -122,16 +122,16 @@ pip install PyScaffolder
 
 - **Blender plugin with PyScaffolder**
 
-![Blender plugin](https://github.com/nodtem66/Scaffolder/raw/master/images/blender-plugin.gif)
+![Blender plugin](https://github.com/nodtem66/Scaffolder/raw/master/docs/images/blender-plugin.gif)
 
 - **The figure of patterns implemented in this program**
 
-![TPMS Patterns](https://github.com/nodtem66/Scaffolder/raw/master/images/patterns.jpg)
+![TPMS Patterns](https://github.com/nodtem66/Scaffolder/raw/master/docs/images/patterns.jpg)
 
 
 - **The examples of generated porous scaffold**
 
-![Examples porous scaffold](https://github.com/nodtem66/Scaffolder/raw/master/images/examples.jpg)
+![Examples porous scaffold](https://github.com/nodtem66/Scaffolder/raw/master/docs/images/examples.jpg)
 
 ## Dependencies
 - [libigl](https://libigl.github.io/)

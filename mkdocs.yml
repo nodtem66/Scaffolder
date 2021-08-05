@@ -1,0 +1,55 @@
+site_name: Scaffolder
+site_url: http://github.com/nodtem66/scaffolder
+repo_url: http://github.com/nodtem66/scaffolder
+nav:
+  - Home: index.md
+  - Installation: installation.md
+  - Tutorials:
+    - tutorial_1.md
+  - Usages:
+    - Command line: cmd.md
+    - Python API: python.md
+    - Blender Plugin: blender.md
+  - Tips: tips.md
+plugins:
+  - search
+theme:
+  name: material
+  palette:
+    - primary: blue
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      toggle:
+        icon: material/weather-night
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      toggle:
+        icon: material/weather-sunny
+        name: Switch to light mode
+  features:
+    - content.code.annotate
+    - navigation.top
+markdown_extensions:
+  - abbr
+  - attr_list
+  - def_list
+  - admonition
+  - pymdownx.keys
+  - pymdownx.highlight
+  - pymdownx.superfences
+  - pymdownx.snippets
+  - pymdownx.inlinehilite
+  - pymdownx.arithmatex:
+      generic: true
+  - toc:
+      toc_depth: 2
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/nodtem66/Scaffolder
+extra_css: [extra.css]
+extra_javascript:
+  - javascripts/extra.js
+  - https://polyfill.io/v3/polyfill.min.js?features=es6
+  - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js

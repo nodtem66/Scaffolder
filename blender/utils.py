@@ -1,5 +1,6 @@
 import numpy as np
 import sys
+import os
 import bpy
 
 def ShowMessageBox(message = "", title = "Message Box", icon = 'INFO'):
@@ -24,6 +25,34 @@ def is_module_available(module_name):
         torch_loader = importlib.util.find_spec(module_name)
 
     return torch_loader is not None
+
+def ensure_site_packages(packages):
+    """ `packages`: list of tuples (<import name>, <pip name>) """
+    
+    if not packages:
+        return
+
+    import site
+    import importlib
+    import importlib.util
+
+    user_site_packages = site.getusersitepackages()
+    os.makedirs(user_site_packages, exist_ok = True)
+    sys.path.append(user_site_packages)
+
+    modules_to_install = [module[1] for module in packages if not importlib.util.find_spec(module[0])]   
+
+    if modules_to_install:
+        import subprocess
+
+        if bpy.app.version < (2,91,0):
+            python_binary = bpy.app.binary_path_python
+        else:
+            python_binary = sys.executable
+
+        subprocess.run([python_binary, '-m', 'ensurepip'], check=True)
+        subprocess.run([python_binary, '-m', 'pip', 'install', *modules_to_install, "--user"], check=True)
+
 
 def read_verts(mesh):
     vn = len(mesh.vertices)

@@ -26,13 +26,16 @@ bl_info = {
 import bpy
 from bpy.props import PointerProperty
 
-from . utils import is_module_available, ShowMessageBox
+from . utils import is_module_available, ensure_site_packages, ShowMessageBox
 from . SCAFFOLDER_OP_generate_mesh import SCAFFOLDER_OP_generate_mesh
 from . SCAFFOLDER_OP_slice_test import SCAFFOLDER_OP_slice_test
 from . SCAFFOLDER_PT_generate_mesh import SCAFFOLDER_PT_generate_mesh
 from . SCAFFOLDER_PT_slice_test import SCAFFOLDER_PT_slice_test
 from . SCAFFOLDER_settings import SCAFFOLDER_settings
 
+ensure_site_packages([
+    ("PyScaffolder", "PyScaffolder"),
+])
 
 try:
     import PyScaffolder
