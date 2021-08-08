@@ -79,7 +79,10 @@ class SCAFFOLDER_OP_generate_mesh(bpy.types.Operator):
                 f = read_faces(mesh)
                 
                 def gen(self):
-                    mesh = PyScaffolder.generate_mesh(v, f, params, callback)
+                    if ('__version__' in PyScaffolder.__dict__):
+                        mesh = PyScaffolder.generate_scaffold(v, f, params, callback)
+                    else:
+                        mesh = PyScaffolder.generate_mesh(v, f, params, callback)
                     template_str = "Porosity: %.3f\nSurface Area: %.3f\nSurface Area Ratio: %.3f"
                     props.result1 = template_str % (mesh.porosity, mesh.surface_area, mesh.surface_area_ratio)
                     

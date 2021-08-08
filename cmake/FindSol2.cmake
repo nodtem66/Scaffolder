@@ -56,7 +56,7 @@ file(GLOB SOL2_HEADER_SOURCES ${SOL2_INCLUDE_DIR}/sol*.hpp)
 source_group(sol2 FILES ${SOL2_HEADER_SOURCES})
 
 list(APPEND CMAKE_MODULE_PATH "${SOL2_INCLUDE_DIR}/../cmake/Modules")
-message(STATUS "USE DIR: ${SOL2_INCLUDE_DIR}")
+message(STATUS "USE SOL2 DIR: ${SOL2_INCLUDE_DIR}")
 
 # # # Libraries
 # Here, we pull in all the necessary libraries for building examples and tests
@@ -143,4 +143,4 @@ endif()
 if (NOT LUA_FOUND AND NOT LUABUILD_FOUND)
 	message(FATAL_ERROR "sol2 Lua \"${SOL2_LUA_VERSION}\" not found and could not be targeted for building")
 endif()
-message(STATUS "USE DIR: ${LUA_LIBRARIES} ${LUA_INCLUDE_DIR}")
+message(STATUS "USE LUA DIR: ${LUA_LIBRARIES} ${LUA_INCLUDE_DIR}")

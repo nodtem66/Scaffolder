@@ -1,16 +1,14 @@
-﻿#include "Scaffolder_2.h"
+﻿#include "Scaffolder.h"
+#include "OptimalSlice.hpp"
+#include "MeshOperation.h"
+#include "utils.h"
 #include "QuadricSimplification.h"
+#include "cxxopts.hpp"
+#include "toojpeg/toojpeg.h"
+#include "implicit_function.h"
 
-ProgressBar qsim_progress(100, 40);
-inline bool qsim_callback(int pos, const char* str) {
-    if (pos >= 0 && pos <= 100) {
-        qsim_progress.update(pos);
-        qsim_progress.display();
-    }
-    if (pos >= 100)
-        qsim_progress.done();
-    return true;
-}
+#define LOG if (log_format == SCAFFOLDER_FORMAT_DEFAULT) log
+#define CSV if (log_format == SCAFFOLDER_FORMAT_CSV) log
 
 int main(int argc, char* argv[])
 {
@@ -29,7 +27,7 @@ int main(int argc, char* argv[])
     uint8_t export_axis = 'X';
     uint16_t grid_offset = 3;
     uint16_t shell = 0;
-    uint16_t smooth_step = 5;
+    uint16_t smooth_step = 0;
     uint16_t k_slice = 100;
     uint16_t k_polygon = 4;
     size_t minimum_grid_size = 100;
@@ -41,21 +39,23 @@ int main(int argc, char* argv[])
     double coff = pi;
     double minimum_diameter = 0.25;
 
-    // format Eigen object to readable text
-    Eigen::IOFormat CleanFmt(4, Eigen::DontAlignCols, ", ", "\n", "[", "]");
-    Eigen::IOFormat CSVFmt(-1, Eigen::DontAlignCols, ", ", ", ");
-
     // file parameters
     std::string filename = "", dir = "";
-    std::string surface_name = "schwarzp";
+    std::string surface_name = "bcc";
     std::string input_file = "";
     std::string output_format = "";
     std::uint8_t log_format = SCAFFOLDER_FORMAT_DEFAULT;
 
+    // Eigen format
+    // format Eigen object to readable text
+    Eigen::IOFormat CleanFmt(4, Eigen::DontAlignCols, ", ", "\n", "[", "]");
+    Eigen::IOFormat CSVFmt(-1, Eigen::DontAlignCols, ", ", ", ");
+
     // TRY-CATCH block
     // Parse the program options
     try {
-        cxxopts::Options options("Scaffolder", "Scaffolder - generate 3D scaffold from STL file based on implicit surface");
+        std::string description("Scaffolder (%VERSION%) - generate 3D scaffold from STL file based on implicit surface");
+        cxxopts::Options options("Scaffolder", description.replace(description.find("%VERSION%"), sizeof("%VERSION%") - 1, VERSION));
         options.positional_help("INPUT OUTPUT PARAMETERS").show_positional_help();
         options.add_options()
             ("h,help", "Print help")
@@ -65,24 +65,24 @@ int main(int argc, char* argv[])
             ("q,quiet", "Disable verbose output [default: false]")
             ("c,coff", "Angular frequency (pore size adjustment) default:PI", cxxopts::value<double>(), "DOUBLE")
             ("t,isolevel", "isolevel (porosity adjustment) [default: 0]", cxxopts::value<double>(), "DOUBLE")
-            ("n,surface", "implicit surface: rectlinear, schwarzp, schwarzd, gyroid, double-p, double-d, double-gyroiod, lidinoid, schoen_iwp, neovius, bcc, tubular_g_ab, tubular_g_c [default: schwarzp]", cxxopts::value<std::string>(), "NAME")
+            ("n,surface", "implicit surface: rectlinear, schwarzp, schwarzd, gyroid, double-p, double-d, double-gyroiod, lidinoid, schoen_iwp, neovius, bcc, tubular_g_ab, tubular_g_c (default: bcc)", cxxopts::value<std::string>(), "NAME")
             ("g,grid_size", "Grid size [default: 100]", cxxopts::value<size_t>(), "INT (0..60000)")
             ("s,shell", "Outer thickness (layers) [default:0]", cxxopts::value<uint16_t>(), "INT (0..60000)")
             ("grid_offset", "[default:3]", cxxopts::value<uint16_t>(), "INT (0..60000)")
             ("m,microstructure", "Analysis microstructure with Slice contour technique ( [default: false]")
             ("export_microstructure", "Analysis microstructure and export the 2D contours (for debugging) [default: false]")
-            ("export_jpeg", "Export 2D JPEG [Default: Z,100]", cxxopts::value<std::vector<std::string>>(), "[X|Y|Z],INT")
-            ("k_slice", "K_slice: the number of slicing layers in each direction (used in microstructure analysis) [default: 100]", cxxopts::value<uint16_t>(), "INT (0..60000)")
-            ("k_polygon", "K_polygon: the number of closest outer contour (used in microstructure analysis) [default: 4]", cxxopts::value<uint16_t>(), "INT (>0)")
-            ("z,size_optimize", "Experimental Quadric simplification [default: 0]", cxxopts::value<double>(), "DOUBLE (0..1)")
-            ("smooth_step", "Smooth with laplacian (default: 5)", cxxopts::value<uint16_t>(), "INT (0..60000)")
-            ("dirty", "Disable autoclean [default false]")
-            ("minimum_diameter", "used for removing small orphaned (between 0-1) [default: 0.25]", cxxopts::value<double>(), "DOUBLE (0..1)")
-            ("format", "Format of logging output [default: default]", cxxopts::value<std::string>(), "FORMAT (default, csv)")
-            ("output_inverse", "additional output inverse scaffold [default: false]")
-            ("fix_self_intersect", "Experimental fix self-intersect faces [default: 0]", cxxopts::value<int>()->default_value("0"), "INT")
+            ("export_jpeg", "Export 2D JPEG (Default: Z,100)", cxxopts::value<std::vector<std::string>>(), "[X|Y|Z],INT")
+            ("k_slice", "K_slice: the number of slicing layers in each direction (used in microstructure analysis) (default: 100)", cxxopts::value<uint16_t>(), "INT (0..60000)")
+            ("k_polygon", "K_polygon: the number of closest outer contour (used in microstructure analysis) (default: 4)", cxxopts::value<uint16_t>(), "INT (>0)")
+            ("z,size_optimize", "Experimental Quadric simplification (default: 0)", cxxopts::value<double>(), "DOUBLE (0..1)")
+            ("smooth_step", "Smooth with laplacian", cxxopts::value<uint16_t>()->default_value("0"), "INT (0..60000)")
+            ("dirty", "Disable autoclean", cxxopts::value<bool>()->default_value("false"), "")
+            ("minimum_diameter", "used for removing small orphaned (between 0-1)", cxxopts::value<double>()->default_value("0.25"), "DOUBLE (0..1)")
+            ("format", "Format of logging output", cxxopts::value<std::string>()->default_value("default"), "FORMAT (default, csv)")
+            ("output_inverse", "additional output inverse scaffold", cxxopts::value<bool>()->default_value("false"), "")
+            ("fix_self_intersect", "Experimental fix self-intersect faces", cxxopts::value<int>()->default_value("0"), "INT")
             ("mean_curvature", "Size of mean curvature histogram", cxxopts::value<int>()->default_value("0"), "INT")
-            ("intersect", "Generate 3D mesh without intersect with original mesh [default: true]", cxxopts::value<bool>()->default_value("true"), "");
+            ("no_intersect", "Generate 3D mesh without intersect with original mesh (false)", cxxopts::value<bool>(), "");
         options.parse_positional({ "input", "output", "params" });
         bool isEmptyOption = (argc == 1);
         cxxopts::ParseResult result = options.parse(argc, argv);
@@ -128,7 +128,7 @@ int main(int argc, char* argv[])
             }
         }
         if (result.count("dirty")) dirty = result["dirty"].as<bool>();
-        if (result.count("intersect")) is_intersect = result["intersect"].as<bool>();
+        if (result.count("no_intersect")) is_intersect = !result["no_intersect"].as<bool>();
         if (result.count("microstructure")) {
             is_analysis_microstructure = result["microstructure"].as<bool>();
             no_output = true;
@@ -250,7 +250,7 @@ int main(int argc, char* argv[])
         << "--   Mean curvature: " << (is_mean_curvature ? "True" : "False") << std::endl
         << "-- Export JPEG: " << (is_export_jpeg ? "Yes" : "No") << std::endl
         << "--   Axis: " << export_axis << std::endl
-        << "-- Build: " << (no_output ? "No" : "Yes") << (is_build_inverse ? " (Inverse)" : "") << (is_intersect ? "(Intersect)" : "") << std::endl;
+        << "-- Build: " << (no_output ? "No" : "Yes") << (is_build_inverse ? " (Inverse)" : "") << (is_intersect ? " (Intersect)" : "") << std::endl;
     else
     CSV << "Surface,coff,shell,thickness,grid_size,grid_offset,smooth_step,input_file,";
 
@@ -538,9 +538,7 @@ int main(int argc, char* argv[])
 
         if (qsim_percent > 0) {
             LOG << "[Quadric Simplificaion: " << qsim_percent << "]" << std::endl;
-            qsim_progress.reset();
             vcg::tri::mesh_quad_simplification(mesh, qsim_percent, qsim_callback);
-            qsim_progress.done();
             LOG << "-- Info: " << mesh.VN() << " vertices " << mesh.FN() << " faces" << std::endl;
         }
 
@@ -749,7 +747,12 @@ int main(int argc, char* argv[])
                 << mesh.VN() << ',' << mesh.FN() <<  std::endl;
         }
         else {
-            LOG << "[Warning] The scaffold isn't a manifold. The grid_offset should be increased or enable --fix_self_intersect option" << std::endl;
+            LOG << "[Warning] The scaffold isn't a manifold, so the suggestions are here:\n"
+                << "* Increase --grid_offset \n"
+                << "* Enable --fix_self_intersect option \n"
+                << "* Adjust --smooth_step \n"
+                << "* OR use the external 3D mesh editor to fix the problem, which I hope you can do it"
+                << std::endl;
             else
             CSV << ",,,," << mesh.VN() << ',' << mesh.FN() << std::endl;
         }

@@ -10,7 +10,6 @@
 #include "MeshOperation.h"
 
 ProgressBar import_progress(100, 40);
-ProgressBar qsim_progress(100, 40);
 
 int _pos = 0;
 bool import_callback(int pos, const char* str) {

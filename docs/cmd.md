@@ -5,9 +5,9 @@ Usage:
   Scaffolder [OPTION...] INPUT OUTPUT PARAMETERS
 
   -h, --help                    Print help
-  -i, --input INPUT             Input file (STL)
+  -i, --input INPUT             Input file (STL/PLY/OFF/OBJ/VMI)
   -o, --output OUTPUT           Output filename with extension
-                                stl,ply,obj,off [default: out]
+                                stl,ply,obj,off,ctm
       --params PARAMETERS       Combined parameters list:
                                 surface[,coff,isolevel,grid_size,k_slice,k_polygon]
   -q, --quiet                   Disable verbose output [default: false]
@@ -17,7 +17,7 @@ Usage:
   -n, --surface NAME            implicit surface: rectlinear, schwarzp,
                                 schwarzd, gyroid, double-p, double-d,
                                 double-gyroiod, lidinoid, schoen_iwp, neovius, bcc,
-                                tubular_g_ab, tubular_g_c [default: schwarzp]
+                                tubular_g_ab, tubular_g_c (default: bcc)
   -g, --grid_size INT (0..60000)
                                 Grid size [default: 100]
   -s, --shell INT (0..60000)    Outer thickness (layers) [default:0]
@@ -27,23 +27,31 @@ Usage:
                                 technique ( [default: false]
       --export_microstructure   Analysis microstructure and export the 2D
                                 contours (for debugging) [default: false]
+      --export_jpeg [X|Y|Z],INT
+                                Export 2D JPEG (Default: Z,100)
       --k_slice INT (0..60000)  K_slice: the number of slicing layers in each
                                 direction (used in microstructure analysis)
-                                [default: 100]
+                                (default: 100)
       --k_polygon INT (>0)      K_polygon: the number of closest outer
-                                contour (used in microstructure analysis) [default: 4]
+                                contour (used in microstructure analysis) (default:
+                                4)
   -z, --size_optimize DOUBLE (0..1)
-                                Experimental Quadric simplification [default: 0]
+                                Experimental Quadric simplification (default:
+                                0)
       --smooth_step INT (0..60000)
-                                Smooth with laplacian (default: 5)
-      --dirty                   Disable autoclean [default false]
+                                Smooth with laplacian (default: 0)
+      --dirty                   Disable autoclean
       --minimum_diameter DOUBLE (0..1)
-                                used for removing small orphaned (between 0-1) [default: 0.25]
+                                used for removing small orphaned (between
+                                0-1) (default: 0.25)
       --format FORMAT (default, csv)
-                                Format of logging output [default: default]
-      --output_inverse          additional output inverse scaffold [default: false]
-      --fix_self_intersect      Experimental fix self-intersect faces
-                                [default: false]
+                                Format of logging output (default: default)
+      --output_inverse          additional output inverse scaffold
+      --fix_self_intersect INT  Experimental fix self-intersect faces
+                                (default: 0)
+      --mean_curvature INT      Size of mean curvature histogram (default: 0)
+      --no_intersect            Generate 3D mesh without intersect with
+                                original mesh (false)
 ```
 
 ## Examples

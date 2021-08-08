@@ -2,9 +2,9 @@
  * This is the implement slice algorithm from Rodrigo, 2017 (An Optimal Algorithm for 3D Triangle Mesh Slicing)
  * which is claimed to be faster than slic3r and CGAL method.
  */
-#pragma once
 #ifndef OPTIMALSLICE_INCLUDED
 #define OPTIMALSLICE_INCLUDED
+
 #ifndef SLICE_PRECISION
 // There's a problem of double hashing with the precision less than 1e-8 (e.g. 1e-10)
 // when performed contour constructing

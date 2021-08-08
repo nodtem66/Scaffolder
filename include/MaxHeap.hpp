@@ -1,4 +1,5 @@
-#pragma once
+#ifndef MAXHEAP_HPP_INCLUDED
+#define MAXHEAP_HPP_INCLUDED
 
 #include <vector>
 #include <iostream>
@@ -43,3 +44,4 @@ public:
 		heapify(0);
 	}
 };
+#endif

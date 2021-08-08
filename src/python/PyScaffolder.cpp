@@ -5,6 +5,8 @@ namespace py = pybind11;
 PYBIND11_MODULE(PyScaffolder, m) {
     m.doc() = "PyScaffolder generate isosurface from implicit function";
 
+    m.attr("__version__") = VERSION;
+
     py::class_<PyScaffolder::PoreSize>(m, "PoreSize", py::dynamic_attr())
         .def(py::init<>())
         .def_readwrite("minFeret", &PyScaffolder::PoreSize::minFeret)
@@ -22,6 +24,7 @@ PYBIND11_MODULE(PyScaffolder, m) {
         .def(py::init<>())
         .def_readwrite("is_build_inverse", &PyScaffolder::Parameter::is_build_inverse)
         .def_readwrite("is_intersect", &PyScaffolder::Parameter::is_intersect)
+        .def_readwrite("verbose", &PyScaffolder::Parameter::verbose)
         .def_readwrite("coff", &PyScaffolder::Parameter::coff)
         .def_readwrite("grid_offset", &PyScaffolder::Parameter::grid_offset)
         .def_readwrite("grid_size", &PyScaffolder::Parameter::grid_size)
@@ -34,7 +37,7 @@ PYBIND11_MODULE(PyScaffolder, m) {
         .def_readwrite("fix_self_intersect", &PyScaffolder::Parameter::fix_self_intersect)
         .def_readwrite("surface_name", &PyScaffolder::Parameter::surface_name);
 
-    m.def("slice_test", &PyScaffolder::slice_test, "A function to slice input mesh into pore sizes",
+    m.def("slice_test", &PyScaffolder::slice_test, py::call_guard<py::gil_scoped_release>(), "A function to slice input mesh into pore sizes",
         py::arg("vertices"),
         py::arg("faces"),
         py::arg("k_slice") = 100,
@@ -46,10 +49,19 @@ PYBIND11_MODULE(PyScaffolder, m) {
 
     PyScaffolder::Parameter default_parameters;
     
-    m.def("generate_mesh", &PyScaffolder::generate_mesh, "A function to generate isosurface from input mesh and parameters",
+    m.def("generate_scaffold", &PyScaffolder::generate_scaffold, py::call_guard<py::gil_scoped_release>(), "A function to generate isosurface from input mesh and parameters",
         py::arg("vertices"),
         py::arg("faces"),
         py::arg("params") = default_parameters,
+        py::arg("callback") = py::none()
+    );
+
+    m.def("marching_cubes", &PyScaffolder::marching_cubes, py::call_guard<py::gil_scoped_release>(), "A function to generate a triangular mesh (v, f) from isovalues (f)",
+        py::arg("f"),
+        py::arg("grid_size") = std::tuple<int32_t, int32_t, int32_t>(100, 100, 100),
+        py::arg("v_min") = std::tuple<double, double, double>(0, 0, 0),
+        py::arg("delta") = 0.01,
+        py::arg("clean") = false,
         py::arg("callback") = py::none()
     );
 }

@@ -38,8 +38,8 @@ class SCAFFOLDER_settings(bpy.types.PropertyGroup):
     is_build_inverse: BoolProperty(name="Build inverse", default=False)
     
     grid_size: IntProperty(name="Grid size", default=100, min=10)
-    grid_offset: IntProperty(name="Grid offset", default=5, min=0)
-    smooth_step: IntProperty(name="smooth step", default=5, min=0)
+    grid_offset: IntProperty(name="Grid offset", default=3, min=0)
+    smooth_step: IntProperty(name="smooth step", default=0, min=0)
     k_slice: IntProperty(name="k slice", default=100, min=1)
     k_polygon: IntProperty(name="k polygon", default=4, min=1)
     

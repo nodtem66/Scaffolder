@@ -9,7 +9,7 @@
 #include <locale>
 #include <algorithm>
 #include <functional>
-#include <sol/sol.hpp>
+#include "sol/sol.hpp"
 
 typedef double FT;
 const FT pi = 3.141592653589793238462643383279502884L;
@@ -242,7 +242,7 @@ public:
 	FT operator ()(FT x, FT y, FT z) {
 		// Since we use FREP where F(x,y,z) >= 0 defined as a solid
 		// then we inversed the implicit function to match FREP
-		// For example, f(x,y,z) = x^2+y^2+z^2 - 1, We want the solid region of f(x, y, z) <= 0
+		// For example, f(x,y,z) = x^2+y^2+z^2 - 1, We want the solid region inside the circle where f(x, y, z) <= 0
 		// so that F(x,y,z) = -f(x,y,z) >= 0
 		if (thickness <= eps) {
 			if (isLuaFunction) {
@@ -298,5 +298,14 @@ Function* isosurface(std::string name, FT t) {
 		return new TGc();
 	}
 	throw std::runtime_error("Implicit surface called `" + name + "` doesn't exist");
+}
+
+void set_shorten_function(sol::state& lua) {
+	lua.script("abs, acos, asin, atan, atan2 = math.abs, math.acos, math.atan, math.atan2");
+	lua.script("ceil, cos, deg, exp, floor = math.ceil, math.cos, math.deg, math.exp, math.floor");
+	lua.script("log, log10, max, min, mod = math.log, math.log10, math.max, math.min, math.mod");
+	lua.script("pow, rad, sin, sqrt, tan = math.pow, math.rad, math.sin, math.sqrt, math.tan");
+	lua.script("frexp, ldexp, random, randomseed = math.frexp, math.ldexp, math.random, math.randomseed");
+	lua.script("local pi = math.pi");
 }
 #endif

@@ -117,23 +117,17 @@ endif()
 if(BUILD_SCAFFOLDER)
 	# Add your project files
 	file(GLOB MAIN_SOURCES
-		"${PROJECT_SOURCE_DIR}/include/*.c"
-		"${PROJECT_SOURCE_DIR}/include/*.cpp"
-		"${PROJECT_SOURCE_DIR}/include/*.tpp"
-		"${PROJECT_SOURCE_DIR}/include/*.h"
-		"${PROJECT_SOURCE_DIR}/include/*.hpp"
 		"${PROJECT_SOURCE_DIR}/include/*/*.c"
 		"${PROJECT_SOURCE_DIR}/include/*/*.cpp"
-		"${PROJECT_SOURCE_DIR}/include/*/*.tpp"
-		"${PROJECT_SOURCE_DIR}/include/*/*.h"
-		"${PROJECT_SOURCE_DIR}/include/*/*.hpp"
 		"${PROJECT_SOURCE_DIR}/src/utils.cpp"
+		"${PROJECT_SOURCE_DIR}/src/Scaffolder.cpp"
 		"${VCG_INCLUDE_DIR}/wrap/ply/plylib.cpp"
 		"${OpenCTM_INCLUDE_DIR}/*.c"
 		"${OpenCTM_INCLUDE_DIR}/liblzma/*.c"
 	)
 	include(update_deps_file)
 	update_deps_file("main_sources" "${MAIN_SOURCES}")
+	
 
 	# Build binary
 	add_executable(${PROJECT_NAME} ${MAIN_SOURCES} ${PROJECT_SOURCE_DIR}/src/Main.cpp)
@@ -145,6 +139,7 @@ if(BUILD_SCAFFOLDER)
 		${SOL2_INCLUDE_DIR}
 		${LUA_INCLUDE_DIR}
 		${OpenCTM_INCLUDE_DIR}
+		${LIBIGL_INCLUDE_DIR}
 		"${OpenCTM_INCLUDE_DIR}/liblzma/"
 	)
 	target_link_libraries(${PROJECT_NAME} PRIVATE
@@ -155,10 +150,15 @@ if(BUILD_SCAFFOLDER)
 		${LUA_LIBRARIES}
 	)
 
-	add_executable("${PROJECT_NAME}.SliceTest" ${MAIN_SOURCES} ${PROJECT_SOURCE_DIR}/src/SliceTest.cpp)
+	add_executable("${PROJECT_NAME}.SliceTest" 
+		${PROJECT_SOURCE_DIR}/src/SliceTest.cpp
+		${PROJECT_SOURCE_DIR}/src/utils.cpp
+		${VCG_INCLUDE_DIR}/wrap/ply/plylib.cpp
+	)
 	target_include_directories("${PROJECT_NAME}.SliceTest" PRIVATE
 		"${PROJECT_SOURCE_DIR}/include"
 		${VCG_INCLUDE_DIR}
+		${LIBIGL_INCLUDE_DIR}
 		${EIGEN3_INCLUDE_DIR}
 		${OpenCTM_INCLUDE_DIR}
 		"${OpenCTM_INCLUDE_DIR}/liblzma/"
@@ -177,8 +177,8 @@ if(BUILD_PYSCAFFOLDER)
 
 	file(GLOB PYTHON_SOURCES
 		"${PROJECT_SOURCE_DIR}/src/python/*.cpp"
-		"${PROJECT_SOURCE_DIR}/src/python/*.hpp"
-		"${PROJECT_SOURCE_DIR}/src/utils.cpp"
+		${PROJECT_SOURCE_DIR}/src/Scaffolder.cpp
+		${PROJECT_SOURCE_DIR}/src/utils.cpp
 	)
 	include(update_deps_file)
 	update_deps_file("python_sources" "${PYTHON_SOURCES}")
@@ -186,10 +186,12 @@ if(BUILD_PYSCAFFOLDER)
 	pybind11_add_module("Py${PROJECT_NAME}" ${PYTHON_SOURCES})
 	target_include_directories("Py${PROJECT_NAME}" PRIVATE
 		"${PROJECT_SOURCE_DIR}/include"
+		"${PROJECT_SOURCE_DIR}/src/python/"
 		${TBB_INCLUDE_DIR}
 		${VCG_INCLUDE_DIR}
 		${EIGEN3_INCLUDE_DIR}
 		${SOL2_INCLUDE_DIR}
+		${LIBIGL_INCLUDE_DIR}
 		${LUA_INCLUDE_DIR}
 		${PyBind11_INCLUDE_DIR}
 		${OpenCTM_INCLUDE_DIR}

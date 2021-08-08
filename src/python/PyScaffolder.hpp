@@ -1,5 +1,3 @@
-#pragma once
-
 #ifndef PYSCAFFOLDER_INCLUDED_H
 #define PYSCAFFOLDER_INCLUDED_H
 
@@ -10,6 +8,9 @@
 #include "pybind11/stl_bind.h"
 #include "pybind11/eigen.h"
 #include "pybind11/functional.h"
+#include "Scaffolder.h"
+
+namespace py = pybind11;
 
 namespace PyScaffolder {
 
@@ -30,9 +31,10 @@ namespace PyScaffolder {
 	struct Parameter {
 		bool is_build_inverse = false;
 		bool is_intersect = true;
+		bool verbose = false;
 		uint16_t shell = 0;
-		uint16_t grid_offset = 5;
-		uint16_t smooth_step = 5;
+		uint16_t grid_offset = 3;
+		uint16_t smooth_step = 0;
 		uint16_t k_slice = 100;
 		uint16_t k_polygon = 4;
 		uint16_t fix_self_intersect = 0;
@@ -53,10 +55,19 @@ namespace PyScaffolder {
 		const std::function<void(int)>& callback = NULL
 	);
 
-	MeshInfo generate_mesh(
+	MeshInfo generate_scaffold(
 		Eigen::MatrixXd v,
 		Eigen::MatrixXi f,
 		Parameter params,
+		const std::function<void(int)>& callback = NULL
+	);
+
+	std::tuple<Eigen::MatrixXd, Eigen::MatrixXi> marching_cubes(
+		Eigen::VectorXd& Fxyz,
+		py::object& grid_size,
+		py::object& Vmin,
+		py::object& delta,
+		bool clean = false,
 		const std::function<void(int)>& callback = NULL
 	);
 }

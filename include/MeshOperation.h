@@ -1,6 +1,6 @@
-#pragma once
 #ifndef MESHOPERATION_INCLUDED
 #define MESHOPERATION_INCLUDED
+
 #include "Mesh.h"
 #include "utils.h"
 

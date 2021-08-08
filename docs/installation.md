@@ -111,7 +111,7 @@ params = PyScaffolder.Parameter()
 params.coff = 1.0
 
 # Test the mesh generation from v,f
-a = PyScaffolder.[generate_mesh]()(v, f, params)
+a = PyScaffolder.generate_scaffold(v, f, params)
 print(a.porosity)
 print(a.surface_area_ratio)
 print(len(a.v), len(a.f))

@@ -7,7 +7,7 @@ angular frequency ($w$), and isolevel ($t$) are required (See [Command line](cmd
 ## Angular frequency
 
 According to [prior study](https://github.com/nodtem66/Scaffolder/blob/master/data/data_visualization.ipynb),
-**$w$ is inversely proportational to the pore size** (see [Tips](tips.md)). That is when $w$ increases,
+**$w$ is inversely proportational to the pore size** (see [Tips](tips.md)). That is, when $w$ increases,
 the pore size will be decreased. For gyroid, $w \approx \pi/\text{pore size}$. If we want pore size of 0.25
 (unit as same as `sphere.stl`), we try to initially set $w = \pi/0.25 \approx 12$ 
 
@@ -107,7 +107,7 @@ We use binary search to adjust the new value of $t$ to find the optimal value wi
 | -- | -- | -- | -- | -- | -- | -- | -- | -- |
 | Porosity | 0.508 | 0.85 | 0.67 | 0.59 | 0.634 | 0.613 | 0.602 | 0.597
 
-We can also use the classic numerical method called [Secant method](https://en.wikipedia.org/wiki/Secant_method) to find the optimal $t$ for the target porosity.
+We can also use the classical numerical method called [Secant method](https://en.wikipedia.org/wiki/Secant_method) to find the optimal $t$ for the target porosity.
 
 $$
 F(t) = Porosity(t) - 0.6 = 0

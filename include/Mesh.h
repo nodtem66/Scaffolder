@@ -1,6 +1,6 @@
-#pragma once
 #ifndef MESH_INCLUDED
 #define MESH_INCLUDED
+
 #include <openctm.h>
 #include <vcg/complex/complex.h>
 #include <vcg/complex/algorithms/update/halfedge_indexed.h>

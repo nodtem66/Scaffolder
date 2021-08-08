@@ -1,15 +1,36 @@
 #include "PyScaffolder.hpp"
-#include "Scaffolder_2.h"
-#undef LOG
+#include "OptimalSlice.hpp"
+#include "MeshOperation.h"
+#include "implicit_function.h"
+#include "QuadricSimplification.h"
+#include "dualmc/dualmc.h"
+
 #define LOG std::cout
+#define IS_INSTANCE_ARRAYLIST(x) (py::isinstance<py::list>(x) || py::isinstance<py::tuple>(x) || py::isinstance<py::array>(x))
 
 using namespace PyScaffolder;
+using namespace optimal_slice;
+namespace py = pybind11;
 
 // format Eigen object to readable text
 Eigen::IOFormat CleanFmt(4, Eigen::DontAlignCols, ", ", "\n", "[", "]");
 Eigen::IOFormat CSVFmt(-1, Eigen::DontAlignCols, ", ", ", ");
 
-MeshInfo PyScaffolder::generate_mesh(
+void clean_mesh(TMesh &mesh) {
+    // It's a good practice to clean STL mesh firstly (VCGLib)
+    mesh.face.EnableFFAdjacency();
+    vcg::tri::Clean<TMesh>::RemoveDuplicateFace(mesh);
+    vcg::tri::Clean<TMesh>::RemoveDuplicateVertex(mesh);
+    vcg::tri::Clean<TMesh>::RemoveUnreferencedVertex(mesh);
+    vcg::tri::UpdateTopology<TMesh>::FaceFace(mesh);
+    vcg::tri::Clean<TMesh>::RemoveZeroAreaFace(mesh);
+    vcg::tri::Clean<TMesh>::RemoveNonManifoldFace(mesh);
+    vcg::tri::Clean<TMesh>::RemoveUnreferencedVertex(mesh);
+    vcg::tri::UpdateTopology<TMesh>::FaceFace(mesh);
+    mesh.face.DisableFFAdjacency();
+}
+
+MeshInfo PyScaffolder::generate_scaffold(
 	Eigen::MatrixXd V1,
 	Eigen::MatrixXi F1,
 	Parameter params,
@@ -17,8 +38,8 @@ MeshInfo PyScaffolder::generate_mesh(
 ) {
 	MeshInfo mesh_info;
     TMesh mesh;
-	double volume1 = eps, volume2 = eps;
-	double area1 = eps, area2 = eps;
+	double volume1 = EPSIL, volume2 = EPSIL;
+	double area1 = EPSIL, area2 = EPSIL;
 	{
 		Eigen::MatrixXd V, Fxyz, IFxyz;
 		Eigen::MatrixXi F;
@@ -69,15 +90,16 @@ MeshInfo PyScaffolder::generate_mesh(
             // Create border offset from the original box
             V1min1 = V1min - params.grid_offset * grid_delta * Eigen::RowVector3d::Ones();
             grid_size = (L / grid_delta).cast<int>() + 2 * params.grid_offset * Eigen::RowVector3i::Ones();
-            LOG << "-- Bounding Box: "
-                << V1min.format(CleanFmt) << ' ' << V1max.format(CleanFmt) << std::endl
-                << "-- Length: " << L.format(CleanFmt) << std::endl
-                << "-- Grid delta: " << grid_delta << std::endl;
+            if (params.verbose)
+                LOG << "-- Bounding Box: "
+                    << V1min.format(CleanFmt) << ' ' << V1max.format(CleanFmt) << std::endl
+                    << "-- Length: " << L.format(CleanFmt) << std::endl
+                    << "-- Grid delta: " << grid_delta << std::endl;
             // Convert input STL from VCG::TMesh to Eigen matrixXd V1
             mesh_to_eigen_vector(stl, V1, F1);
         }
 		// Generate Grid index (x,y,z)
-        LOG << "[Generating grid] ";
+        if (params.verbose) LOG << "[Generating grid] ";
 		Eigen::MatrixXd GV(grid_size.prod(), 3);
 		for (size_t k = 0; k < grid_size(2); k++) {
 			const double z = V1min1(2) + k * grid_delta;
@@ -90,8 +112,10 @@ MeshInfo PyScaffolder::generate_mesh(
 				}
 			}
 		}
-        LOG << "OK" << std::endl
-            << "-- Grid size: " << grid_size.prod() << " " << grid_size.format(CleanFmt) << std::endl;
+        if (params.verbose)
+            LOG << "OK" << std::endl
+                << "-- Grid size: " << grid_size.prod() << " " << grid_size.format(CleanFmt) << std::endl;
+        
         if (callback != NULL) callback(1);
 
         Eigen::VectorXd W, D, Signed_Distance;
@@ -104,9 +128,10 @@ MeshInfo PyScaffolder::generate_mesh(
             igl::signed_distance_fast_winding_number(GV, V1, F1, tree, bvh, Signed_Distance);
             Signed_Distance *= -1;
         }
-        LOG << "OK" << std::endl
-            << "-- Sign Distance: [ " << Signed_Distance.minCoeff() << ", " << Signed_Distance.maxCoeff() << "]  "
+        if (params.verbose)
+        LOG << "-- Sign Distance: [ " << Signed_Distance.minCoeff() << ", " << Signed_Distance.maxCoeff() << "]  "
             << "Wind: [ " << W.minCoeff() << ", " << W.maxCoeff() << "]" << std::endl;
+        
         if (callback != NULL) callback(10);
         
         sol::state lua;
@@ -238,7 +263,8 @@ MeshInfo PyScaffolder::generate_mesh(
             is_manifold = is_manifold && fix_non_manifold_edges(mesh, params.minimum_diameter, 5);
         }
         if (!is_manifold) {
-            std::cout << "[Warning] Mesh is not two manifold" << std::endl;
+            if (params.verbose)
+                LOG << "[Warning] Mesh is not two manifold" << std::endl;
         }
         else {
             area2 = vcg::tri::Stat<TMesh>::ComputeMeshArea(mesh);
@@ -248,24 +274,94 @@ MeshInfo PyScaffolder::generate_mesh(
             mesh_info.surface_area_ratio = abs(area2 / area1);
         }
 	}
-    // It's a good practice to clean STL mesh firstly (VCGLib)
-    mesh.face.EnableFFAdjacency();
-    vcg::tri::Clean<TMesh>::RemoveDuplicateFace(mesh);
-    vcg::tri::Clean<TMesh>::RemoveDuplicateVertex(mesh);
-    vcg::tri::Clean<TMesh>::RemoveUnreferencedVertex(mesh);
-    vcg::tri::UpdateTopology<TMesh>::FaceFace(mesh);
-    vcg::tri::Clean<TMesh>::RemoveZeroAreaFace(mesh);
-    vcg::tri::Clean<TMesh>::RemoveNonManifoldFace(mesh);
-    vcg::tri::Clean<TMesh>::RemoveUnreferencedVertex(mesh);
-    vcg::tri::UpdateTopology<TMesh>::FaceFace(mesh);
-    mesh.face.DisableFFAdjacency();
+    clean_mesh(mesh);
     mesh_to_eigen_vector(mesh, mesh_info.v, mesh_info.f);
     if (callback != NULL) callback(100);
 	return mesh_info;
 }
 
-using namespace optimal_slice;
+std::tuple<Eigen::MatrixXd, Eigen::MatrixXi> PyScaffolder::marching_cubes(
+    Eigen::VectorXd& Fxyz,
+    py::object& grid_size,
+    py::object& _Vmin,
+    py::object& _delta,
+    bool clean,
+    const std::function<void(int)>& callback
+)   {
+    dualmc::DualMC<double> builder;
+    std::vector<dualmc::Vertex> mc_vertices;
+    std::vector<dualmc::Quad> mc_quads;
+    if (callback != NULL) builder.callback = callback;
 
+    // Type conversion
+    std::array<int32_t, 3> g;
+    if (IS_INSTANCE_ARRAYLIST(grid_size)) {
+        g = py::cast< std::array<int32_t, 3> >(grid_size);
+    }
+    else {
+        int32_t gs = py::cast<int32_t>(grid_size);
+        g[0] = gs;
+        g[1] = gs;
+        g[2] = gs;
+    }
+    std::array<double, 3> delta;
+    if (IS_INSTANCE_ARRAYLIST(_delta)) {
+        delta = py::cast< std::array<double, 3> >(_delta);
+    }
+    else {
+        double d = py::cast<double>(_delta);
+        delta[0] = d;
+        delta[1] = d;
+        delta[2] = d;
+    }
+    std::array<double, 3> Vmin = py::cast<std::array<double, 3>>(_Vmin);
+   
+    // Dual-Marching cubes
+    builder.build((double const*)Fxyz.data(), g[0], g[1], g[2], 0, true, true, mc_vertices, mc_quads);
+
+    Eigen::MatrixXd v;
+    Eigen::MatrixXi f;
+    if (clean) {
+        TMesh mesh;
+        TMesh::VertexIterator vi = vcg::tri::Allocator<TMesh>::AddVertices(mesh, mc_vertices.size());
+        TMesh::FaceIterator fi = vcg::tri::Allocator<TMesh>::AddFaces(mesh, mc_quads.size() * 2);
+        std::vector<TMesh::VertexPointer> vp(mc_vertices.size());
+        for (size_t i = 0, len = mc_vertices.size(); i < len; i++, ++vi) {
+            vp[i] = &(*vi);
+            vi->P() = TMesh::CoordType(
+                Vmin[0] + mc_vertices[i].x * delta[0],
+                Vmin[1] + mc_vertices[i].y * delta[1],
+                Vmin[2] + mc_vertices[i].z * delta[2]
+            );
+        }
+        for (size_t i = 0, len = mc_quads.size(); i < len; i++, ++fi) {
+            fi->V(0) = vp[mc_quads[i].i0];
+            fi->V(1) = vp[mc_quads[i].i1];
+            fi->V(2) = vp[mc_quads[i].i2];
+            ++fi;
+            fi->V(0) = vp[mc_quads[i].i2];
+            fi->V(1) = vp[mc_quads[i].i3];
+            fi->V(2) = vp[mc_quads[i].i0];
+        }
+        clean_mesh(mesh);
+        mesh_to_eigen_vector(mesh, v, f);
+    }
+    else {
+        v.resize(mc_vertices.size(), 3);
+        for (size_t i = 0, len = mc_vertices.size(); i < len; i++) {
+            v.row(i) << Vmin[0] + mc_vertices[i].x * delta[0], Vmin[1] + mc_vertices[i].y * delta[1], Vmin[2] + mc_vertices[i].z * delta[2];
+        }
+        f.resize(mc_quads.size()*2, 3);
+        for (size_t i = 0, j = 0, len = mc_quads.size(); i < len; i++) {
+            f.row(j) << mc_quads[i].i0, mc_quads[i].i1, mc_quads[i].i2;
+            j++;
+            f.row(j) << mc_quads[i].i2, mc_quads[i].i3, mc_quads[i].i0;
+            j++;
+        }
+    }
+
+    return make_tuple(v, f);
+}
 
 PoreSize PyScaffolder::slice_test(Eigen::MatrixXd v, Eigen::MatrixXi f, size_t k_slice, size_t k_polygon, int direction, const std::function<void(int)>& callback) {
     PoreSize pore_size;
