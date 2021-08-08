@@ -8,7 +8,7 @@ parameters:
 jobs:
 - job: conda_osx64
   pool:
-    vmImage: macOS-10.15
+    vmImage: macOS-latest
   strategy:
     matrix:
       osx_64:

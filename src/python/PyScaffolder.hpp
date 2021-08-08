@@ -65,8 +65,8 @@ namespace PyScaffolder {
 	std::tuple<Eigen::MatrixXd, Eigen::MatrixXi> marching_cubes(
 		Eigen::VectorXd& Fxyz,
 		py::object& grid_size,
-		py::object& Vmin,
 		py::object& delta,
+		const std::vector<double>& Vmin,
 		bool clean = false,
 		const std::function<void(int)>& callback = NULL
 	);

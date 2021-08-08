@@ -283,84 +283,89 @@ MeshInfo PyScaffolder::generate_scaffold(
 std::tuple<Eigen::MatrixXd, Eigen::MatrixXi> PyScaffolder::marching_cubes(
     Eigen::VectorXd& Fxyz,
     py::object& grid_size,
-    py::object& _Vmin,
     py::object& _delta,
+    const std::vector<double>& Vmin,
     bool clean,
     const std::function<void(int)>& callback
 )   {
-    dualmc::DualMC<double> builder;
-    std::vector<dualmc::Vertex> mc_vertices;
-    std::vector<dualmc::Quad> mc_quads;
-    if (callback != NULL) builder.callback = callback;
+    try {
+        dualmc::DualMC<double> builder;
+        std::vector<dualmc::Vertex> mc_vertices;
+        std::vector<dualmc::Quad> mc_quads;
+        if (callback != NULL) builder.callback = callback;
+        // Type conversion
+        std::array<int32_t, 3> g;
+        if (IS_INSTANCE_ARRAYLIST(grid_size)) {
+            g = py::cast< std::array<int32_t, 3> >(grid_size);
+        }
+        else {
+            int32_t gs = py::cast<int32_t>(grid_size);
+            g[0] = gs;
+            g[1] = gs;
+            g[2] = gs;
+        }
+        std::array<double, 3> delta;
+        if (IS_INSTANCE_ARRAYLIST(_delta)) {
+            delta = py::cast< std::array<double, 3> >(_delta);
+        }
+        else {
+            double d = py::cast<double>(_delta);
+            delta[0] = d;
+            delta[1] = d;
+            delta[2] = d;
+        }
 
-    // Type conversion
-    std::array<int32_t, 3> g;
-    if (IS_INSTANCE_ARRAYLIST(grid_size)) {
-        g = py::cast< std::array<int32_t, 3> >(grid_size);
-    }
-    else {
-        int32_t gs = py::cast<int32_t>(grid_size);
-        g[0] = gs;
-        g[1] = gs;
-        g[2] = gs;
-    }
-    std::array<double, 3> delta;
-    if (IS_INSTANCE_ARRAYLIST(_delta)) {
-        delta = py::cast< std::array<double, 3> >(_delta);
-    }
-    else {
-        double d = py::cast<double>(_delta);
-        delta[0] = d;
-        delta[1] = d;
-        delta[2] = d;
-    }
-    std::array<double, 3> Vmin = py::cast<std::array<double, 3>>(_Vmin);
-   
-    // Dual-Marching cubes
-    builder.build((double const*)Fxyz.data(), g[0], g[1], g[2], 0, true, true, mc_vertices, mc_quads);
+        // Dual-Marching cubes
+        builder.build((double const*)Fxyz.data(), g[0], g[1], g[2], 0, true, true, mc_vertices, mc_quads);
 
-    Eigen::MatrixXd v;
-    Eigen::MatrixXi f;
-    if (clean) {
-        TMesh mesh;
-        TMesh::VertexIterator vi = vcg::tri::Allocator<TMesh>::AddVertices(mesh, mc_vertices.size());
-        TMesh::FaceIterator fi = vcg::tri::Allocator<TMesh>::AddFaces(mesh, mc_quads.size() * 2);
-        std::vector<TMesh::VertexPointer> vp(mc_vertices.size());
-        for (size_t i = 0, len = mc_vertices.size(); i < len; i++, ++vi) {
-            vp[i] = &(*vi);
-            vi->P() = TMesh::CoordType(
-                Vmin[0] + mc_vertices[i].x * delta[0],
-                Vmin[1] + mc_vertices[i].y * delta[1],
-                Vmin[2] + mc_vertices[i].z * delta[2]
-            );
+        Eigen::MatrixXd v;
+        Eigen::MatrixXi f;
+        if (clean) {
+            TMesh mesh;
+            TMesh::VertexIterator vi = vcg::tri::Allocator<TMesh>::AddVertices(mesh, mc_vertices.size());
+            TMesh::FaceIterator fi = vcg::tri::Allocator<TMesh>::AddFaces(mesh, mc_quads.size() * 2);
+            std::vector<TMesh::VertexPointer> vp(mc_vertices.size());
+            for (size_t i = 0, len = mc_vertices.size(); i < len; i++, ++vi) {
+                vp[i] = &(*vi);
+                vi->P() = TMesh::CoordType(
+                    Vmin[0] + mc_vertices[i].x * delta[0],
+                    Vmin[1] + mc_vertices[i].y * delta[1],
+                    Vmin[2] + mc_vertices[i].z * delta[2]
+                );
+            }
+            for (size_t i = 0, len = mc_quads.size(); i < len; i++, ++fi) {
+                fi->V(0) = vp[mc_quads[i].i0];
+                fi->V(1) = vp[mc_quads[i].i1];
+                fi->V(2) = vp[mc_quads[i].i2];
+                ++fi;
+                fi->V(0) = vp[mc_quads[i].i2];
+                fi->V(1) = vp[mc_quads[i].i3];
+                fi->V(2) = vp[mc_quads[i].i0];
+            }
+            clean_mesh(mesh);
+            mesh_to_eigen_vector(mesh, v, f);
         }
-        for (size_t i = 0, len = mc_quads.size(); i < len; i++, ++fi) {
-            fi->V(0) = vp[mc_quads[i].i0];
-            fi->V(1) = vp[mc_quads[i].i1];
-            fi->V(2) = vp[mc_quads[i].i2];
-            ++fi;
-            fi->V(0) = vp[mc_quads[i].i2];
-            fi->V(1) = vp[mc_quads[i].i3];
-            fi->V(2) = vp[mc_quads[i].i0];
+        else {
+            v.resize(mc_vertices.size(), 3);
+            for (size_t i = 0, len = mc_vertices.size(); i < len; i++) {
+                v.row(i) << Vmin[0] + mc_vertices[i].x * delta[0], Vmin[1] + mc_vertices[i].y * delta[1], Vmin[2] + mc_vertices[i].z * delta[2];
+            }
+            f.resize(mc_quads.size() * 2, 3);
+            for (size_t i = 0, j = 0, len = mc_quads.size(); i < len; i++) {
+                f.row(j) << mc_quads[i].i0, mc_quads[i].i1, mc_quads[i].i2;
+                j++;
+                f.row(j) << mc_quads[i].i2, mc_quads[i].i3, mc_quads[i].i0;
+                j++;
+            }
         }
-        clean_mesh(mesh);
-        mesh_to_eigen_vector(mesh, v, f);
-    }
-    else {
-        v.resize(mc_vertices.size(), 3);
-        for (size_t i = 0, len = mc_vertices.size(); i < len; i++) {
-            v.row(i) << Vmin[0] + mc_vertices[i].x * delta[0], Vmin[1] + mc_vertices[i].y * delta[1], Vmin[2] + mc_vertices[i].z * delta[2];
-        }
-        f.resize(mc_quads.size()*2, 3);
-        for (size_t i = 0, j = 0, len = mc_quads.size(); i < len; i++) {
-            f.row(j) << mc_quads[i].i0, mc_quads[i].i1, mc_quads[i].i2;
-            j++;
-            f.row(j) << mc_quads[i].i2, mc_quads[i].i3, mc_quads[i].i0;
-            j++;
-        }
-    }
 
-    return make_tuple(v, f);
+
+        return make_tuple(v, f);
+    }
+    catch (std::exception& e) {
+        if (callback != NULL) callback(100);
+        throw std::runtime_error(e.what());
+    }
 }
 
 PoreSize PyScaffolder::slice_test(Eigen::MatrixXd v, Eigen::MatrixXi f, size_t k_slice, size_t k_polygon, int direction, const std::function<void(int)>& callback) {

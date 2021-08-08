@@ -55,11 +55,11 @@ Scaffolder.SliceTest --help
 ```
 
 ## Python supports
-The current version of `Scaffolder` supports python `2.7`, `3.6`, `3.7`, `3.8`, and `3.9` with only `x86_64` platform on:
+The current version of `Scaffolder` supports python `3.6`, `3.7`, `3.8`, and `3.9` with only `x86_64` platform on:
 
 * Window 10 (didn't test with the older version)
 * Linux
-* OSX 10.9
+* OSX 10
 
 !!! note
     see the list of available version at [PyPI][]

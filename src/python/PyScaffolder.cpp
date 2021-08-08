@@ -59,8 +59,8 @@ PYBIND11_MODULE(PyScaffolder, m) {
     m.def("marching_cubes", &PyScaffolder::marching_cubes, py::call_guard<py::gil_scoped_release>(), "A function to generate a triangular mesh (v, f) from isovalues (f)",
         py::arg("f"),
         py::arg("grid_size") = std::tuple<int32_t, int32_t, int32_t>(100, 100, 100),
-        py::arg("v_min") = std::tuple<double, double, double>(0, 0, 0),
         py::arg("delta") = 0.01,
+        py::arg("v_min") = std::tuple<double, double, double>(0, 0, 0),
         py::arg("clean") = false,
         py::arg("callback") = py::none()
     );

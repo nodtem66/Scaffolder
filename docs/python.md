@@ -2,61 +2,6 @@
 
 `PyScaffolder` is a wrapper for `Scaffolder`, which is written in C++. 
 It used [PyBind11](https://github.com/pybind/pybind11) to interface the C++ core function.
-
-## Pybind11 Definition
-
-```cpp
-namespace PyScaffolder {
-
-	struct PoreSize {
-		PoreSize() {}
-		Eigen::RowVectorXd minFeret;
-		Eigen::RowVectorXd maxFeret;
-	};
-
-	struct MeshInfo {
-		Eigen::MatrixXd v;
-		Eigen::MatrixXi f;
-		double porosity;
-		double surface_area;
-		double surface_area_ratio;
-	};
-
-	struct Parameter {
-		bool is_build_inverse = false;
-		bool is_intersect = true;
-		uint16_t shell = 0;
-		uint16_t grid_offset = 5;
-		uint16_t smooth_step = 5;
-		uint16_t k_slice = 100;
-		uint16_t k_polygon = 4;
-		uint16_t fix_self_intersect = 0;
-		size_t grid_size = 100;
-		double isolevel = 0.0;
-		double qsim_percent = 0;
-		double coff = 3.141592653589793238462643383279502884L;
-		double minimum_diameter = 0.25;
-		std::string surface_name = "bcc";
-	};
-
-	PoreSize slice_test(
-		Eigen::MatrixXd v, 
-		Eigen::MatrixXi f, 
-		size_t k_slice = 100, 
-		size_t k_polygon = 4, 
-		int direction = 0, 
-		const std::function<void(int)>& callback = NULL
-	);
-
-	MeshInfo generate_mesh(
-		Eigen::MatrixXd v,
-		Eigen::MatrixXi f,
-		Parameter params,
-		const std::function<void(int)>& callback = NULL
-	);
-}
-```
-
 The main core functions are `generate_scaffold` and `slice_test` which resemble the standalone program: `Scaffolder` and `Scaffolder.Slice`.
 
 ## generate_scaffold
@@ -73,7 +18,7 @@ def generate_scaffold(vertices, faces, params=Parameter(), callback=None)
     [MeshInfo](#meshinfo)
     ### Example
     ```python
-    from PyScaffolder import generate_mesh, Parameter
+    from PyScaffolder import generate_scaffold, Parameter
 
     # vertices and faces of a 20mm cube
     v = [
@@ -103,19 +48,19 @@ def generate_scaffold(vertices, faces, params=Parameter(), callback=None)
     ]
 
     # the function required two parameters
-    mesh_info = generate_mesh(v, f)
+    mesh_info = generate_scaffold(v, f)
 
     # use custom parameters
     parameter = Parameter()
     parameter.coff = 1.0
     
-    mesh_info = generate_mesh(v, f, parameter)
+    mesh_info = generate_scaffold(v, f, parameter)
 
     # use callback to show % progression
     def progression(n):
       print(n)
 
-    mesh_info = generate_mesh(v, f, callback=progression)
+    mesh_info = generate_scaffold(v, f, callback=progression)
     ```
 
 ## slice_test
@@ -155,8 +100,8 @@ def marching_cubes(f, grid_size=(100,100,100), v_min=(0,0,0), delta=0.01, clean=
     ### Parameters
     * `f`: numpy.array representing a discrete isosurface where F(x,y,z) = 0 is boundary   
     * `grid_size`: *Optional* array, list, tuple, or int representing the number of voxels 
+    * `delta`: *Optional* array, list, tuple or double representing the dimension of a voxel
     * `v_min`: *Optional* array, list, tuple the coordinate of the corner of grid
-    * `delta`: *Optional* array, list, tuple or double representing the dimension of a voxel 
     * `clean` *Optional* boolean that enable mesh cleaning after marching cubes
     * `callback`: *Optional* function with one `integer` parameter indicating the progression
     ###Return
