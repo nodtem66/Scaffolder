@@ -41,6 +41,6 @@ html .md-footer-meta.md-typeset a, html .md-footer-meta.md-typeset a:hover {
     color: var(--md-primary-fg-color--dark);
 }
 
-.md-typeset {
+.md-typeset p {
     text-align: justify;
 }

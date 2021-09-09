@@ -6,6 +6,7 @@ nav:
   - Installation: installation.md
   - Tutorials:
     - tutorial_1.md
+    - TPMS with Python: tutorial_2.md
   - Usages:
     - Command line: cmd.md
     - Python API: python.md

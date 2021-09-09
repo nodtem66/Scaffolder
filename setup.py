@@ -108,12 +108,6 @@ class CMakeBuild(build_ext):
 # The information here can also be placed in setup.cfg - better separation of
 # logic and declaration, and simpler if you include description/version in a file.
 setup(
-    name="PyScaffolder",
-    version="1.5.2",
-    author="Jirawat Iamsamang",
-    author_email="nodtem66@gmail.com",
-    description="Python wrapper for scaffolder program",
-    long_description="https://github.com/nodtem66/Scaffolder",
     ext_modules=[CMakeExtension("PyScaffolder")],
     cmdclass={"build_ext": CMakeBuild},
     zip_safe=False,
