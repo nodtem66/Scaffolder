@@ -1,11 +1,11 @@
 # Scaffolder 
-![Build Status](https://github.com/nodtem66/Scaffolder/workflows/Build/badge.svg) [![Build Status](https://dev.azure.com/n66/PublicCI/_apis/build/status/nodtem66.Scaffolder%20(Anaconda)?branchName=master)](https://dev.azure.com/n66/PublicCI/_build/latest?definitionId=6&branchName=master)
+![Build Status](https://github.com/nodtem66/Scaffolder/actions/workflows/binary.yml/badge.svg) [![Build Status](https://dev.azure.com/n66/PublicCI/_apis/build/status%2Fnodtem66.Scaffolder%20(Anaconda%20release)?branchName=master)](https://dev.azure.com/n66/PublicCI/_build/latest?definitionId=8&branchName=master)
 
-[![Anaconda](https://anaconda.org/nodtem66/scaffolder/badges/version.svg)](https://anaconda.org/nodtem66/scaffolder) ![Last update](https://anaconda.org/nodtem66/scaffolder/badges/latest_release_date.svg) ![Platform](https://anaconda.org/nodtem66/scaffolder/badges/platforms.svg) ![Install](https://anaconda.org/nodtem66/scaffolder/badges/installer/conda.svg)
+[![Anaconda](https://anaconda.org/nodtem66/scaffolder/badges/version.svg)](https://anaconda.org/nodtem66/scaffolder) ![Last update](https://anaconda.org/nodtem66/scaffolder/badges/latest_release_date.svg) ![Platform](https://anaconda.org/nodtem66/scaffolder/badges/platforms.svg)
 
 ![Scaffolder Logo](https://github.com/nodtem66/Scaffolder/raw/master/docs/images/scaffolder_logo.jpg)
 
-Generate scaffold from STL/PLY/OFF/OBJ file with implicit function (e.g., Schwarz P/ Gyroid).
+Transform a 3D model from STL/PLY/OFF/OBJ to a porous model with implicit function (e.g., Schwarz P/ Gyroid).
 
 [Documentation](https://nodtem66.github.io/Scaffolder) 
 
@@ -41,10 +41,10 @@ pip install PyScaffolder
 ![Examples porous scaffold](https://github.com/nodtem66/Scaffolder/raw/master/docs/images/examples.jpg)
 
 ## Dependencies
-- [libigl](https://libigl.github.io/)
-- [vcglib](https://github.com/cnr-isti-vclab/vcglib)
-- [sol2](https://github.com/ThePhD/sol2)
-- [tbb](https://github.com/oneapi-src/oneTBB)
+- [libigl](https://libigl.github.io/) - The computational geometry library
+- [vcglib](https://github.com/cnr-isti-vclab/vcglib) - The mesh utility library
+- [sol2](https://github.com/ThePhD/sol2) - Lua script integration
+- [tbb](https://github.com/oneapi-src/oneTBB) - Threading library
 
 ## How it works
 - Read STL file and finding the boundary box
@@ -55,18 +55,25 @@ pip install PyScaffolder
 - Clean up the duplicated vertices or faces, and abandon the group of connected faces having the diameter below the setting
 - Export to the target 3D format
 
-## Coff and Thickness study
-[Angular frequency and iso-level](https://colab.research.google.com/github/nodtem66/Scaffolder/blob/master/data/data_visualization.ipynb)
+## FAQ
+
+### How can I find the dataset from a study of coffient and isolevel?
+The raw dataset is available at [Mendeley Data](https://data.mendeley.com/datasets/sbxr7xxvnd/2).
+The program that used to generate that data was released at [Github repository](https://github.com/nodtem66/Scaffolder). You can also find the interactive visualization at [Google Colab](https://colab.research.google.com/github/nodtem66/Scaffolder/blob/master/data/data_visualization.ipynb)
+
+### Where is the implicit functions were defined in the C++ sourcecode?
+https://github.com/nodtem66/Scaffolder/blob/master/include/implicit_function.h
+
+### Can you suggest alternative softwares like this program?
+- Rhino (Grasshopper)
+- nTopology
+- Hyperganic
 
 ## References
-- [libigl](https://github.com/libigl/libigl)
-- [vcglib](https://github.com/cnr-isti-vclab/vcglib)
-- [sol2](https://github.com/ThePhD/sol2)
-- [tbb](https://github.com/oneapi-src/oneTBB) 
-- [dualmc](https://github.com/dominikwodniok/dualmc)
-- [cxxopts](https://github.com/jarro2783/cxxopts)
-- [ProgressBar](https://github.com/prakhar1989/progress-cpp)
 - [Minimal surface Blog](https://minimalsurfaces.blog/)
+- Dual marching cube - [dualmc](https://github.com/dominikwodniok/dualmc)
+- Command line parser - [cxxopts](https://github.com/jarro2783/cxxopts)
+- Progress bar - [ProgressBar](https://github.com/prakhar1989/progress-cpp)
 
 ## Citation
 [Computational method and program for generating a porous scaffold based on implicit surfaces](https://doi.org/10.1016/j.cmpb.2021.106088)
