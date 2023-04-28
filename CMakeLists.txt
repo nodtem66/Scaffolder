@@ -123,6 +123,8 @@ if(BUILD_SCAFFOLDER)
 		${LIBIGL_INCLUDE_DIR}
 		"${OpenCTM_INCLUDE_DIR}/liblzma/"
 	)
+
+	if (NOT APPLE)
 	target_link_libraries(${PROJECT_NAME} PRIVATE
 		igl::core
 		tbb
@@ -130,6 +132,14 @@ if(BUILD_SCAFFOLDER)
 		OpenMP::OpenMP_CXX
 		${LUA_LIBRARIES}
 	)
+	else()
+		target_link_libraries(${PROJECT_NAME} PRIVATE
+		igl::core
+		tbb
+		Threads::Threads
+		${LUA_LIBRARIES}
+	)
+	endif()
 
 	add_executable("${PROJECT_NAME}.SliceTest" 
 		${PROJECT_SOURCE_DIR}/src/SliceTest.cpp
@@ -144,7 +154,11 @@ if(BUILD_SCAFFOLDER)
 		${OpenCTM_INCLUDE_DIR}
 		"${OpenCTM_INCLUDE_DIR}/liblzma/"
 	)
-	target_link_libraries("${PROJECT_NAME}.SliceTest" PRIVATE tbb OpenMP::OpenMP_CXX)
+	if (NOT APPLE)
+		target_link_libraries("${PROJECT_NAME}.SliceTest" PRIVATE tbb OpenMP::OpenMP_CXX)
+	else()
+		target_link_libraries("${PROJECT_NAME}.SliceTest" PRIVATE tbb)
+	endif()
 
 	# Install binary
 	include(GNUInstallDirs)
@@ -178,6 +192,7 @@ if(BUILD_PYSCAFFOLDER)
 		${OpenCTM_INCLUDE_DIR}
 		"${OpenCTM_INCLUDE_DIR}/liblzma/"
 	)
+	if (NOT APPLE)
 	target_link_libraries("Py${PROJECT_NAME}" PRIVATE
 		igl::core
 		tbb
@@ -185,6 +200,15 @@ if(BUILD_PYSCAFFOLDER)
 		OpenMP::OpenMP_CXX
 		${LUA_LIBRARIES}
 	)
+	else()
+	target_link_libraries("Py${PROJECT_NAME}" PRIVATE
+		igl::core
+		tbb
+		Threads::Threads
+		${LUA_LIBRARIES}
+	)
+	endif()
+
 	include(GNUInstallDirs)
 	install(TARGETS "Py${PROJECT_NAME}"
 		COMPONENT python

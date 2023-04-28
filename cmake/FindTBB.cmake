@@ -25,15 +25,11 @@ set(TBB_ROOT_DIR ${TBB_INCLUDE_DIR}/../)
 set(TBB_TEST OFF CACHE INTERNAL "turn off")
 set(TBB_EXAMPLES OFF CACHE INTERNAL "turn off")
 set(TBB_STRICT OFF CACHE INTERNAL "turn off")
-if(APPLE)
-set(BUILD_SHARED_LIBS ON CACHE INTERNAL "Build a share lib on MacOS")
-else()
 set(BUILD_SHARED_LIBS OFF CACHE INTERNAL "turn off dynamic LINK_DEPENDS (not recommended by intel)")
-endif()
 
 include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(TBB
-    "\nTBB not found --- You can download it using:\n\tgit clone https://github.com/TBB/TBB ${CMAKE_SOURCE_DIR}/../TBB"
+    "\nTBB not found --- You can download it using:\n\tgit clone https://github.com/oneapi/TBB ${CMAKE_SOURCE_DIR}/../TBB"
     TBB_INCLUDE_DIR)
 mark_as_advanced(TBB_INCLUDE_DIR)
 
