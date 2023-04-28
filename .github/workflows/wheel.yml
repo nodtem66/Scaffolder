@@ -1,4 +1,4 @@
-name: Manually Build Wheels
+name: PyPI Wheels (Manual) 
 
 on:
   workflow_dispatch:

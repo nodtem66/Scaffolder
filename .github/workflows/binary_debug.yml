@@ -1,4 +1,4 @@
-name: Manually build Binary
+name: Binary (Debug)
 
 on:
   workflow_dispatch:
@@ -31,7 +31,8 @@ jobs:
 
     - name: Install libomp (macOS)
       if: github.event.inputs.os == 'macos-latest'
-      run: curl -LO https://raw.githubusercontent.com/Homebrew/homebrew-core/master/Formula/libomp.rb && brew reinstall --build-from-source --formula ./libomp.rb
+      run: brew install libomp
+      #run: curl -LO https://raw.githubusercontent.com/Homebrew/homebrew-core/master/Formula/libomp.rb && brew reinstall --build-from-source --formula ./libomp.rb
       
     - name: Create Build Environment
       run: cmake -E make_directory ${{github.workspace}}/build
