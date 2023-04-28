@@ -75,20 +75,13 @@ find_package(VCG REQUIRED)
 find_package(Sol2 REQUIRED)
 find_package(OpenCTM REQUIRED)
 if(BUILD_WITH_OPENMP)
-  if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin" AND ${CMAKE_CXX_COMPILER_ID} MATCHES "Clang")
+	if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin" AND ${CMAKE_CXX_COMPILER_ID} MATCHES "Clang")
 		set(OpenMP_CXX "${CMAKE_CXX_COMPILER}" CACHE STRING "" FORCE)
-		set(OpenMP_CXX_FLAGS "-Xpreprocessor -fopenmp=libomp -Wno-unused-command-line-argument" CACHE STRING "" FORCE)
-  	set(OpenMP_CXX_LIB_NAMES "libomp" "libgomp" "libiomp5" CACHE STRING "" FORCE)
-		#set(OpenMP_CXX_FLAGS "-Xpreprocessor -fopenmp -I/usr/local/opt/libomp/include" CACHE INTERNAL "OpenMP flags for Xcode toolchain.")
-		#set(OpenMP_CXX_LIB_NAMES "omp" CACHE INTERNAL "OpenMP lib name for Xcode toolchain.")
-		#set(OpenMP_omp_LIBRARY "/usr/local/opt/libomp/lib/libomp.dylib" CACHE INTERNAL "OpenMP lib name for Xcode toolchain.")
-		set(OpenMP_libomp_LIBRARY ${OpenMP_CXX_LIB_NAMES} CACHE STRING "" FORCE)
-		set(OpenMP_libgomp_LIBRARY ${OpenMP_CXX_LIB_NAMES} CACHE STRING "" FORCE)
-		set(OpenMP_libiomp5_LIBRARY ${OpenMP_CXX_LIB_NAMES} CACHE STRING "" FORCE)
-  else()
-		find_package(OpenMP REQUIRED)
-	endif()
-
+		set(OpenMP_CXX_FLAGS "-Xpreprocessor -fopenmp -I/usr/local/opt/libomp/include" CACHE INTERNAL "OpenMP flags for Xcode toolchain.")
+		set(OpenMP_CXX_LIB_NAMES "omp" CACHE INTERNAL "OpenMP lib name for Xcode toolchain.")
+		set(OpenMP_omp_LIBRARY "/usr/local/opt/libomp/lib/libomp.dylib" CACHE INTERNAL "OpenMP lib name for Xcode toolchain.")
+  endif()
+	find_package(OpenMP REQUIRED)	
 	message(STATUS "OpenMP: ${OpenMP_CXX_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
 	#set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
@@ -123,8 +116,6 @@ if(BUILD_SCAFFOLDER)
 		${LIBIGL_INCLUDE_DIR}
 		"${OpenCTM_INCLUDE_DIR}/liblzma/"
 	)
-
-	if (NOT APPLE)
 	target_link_libraries(${PROJECT_NAME} PRIVATE
 		igl::core
 		tbb
@@ -132,14 +123,6 @@ if(BUILD_SCAFFOLDER)
 		OpenMP::OpenMP_CXX
 		${LUA_LIBRARIES}
 	)
-	else()
-		target_link_libraries(${PROJECT_NAME} PRIVATE
-		igl::core
-		tbb
-		Threads::Threads
-		${LUA_LIBRARIES}
-	)
-	endif()
 
 	add_executable("${PROJECT_NAME}.SliceTest" 
 		${PROJECT_SOURCE_DIR}/src/SliceTest.cpp
@@ -154,11 +137,7 @@ if(BUILD_SCAFFOLDER)
 		${OpenCTM_INCLUDE_DIR}
 		"${OpenCTM_INCLUDE_DIR}/liblzma/"
 	)
-	if (NOT APPLE)
-		target_link_libraries("${PROJECT_NAME}.SliceTest" PRIVATE tbb OpenMP::OpenMP_CXX)
-	else()
-		target_link_libraries("${PROJECT_NAME}.SliceTest" PRIVATE tbb)
-	endif()
+	target_link_libraries("${PROJECT_NAME}.SliceTest" PRIVATE tbb OpenMP::OpenMP_CXX)
 
 	# Install binary
 	include(GNUInstallDirs)
@@ -192,7 +171,6 @@ if(BUILD_PYSCAFFOLDER)
 		${OpenCTM_INCLUDE_DIR}
 		"${OpenCTM_INCLUDE_DIR}/liblzma/"
 	)
-	if (NOT APPLE)
 	target_link_libraries("Py${PROJECT_NAME}" PRIVATE
 		igl::core
 		tbb
@@ -200,15 +178,6 @@ if(BUILD_PYSCAFFOLDER)
 		OpenMP::OpenMP_CXX
 		${LUA_LIBRARIES}
 	)
-	else()
-	target_link_libraries("Py${PROJECT_NAME}" PRIVATE
-		igl::core
-		tbb
-		Threads::Threads
-		${LUA_LIBRARIES}
-	)
-	endif()
-
 	include(GNUInstallDirs)
 	install(TARGETS "Py${PROJECT_NAME}"
 		COMPONENT python
