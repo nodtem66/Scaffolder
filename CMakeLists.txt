@@ -46,33 +46,6 @@ if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
   message(STATUS "[OSX Detected]")	
   add_definitions(-D_DARWIN_C_SOURCE -D_GNU_SOURCE -D_XOPEN_SOURCE=600)
   add_compile_options(-faligned-allocation)
-  #[[
-  find_program(brew brew)
-  if(brew)
-    execute_process(COMMAND "${brew}" --prefix
-		RESULT_VARIABLE brew_f
-		OUTPUT_VARIABLE brew_prefix 
-		OUTPUT_STRIP_TRAILING_WHITESPACE
-		ERROR_QUIET
-	)
-	if(brew_f EQUAL 0)
-	  list(APPEND CMAKE_MODULE_PATH ${brew_prefix}/share/cmake/Modules)
-	  message(STATUS "Brew: ${brew} --prefix => ${brew_prefix}")
-	endif()
-
-	execute_process(COMMAND "${brew}" --prefix eigen
-		RESULT_VARIABLE brew_f
-		OUTPUT_VARIABLE brew_prefix
-		OUTPUT_STRIP_TRAILING_WHITESPACE
-		ERROR_QUIET
-	)
-	if(brew_f EQUAL 0)
-	  message(STATUS "Brew: ${brew} --prefix eigen => ${brew_prefix}")
-	  set(ENV{EIGEN3_ROOT_DIR} "${brew_prefix}")
-	  set(ENV{Eigen3_ROOT} "${brew_prefix}")
-	endif()
-  endif()
-  ]]
 endif()
 
 if(${CMAKE_CXX_COMPILER_ID} MATCHES "Clang")
@@ -102,16 +75,24 @@ find_package(VCG REQUIRED)
 find_package(Sol2 REQUIRED)
 find_package(OpenCTM REQUIRED)
 if(BUILD_WITH_OPENMP)
-  find_package(OpenMP REQUIRED)
   if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin" AND ${CMAKE_CXX_COMPILER_ID} MATCHES "Clang")
-	set(OpenMP_CXX_FLAGS "-Xpreprocessor -fopenmp -I/usr/local/opt/libomp/include" CACHE INTERNAL "OpenMP flags for Xcode toolchain.")
-	set(OpenMP_CXX_LIB_NAMES "omp" CACHE INTERNAL "OpenMP lib name for Xcode toolchain.")
-	set(OpenMP_omp_LIBRARY "/usr/local/opt/libomp/lib/libomp.dylib" CACHE INTERNAL "OpenMP lib name for Xcode toolchain.")
-  endif()
-  message(STATUS "OpenMP: ${OpenMP_CXX_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
-  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
-  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
+		set(OpenMP_CXX "${CMAKE_CXX_COMPILER}" CACHE STRING "" FORCE)
+		set(OpenMP_CXX_FLAGS "-Xpreprocessor -fopenmp=libomp -Wno-unused-command-line-argument" CACHE STRING "" FORCE)
+  	set(OpenMP_CXX_LIB_NAMES "libomp" "libgomp" "libiomp5" CACHE STRING "" FORCE)
+		#set(OpenMP_CXX_FLAGS "-Xpreprocessor -fopenmp -I/usr/local/opt/libomp/include" CACHE INTERNAL "OpenMP flags for Xcode toolchain.")
+		#set(OpenMP_CXX_LIB_NAMES "omp" CACHE INTERNAL "OpenMP lib name for Xcode toolchain.")
+		#set(OpenMP_omp_LIBRARY "/usr/local/opt/libomp/lib/libomp.dylib" CACHE INTERNAL "OpenMP lib name for Xcode toolchain.")
+		set(OpenMP_libomp_LIBRARY ${OpenMP_CXX_LIB_NAMES} CACHE STRING "" FORCE)
+		set(OpenMP_libgomp_LIBRARY ${OpenMP_CXX_LIB_NAMES} CACHE STRING "" FORCE)
+		set(OpenMP_libiomp5_LIBRARY ${OpenMP_CXX_LIB_NAMES} CACHE STRING "" FORCE)
+  else()
+		find_package(OpenMP REQUIRED)
+	endif()
+
+	message(STATUS "OpenMP: ${OpenMP_CXX_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
+	#set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+	set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
 endif()
 
 if(BUILD_SCAFFOLDER)
