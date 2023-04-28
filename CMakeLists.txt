@@ -88,9 +88,9 @@ if(NOT EXISTS "${PROJECT_SOURCE_DIR}/external/libigl/CMakeLists.txt" OR
    NOT EXISTS "${PROJECT_SOURCE_DIR}/external/OpenCTM-1.0.3/lib/openctm.h")
   include(download_external_files)
   download_external_files(
-	https://github.com/nodtem66/Scaffolder/releases/download/v1.5.1/external.tar.gz
+	https://github.com/nodtem66/Scaffolder/releases/download/v1.5.2/external.tar.gz
 	"${PROJECT_SOURCE_DIR}/scripts/external.tar.gz"
-	bdfbd6d7a5643fca1fe7ca1db24d1fa1e3971e0b1d18a7225db1fdd94859f05d
+	7d68b2d1f82ce7b9f4d07b0847ccd9df278eda55bf705ce13cf1893479b73da6
   )
   file(ARCHIVE_EXTRACT INPUT "${PROJECT_SOURCE_DIR}/scripts/external.tar.gz" DESTINATION ${PROJECT_SOURCE_DIR})
 endif()
