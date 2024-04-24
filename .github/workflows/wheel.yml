@@ -58,7 +58,7 @@ jobs:
         brew install openblas
     
     - name: Build wheel
-      uses: pypa/cibuildwheel@v2
+      uses: pypa/cibuildwheel@v2.17
       env:
         # Python 2.7 on Windows requires a workaround for C++11 support,
         # built separately below

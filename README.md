@@ -1,4 +1,6 @@
-# Scaffolder 
+# Scaffolder
+![GitHub last commit](https://img.shields.io/github/last-commit/nodtem66/Scaffolder)
+
 ![Build Status](https://github.com/nodtem66/Scaffolder/actions/workflows/binary.yml/badge.svg) [![Build Status](https://dev.azure.com/n66/PublicCI/_apis/build/status%2Fnodtem66.Scaffolder%20(Anaconda%20release)?branchName=master)](https://dev.azure.com/n66/PublicCI/_build/latest?definitionId=8&branchName=master)
 
 [![Anaconda](https://anaconda.org/nodtem66/scaffolder/badges/version.svg)](https://anaconda.org/nodtem66/scaffolder) ![Last update](https://anaconda.org/nodtem66/scaffolder/badges/latest_release_date.svg) ![Platform](https://anaconda.org/nodtem66/scaffolder/badges/platforms.svg)
