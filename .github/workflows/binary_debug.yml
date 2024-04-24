@@ -25,7 +25,7 @@ jobs:
     - name: Input
       run: echo "${{ github.event.inputs.os }} ${{ github.event.inputs.compiler }}"
 
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         submodules: true
 
