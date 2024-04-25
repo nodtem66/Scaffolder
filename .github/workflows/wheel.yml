@@ -73,10 +73,15 @@ jobs:
       with:
         path: wheelhouse/*.whl
 
-  upload_all:
+  pypi-publish:
     name: Upload if release
     needs: [build_wheels, build_sdist]
     runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/project/PyScaffolder
+    permissions:
+      id-token: write
     if: github.event.inputs.upload != false
 
     steps:
@@ -87,8 +92,9 @@ jobs:
         name: artifact
         path: dist
 
-    - uses: pypa/gh-action-pypi-publish@v1
+    - name: Publish package distributions to PyPI
+      uses: pypa/gh-action-pypi-publish@release/v1
       with:
-        user: __token__
-        password: ${{ secrets.PYPI_API_TOKEN }}
+        #user: __token__
+        #password: ${{ secrets.PYPI_API_TOKEN }}
         skip-existing: true
