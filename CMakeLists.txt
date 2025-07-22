@@ -1,4 +1,4 @@
-﻿cmake_minimum_required (VERSION 3.8)
+﻿cmake_minimum_required (VERSION 3.12)
 
 project ("Scaffolder")
 
@@ -61,9 +61,9 @@ if(NOT EXISTS "${PROJECT_SOURCE_DIR}/external/libigl/CMakeLists.txt" OR
    NOT EXISTS "${PROJECT_SOURCE_DIR}/external/OpenCTM-1.0.3/lib/openctm.h")
   include(download_external_files)
   download_external_files(
-	https://github.com/nodtem66/Scaffolder/releases/download/v1.5.2/external.tar.gz
+	https://github.com/nodtem66/Scaffolder/releases/download/v1.5.3/external.tar.gz
 	"${PROJECT_SOURCE_DIR}/scripts/external.tar.gz"
-	7c85850c2983cced32efab8a290795dd5dd67710c48501e5f54d76b8d43be519
+	1ddf82e2931531b15755271b8a9813fd8886fd30fa3748248f573b34e33162e3
   )
   file(ARCHIVE_EXTRACT INPUT "${PROJECT_SOURCE_DIR}/scripts/external.tar.gz" DESTINATION ${PROJECT_SOURCE_DIR})
 endif()
