@@ -44,7 +44,7 @@ jobs:
         submodules: true
 
     - name: Install libomp and openblas for macos
-      if: matrix.os == 'macos-latest'
+      if: matrix.os == 'macos-latest' || matrix.os == 'macos-14' || matrix.os == 'macos-15'
       run: |
         brew install libomp
         brew install openblas
@@ -54,7 +54,7 @@ jobs:
       env:
         # Python 2.7 on Windows requires a workaround for C++11 support,
         # built separately below
-        CIBW_SKIP: pp* cp27* *-win32 *_i686 *_aarch64 *_ppc64le *_s390x
+        CIBW_SKIP: pp* *-win32 *_i686 *_aarch64 *_ppc64le *_s390x
 
     - name: Show files
       run: ls -lh wheelhouse
