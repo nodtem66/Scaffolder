@@ -1,4 +1,4 @@
-﻿cmake_minimum_required (VERSION 3.12)
+﻿cmake_minimum_required (VERSION 3.18)
 
 project ("Scaffolder")
 
@@ -63,7 +63,7 @@ if(NOT EXISTS "${PROJECT_SOURCE_DIR}/external/libigl/CMakeLists.txt" OR
   download_external_files(
 	https://github.com/nodtem66/Scaffolder/releases/download/v1.5.3/external.tar.gz
 	"${PROJECT_SOURCE_DIR}/scripts/external.tar.gz"
-	98c8b9cfbd1b6f113403ab641df860c93567859d30ef388cf31d2ba179739dc0
+	b54e452038dbdb77a458f91dab1c3377566a47e6bea6d4a0b51bf796b1912806
   )
   file(ARCHIVE_EXTRACT INPUT "${PROJECT_SOURCE_DIR}/scripts/external.tar.gz" DESTINATION ${PROJECT_SOURCE_DIR})
 endif()
@@ -75,22 +75,22 @@ find_package(VCG REQUIRED)
 find_package(Sol2 REQUIRED)
 find_package(OpenCTM REQUIRED)
 if(BUILD_WITH_OPENMP)
-	if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin" AND ${CMAKE_CXX_COMPILER_ID} MATCHES "Clang")
+  if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin" AND ${CMAKE_CXX_COMPILER_ID} MATCHES "Clang")
 		set(OpenMP_CXX "${CMAKE_CXX_COMPILER}" CACHE STRING "" FORCE)
-		set(OpenMP_CXX_FLAGS "-Xpreprocessor -fopenmp -I/usr/local/opt/libomp/include" CACHE INTERNAL "OpenMP flags for Xcode toolchain.")
+		set(OpenMP_CXX_FLAGS "-Xpreprocessor -fopenmp -I/opt/homebrew/opt/libomp/include" CACHE INTERNAL "OpenMP flags for Xcode toolchain.")
 		set(OpenMP_CXX_LIB_NAMES "omp" CACHE INTERNAL "OpenMP lib name for Xcode toolchain.")
-		set(OpenMP_omp_LIBRARY "/usr/local/opt/libomp/lib/libomp.dylib" CACHE INTERNAL "OpenMP lib name for Xcode toolchain.")
+		set(OpenMP_omp_LIBRARY "/opt/homebrew/opt/libomp/lib/libomp.dylib" CACHE INTERNAL "OpenMP lib name for Xcode toolchain.")
   endif()
-	if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin" AND ${CMAKE_C_COMPILER_ID} MATCHES "Clang")
+  if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin" AND ${CMAKE_C_COMPILER_ID} MATCHES "Clang")
 		set(OpenMP_C "${CMAKE_C_COMPILER}" CACHE STRING "" FORCE)
-		set(OpenMP_C_FLAGS "-Xpreprocessor -fopenmp -I/usr/local/opt/libomp/include" CACHE INTERNAL "OpenMP flags for Xcode toolchain.")
+		set(OpenMP_C_FLAGS "-Xpreprocessor -fopenmp -I/opt/homebrew/opt/libomp/include" CACHE INTERNAL "OpenMP flags for Xcode toolchain.")
 		set(OpenMP_C_LIB_NAMES "omp" CACHE INTERNAL "OpenMP lib name for Xcode toolchain.")
   endif()
-	find_package(OpenMP REQUIRED)	
-	message(STATUS "OpenMP: ${OpenMP_CXX_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
-	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
-	set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
+  find_package(OpenMP REQUIRED)	
+  message(STATUS "OpenMP: ${OpenMP_CXX_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
 endif()
 
 if(BUILD_SCAFFOLDER)
@@ -152,6 +152,7 @@ endif()
 
 if(BUILD_PYSCAFFOLDER)
 	message(STATUS "[Build PyScaffolder]")
+	find_package(Python COMPONENTS Interpreter Development)
 	find_package(PyBind11 REQUIRED)
 
 	file(GLOB PYTHON_SOURCES
