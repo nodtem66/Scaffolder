@@ -43,6 +43,10 @@ jobs:
       with:
         submodules: true
 
+    - name: Turn off cmake option for building binary
+      run: |
+        sed -i 's/"Build binary" ON/"Build binary" OFF/g' CMakeLists.txt
+
     - name: Install libomp and openblas for macos
       if: matrix.os == 'macos-latest' || matrix.os == 'macos-14' || matrix.os == 'macos-15'
       run: |
