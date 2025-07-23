@@ -1,0 +1,1232 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="http://github.com/nodtem66/scaffolder/tips/">
+      
+      
+        <link rel="prev" href="../blender/">
+      
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.15">
+    
+    
+      
+        <title>Tips - Scaffolder</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.342714a4.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.06af60db.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../extra.css">
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="blue" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#tips" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="Scaffolder" class="md-header__button md-logo" aria-label="Scaffolder" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Scaffolder
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Tips
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="blue" data-md-color-accent="indigo"  aria-hidden="true"  type="radio" name="__palette" id="__palette_0">
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_2" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m17.75 4.09-2.53 1.94.91 3.06-2.63-1.81-2.63 1.81.91-3.06-2.53-1.94L12.44 4l1.06-3 1.06 3zm3.5 6.91-1.64 1.25.59 1.98-1.7-1.17-1.7 1.17.59-1.98L15.75 11l2.06-.05L18.5 9l.69 1.95zm-2.28 4.95c.83-.08 1.72 1.1 1.19 1.85-.32.45-.66.87-1.08 1.27C15.17 23 8.84 23 4.94 19.07c-3.91-3.9-3.91-10.24 0-14.14.4-.4.82-.76 1.27-1.08.75-.53 1.93.36 1.85 1.19-.27 2.86.69 5.83 2.89 8.02a9.96 9.96 0 0 0 8.02 2.89m-1.64 2.02a12.08 12.08 0 0 1-7.8-3.47c-2.17-2.19-3.33-5-3.49-7.82-2.81 3.14-2.7 7.96.31 10.98 3.02 3.01 7.84 3.12 10.98.31"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_2">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 7a5 5 0 0 1 5 5 5 5 0 0 1-5 5 5 5 0 0 1-5-5 5 5 0 0 1 5-5m0 2a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3m0-7 2.39 3.42C13.65 5.15 12.84 5 12 5s-1.65.15-2.39.42zM3.34 7l4.16-.35A7.2 7.2 0 0 0 5.94 8.5c-.44.74-.69 1.5-.83 2.29zm.02 10 1.76-3.77a7.131 7.131 0 0 0 2.38 4.14zM20.65 7l-1.77 3.79a7.02 7.02 0 0 0-2.38-4.15zm-.01 10-4.14.36c.59-.51 1.12-1.14 1.54-1.86.42-.73.69-1.5.83-2.29zM12 22l-2.41-3.44c.74.27 1.55.44 2.41.44.82 0 1.63-.17 2.37-.44z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="http://github.com/nodtem66/scaffolder" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="Scaffolder" class="md-nav__button md-logo" aria-label="Scaffolder" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    Scaffolder
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="http://github.com/nodtem66/scaffolder" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Home
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../installation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Installation
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Tutorials
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            Tutorials
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tutorial_1/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Gyroid Sphere
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tutorial_2/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    TPMS with Python
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Usages
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            Usages
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../cmd/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Command line
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../python/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Python API
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../blender/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Blender Plugin
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    Tips
+    
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    Tips
+    
+  </span>
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#what-is-the-value-of-w-used-for-pore-size-x" class="md-nav__link">
+    <span class="md-ellipsis">
+      What is the value of \(w\) used for pore size \(x\)?
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-to-reduce-the-size-of-3d-mesh" class="md-nav__link">
+    <span class="md-ellipsis">
+      How to reduce the size of 3D mesh?
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-to-intrepret-the-output-from-console" class="md-nav__link">
+    <span class="md-ellipsis">
+      How to intrepret the output from console?
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-to-intrepret-the-output-from-console-2" class="md-nav__link">
+    <span class="md-ellipsis">
+      How to intrepret the output from console? (2)
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#what-is-the-value-of-w-used-for-pore-size-x" class="md-nav__link">
+    <span class="md-ellipsis">
+      What is the value of \(w\) used for pore size \(x\)?
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-to-reduce-the-size-of-3d-mesh" class="md-nav__link">
+    <span class="md-ellipsis">
+      How to reduce the size of 3D mesh?
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-to-intrepret-the-output-from-console" class="md-nav__link">
+    <span class="md-ellipsis">
+      How to intrepret the output from console?
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-to-intrepret-the-output-from-console-2" class="md-nav__link">
+    <span class="md-ellipsis">
+      How to intrepret the output from console? (2)
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="tips">Tips</h1>
+<h2 id="what-is-the-value-of-w-used-for-pore-size-x">What is the value of <span class="arithmatex">\(w\)</span> used for pore size <span class="arithmatex">\(x\)</span>?</h2>
+<p>The angular frequency (<span class="arithmatex">\(w\)</span>) control the number of repetitive <abbr title="Triply Periodic Minimal Surface">TPMS</abbr> units:</p>
+<div class="arithmatex">\[
+w = 2\pi / T = 2\pi N / L
+\]</div>
+<p>where <span class="arithmatex">\(T\)</span> = period or length of a unit cell, <span class="arithmatex">\(N\)</span> = the number of unit cells, and <span class="arithmatex">\(L\)</span> = the length of input <abbr title="Three-Dimensional">3D</abbr> mesh.</p>
+<p>For example, if we want <span class="arithmatex">\(N=2\)</span> in <code>cube20mm.stl</code> (<span class="arithmatex">\(L=20mm\)</span>), <span class="arithmatex">\(w\)</span> will be <span class="arithmatex">\(2\pi*2/20 = \pi/5\)</span>
+(the unit of <span class="arithmatex">\(L\)</span> has the same dimension with the input mesh).</p>
+<p><img alt="Gyroid" src="../images/tip_gyroid1.jpg" /></p>
+<p>The image show the Gyroid (left) and Double-Gyroid (right) with <span class="arithmatex">\(w=\pi/5\)</span> and <span class="arithmatex">\(t=0\)</span>. The pore size <span class="arithmatex">\(x \approx T/2\)</span>
+for Gyroid and <span class="arithmatex">\(T/4\)</span> for Double-Gyroid. Then,</p>
+<div class="arithmatex">\[
+w \approx \left\{
+\begin{array}{l}
+\pi/x, &amp; \text{for gyroid} \\ 
+\pi/2x, &amp; \text{for double-gyroid}
+\end{array}
+\right.
+\]</div>
+<p>If we want a gyroid with <span class="arithmatex">\(x=5mm\)</span>, we will set <span class="arithmatex">\(w=\pi/5\)</span>.</p>
+<h3 id="example">Example:</h3>
+<p><div class="highlight"><pre><span></span><code>./Scaffolder cube20mm.stl out.ply -c 3.14159 -g 100 -n tubulat_g_ab
+</code></pre></div>
+Program will generate the scaffold from <code>cube20mm.stl</code> (<span class="arithmatex">\(L=20mm\)</span>) with theoretical <span class="arithmatex">\(N=10\)</span></p>
+<h2 id="how-to-reduce-the-size-of-3d-mesh">How to reduce the size of <abbr title="Three-Dimensional">3D</abbr> mesh?</h2>
+<p>Scaffolder uses the Quadratic decimation from <a href="https://www.meshlab.net/">MeshLab</a> to reduce the result <abbr title="Three-Dimensional">3D</abbr> mesh with an option <code>--size_optimize</code> (<code>-z</code>).
+For example, the following command is used to generate a gyroid with 50% decimation, thus resulting the 50% less faces:
+<div class="highlight"><pre><span></span><code>./Scaffolder input.stl out.stl gyroid,0.6283,0.61,200 -z 0.5
+</code></pre></div></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>You can manually reduce the size by using <a href="https://www.meshlab.net/">MeshLab</a>: Filter &gt; Remeshing, Simplification, and Reconstruction &gt; Simplification: Quadric Edge Collapse Decimation</p>
+</div>
+<h2 id="how-to-intrepret-the-output-from-console">How to intrepret the output from console?</h2>
+<p>Suppose that the following command was used: 
+<div class="highlight"><pre><span></span><code>.\Scaffolder.exe .\cube20mm.stl out.stl gyroid,0.6283,0.61,100
+</code></pre></div></p>
+<p>Then this is an output generated by program with default options (<code>--format default</code>) 
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span>
+<span class="normal">14</span>
+<span class="normal">15</span>
+<span class="normal">16</span>
+<span class="normal">17</span>
+<span class="normal">18</span>
+<span class="normal">19</span>
+<span class="normal">20</span>
+<span class="normal">21</span>
+<span class="normal">22</span>
+<span class="normal">23</span>
+<span class="normal">24</span>
+<span class="normal">25</span>
+<span class="normal">26</span>
+<span class="normal">27</span>
+<span class="normal">28</span>
+<span class="normal">29</span>
+<span class="normal">30</span>
+<span class="normal">31</span>
+<span class="normal">32</span>
+<span class="normal">33</span>
+<span class="normal">34</span>
+<span class="normal">35</span>
+<span class="normal">36</span>
+<span class="normal">37</span>
+<span class="normal">38</span>
+<span class="normal">39</span>
+<span class="normal">40</span>
+<span class="normal">41</span>
+<span class="normal">42</span>
+<span class="normal">43</span>
+<span class="normal">44</span>
+<span class="normal">45</span>
+<span class="normal">46</span>
+<span class="normal">47</span>
+<span class="normal">48</span>
+<span class="normal">49</span>
+<span class="normal">50</span>
+<span class="normal">51</span>
+<span class="normal">52</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="hll">[Scaffolder v1.5.1]
+</span>-- Input file: .\cube20mm.stl
+-- Output file: out.stl
+-- Surface (-n): gyroid
+-- Coff (-c): 0.6283
+-- Isolevel (-t): 0.61
+-- Grid size (-g): 100
+--   Grid offset: 3
+--   Shell: 0
+-- Autoclean: True
+--   Minimum diameter: 25%
+--   Smooth step: 5
+--   Fix self-intersect: False
+--   Quadric Simplification (-z): 0
+-- Analysis microstructure (-m): False
+--   Slice grid (k_slice): 100
+--   Nearest outer contours (k_polygon): 4
+--   Export microstructure: False
+--   Mean curvature: False
+-- Export JPEG: No
+--   Axis: X
+-- Build: Yes(Intersect)
+-- Bounding Box: [0, 0, 0] [20, 20, 20]
+-- Length: [20, 20, 20]
+-- Grid delta: 0.2
+<span class="hll">[Generating grid] OK
+</span>-- Grid size: 1191016 [106, 106, 106]
+<span class="hll">[Calculating Winding number] OK
+</span>-- Sign Distance: [ -1.03923, 9.99999]  Wind: [ -2.86488e-06, 1]
+<span class="hll">[Generating isosurface Fxyz] OK
+</span><span class="hll">[Marching Cube]
+</span>[========================================] 100% 0.178s
+-- Info: 105896 vertices 211896 faces
+[libVCG Cleaning] OK
+<span class="hll">[Laplacian smoothing] OK
+</span>-- is_manifold: 1
+<span class="hll">[Topology Measurement]
+</span>-- Mesh is composed by 1 connected component(s)
+-- border edge: 0
+-- non-manifold edge: 0
+-- non-manifold vertex: 0
+-- self-intersect faces: 840
+-- Mesh is two-manifold
+-- Mesh has 0 holes
+-- Genus is 27
+<span class="hll">[Scaffold properties]
+</span>-- Volume: 2267.63
+-- Surface Area: 2855.25
+-- Porosity: 0.716547
+-- Surface Area ratio: 1.18969
+[Writing file] OK
+[Finished]
+</code></pre></div></td></tr></table></div></p>
+<h3 id="parameters-summary-lines-1-25">Parameters summary (Lines 1-25)</h3>
+<table>
+<thead>
+<tr>
+<th>Line</th>
+<th>Parameter (value)</th>
+<th>Detail</th>
+<th>Refer to a process at</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>2</td>
+<td>Input file (cube20mm.stl)</td>
+<td>Path to input file</td>
+<td><a href="#grid-generation-line-26">Line 26</a>,<a href="#winding-number-and-sdf-calculation-line-28">Line 28</a></td>
+</tr>
+<tr>
+<td>3</td>
+<td>Output file (out.stl)</td>
+<td>Path to output file</td>
+<td>Line 51</td>
+</tr>
+<tr>
+<td>4</td>
+<td>Surface (gyroid)</td>
+<td><abbr title="Triply Periodic Minimal Surface">TPMS</abbr> types</td>
+<td><a href="#surface-generation-line-30">Line 30</a></td>
+</tr>
+<tr>
+<td>5</td>
+<td>Coff (0.6283)</td>
+<td>Angular frequency (<span class="arithmatex">\(w\)</span>)</td>
+<td><a href="#surface-generation-line-30">Line 30</a></td>
+</tr>
+<tr>
+<td>6</td>
+<td>Isolevel (0.61)</td>
+<td>Isolevel (<span class="arithmatex">\(t\)</span>)</td>
+<td><a href="#surface-generation-line-30">Line 30</a></td>
+</tr>
+<tr>
+<td>7</td>
+<td>Grid size (100)</td>
+<td>Grid Resolution</td>
+<td><a href="#grid-generation-line-26">Line 26</a></td>
+</tr>
+<tr>
+<td>8</td>
+<td>Grid offset (3)</td>
+<td>Padding size adding to grid</td>
+<td><a href="#grid-generation-line-26">Line 26</a></td>
+</tr>
+<tr>
+<td>9</td>
+<td>Shell (0)</td>
+<td>Depth of solid shell</td>
+<td><a href="#surface-generation-line-30">Line 30</a></td>
+</tr>
+<tr>
+<td>10</td>
+<td>Autoclean (True)</td>
+<td>Clean <abbr title="Three-Dimensional">3D</abbr> Mesh</td>
+<td><a href="#cleaning-line-34">Line 34</a></td>
+</tr>
+<tr>
+<td>11</td>
+<td>Minimum diameter (25%)</td>
+<td>Minimal diameter (% of diagonal length of bounding box) to classify the small components in cleaning process</td>
+<td><a href="#cleaning-line-34">Line 34</a></td>
+</tr>
+<tr>
+<td>12</td>
+<td>Smooth step (5)</td>
+<td>Steps to Laplacian smoothing</td>
+<td><a href="#smoothing-line-35">Line 35</a></td>
+</tr>
+<tr>
+<td>13</td>
+<td>Fix self-intersect (False)</td>
+<td>Whether the program should fix the self-intersect or not</td>
+<td><a href="#cleaning-line-34">Line 34</a></td>
+</tr>
+<tr>
+<td>14</td>
+<td>Quadric Simplification  (0)</td>
+<td>% triangles reduction</td>
+<td>NA</td>
+</tr>
+<tr>
+<td>15</td>
+<td>Analysis microstructure (False)</td>
+<td>Report the pore size</td>
+<td>NA</td>
+</tr>
+<tr>
+<td>16</td>
+<td>Slice grid (100)</td>
+<td><span class="arithmatex">\(k_{slice}\)</span> (the number of slice layers)</td>
+<td>NA</td>
+</tr>
+<tr>
+<td>17</td>
+<td>Nearest outer contours (4)</td>
+<td><span class="arithmatex">\(k_{polygon}\)</span></td>
+<td>NA</td>
+</tr>
+<tr>
+<td>18</td>
+<td>Export microstructure (False)</td>
+<td>Export the SVG of sliced layers</td>
+<td>NA</td>
+</tr>
+<tr>
+<td>19</td>
+<td>Mean curvature (False)</td>
+<td>Calculate the mean curvature</td>
+<td>NA</td>
+</tr>
+<tr>
+<td>20</td>
+<td>Export JPEG (No)</td>
+<td>Export sliced layer</td>
+<td>NA</td>
+</tr>
+<tr>
+<td>21</td>
+<td>Axis (X)</td>
+<td>Axis to slice <abbr title="Three-Dimensional">3D</abbr> Mesh</td>
+<td>NA</td>
+</tr>
+<tr>
+<td>22</td>
+<td>Build (True)</td>
+<td>Generate <abbr title="Three-Dimensional">3D</abbr> Mesh</td>
+<td>Line 51</td>
+</tr>
+<tr>
+<td>23</td>
+<td>Bounding Box ([0, 0, 0] [20, 20, 20])</td>
+<td>Two points of bounding box</td>
+<td><a href="#grid-generation-line-26">Line 26</a></td>
+</tr>
+<tr>
+<td>24</td>
+<td>Length ([20, 20, 20])</td>
+<td><span class="arithmatex">\(\text{Length}\)</span> of bonding box in [x, y, z]</td>
+<td><a href="#grid-generation-line-26">Line 26</a></td>
+</tr>
+<tr>
+<td>25</td>
+<td>Grid delta (0.2)</td>
+<td><span class="arithmatex">\(min(\text{Length})/\text{grid size}\)</span></td>
+<td><a href="#grid-generation-line-26">Line 26</a></td>
+</tr>
+</tbody>
+</table>
+<h3 id="grid-generation-line-26">Grid Generation (Line 26)</h3>
+<p>The voxels were generated based on <span class="arithmatex">\(\text{Length}/\text{Grid delta} + 2(\text{Grid offset})\)</span>. <br />
+In this case, the grid size of (X, Y, Z) is <span class="arithmatex">\((20, 20, 20)/0.2 + 2(3) = (106, 106, 106)\)</span> <br />
+and the total number of voxels is <span class="arithmatex">\(106\times106\times106=1191016\)</span></p>
+<h3 id="winding-number-and-sdf-calculation-line-28">Winding number and <abbr title="Signed distance field">SDF</abbr> calculation (Line 28)</h3>
+<p>The <a href="https://github.com/libigl/libigl">winding number and <abbr title="Signed distance field">SDF</abbr></a> with <span class="arithmatex">\(106\times106\times106\)</span> voxels was calculated based on vertices and faces from input file.</p>
+<h3 id="surface-generation-line-30">Surface Generation (Line 30)</h3>
+<p>By combining <span class="arithmatex">\(w\)</span> (0.6283), <span class="arithmatex">\(t\)</span> (0.61), implicit function (gyroid), and input <abbr title="Signed distance field">SDF</abbr>, the output <abbr title="Signed distance field">SDF</abbr> was constructed.</p>
+<h3 id="surface-visualization-line-31">Surface visualization (Line 31)</h3>
+<p>The trigular mesh was generated from output <abbr title="Signed distance field">SDF</abbr> by dual marching cubes algorithm</p>
+<h3 id="cleaning-line-34">Cleaning (Line 34)</h3>
+<p>If <code>autoclean</code> option is enabled, the trigular mesh was cleaned by <a href="https://github.com/cnr-isti-vclab/vcglib">VGClib</a>.</p>
+<h3 id="smoothing-line-35">Smoothing (Line 35)</h3>
+<p>The Laplacian smooth is used to fix the mis-shape faces from dual marching cube algorithm.</p>
+<h3 id="topology-properties-line-37">Topology properties (Line 37)</h3>
+<p>In order to fabricate with <abbr title="Three-Dimensional">3D</abbr> printer, make sure that <abbr title="Three-Dimensional">3D</abbr> mesh is <a href="https://davidstutz.de/a-formal-definition-of-watertight-meshes/">watertight</a>.
+Thus, the program asserts whether the <abbr title="Three-Dimensional">3D</abbr> mesh is two-manifold or not. Moreover, the number non-manifold and border edges are reported, which should be zero to ensure the watertight property of the <abbr title="Three-Dimensional">3D</abbr> mesh.  </p>
+<h3 id="scaffold-properties-line-46">Scaffold properties (Line 46)</h3>
+<p>Finally, the scaffold property such as volume (<span class="arithmatex">\(\text{unit}^3\)</span>), surface area (<span class="arithmatex">\(\text{unit}^2\)</span>), porosity, and surface area ratio were reported.</p>
+<div class="arithmatex">\[
+Porosity = 1 - \left|\frac{\text{Volume}_{output}}{\text{Volume}_{input}}\right|
+\]</div>
+<div class="arithmatex">\[    
+\text{Surface Area Ratio (SAR)} = \left|\frac{\text{Surface area}_{output}}{\text{Surface area}_{input}}\right|
+\]</div>
+<h2 id="how-to-intrepret-the-output-from-console-2">How to intrepret the output from console? (2)</h2>
+<p>If the <code>Analysis microstructure</code> (<code>-m</code>) is added to the previous command:
+<div class="highlight"><pre><span></span><code>.\Scaffolder.exe .\cube20mm.stl out.stl gyroid,0.6283,0.61,100 -m
+</code></pre></div></p>
+<p>an additional output from microstructure measurement will be reported (Line 47).
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span>
+<span class="normal">14</span>
+<span class="normal">15</span>
+<span class="normal">16</span>
+<span class="normal">17</span>
+<span class="normal">18</span>
+<span class="normal">19</span>
+<span class="normal">20</span>
+<span class="normal">21</span>
+<span class="normal">22</span>
+<span class="normal">23</span>
+<span class="normal">24</span>
+<span class="normal">25</span>
+<span class="normal">26</span>
+<span class="normal">27</span>
+<span class="normal">28</span>
+<span class="normal">29</span>
+<span class="normal">30</span>
+<span class="normal">31</span>
+<span class="normal">32</span>
+<span class="normal">33</span>
+<span class="normal">34</span>
+<span class="normal">35</span>
+<span class="normal">36</span>
+<span class="normal">37</span>
+<span class="normal">38</span>
+<span class="normal">39</span>
+<span class="normal">40</span>
+<span class="normal">41</span>
+<span class="normal">42</span>
+<span class="normal">43</span>
+<span class="normal">44</span>
+<span class="normal">45</span>
+<span class="normal">46</span>
+<span class="normal">47</span>
+<span class="normal">48</span>
+<span class="normal">49</span>
+<span class="normal">50</span>
+<span class="normal">51</span>
+<span class="normal">52</span>
+<span class="normal">53</span>
+<span class="normal">54</span>
+<span class="normal">55</span>
+<span class="normal">56</span>
+<span class="normal">57</span>
+<span class="normal">58</span>
+<span class="normal">59</span>
+<span class="normal">60</span>
+<span class="normal">61</span>
+<span class="normal">62</span>
+<span class="normal">63</span></pre></div></td><td class="code"><div><pre><span></span><code>[Scaffolder v1.5.1]
+-- Input file: .\cube20mm.stl
+-- Output file: out.stl
+-- Surface (-n): gyroid
+-- Coff (-c): 0.6283
+-- Isolevel (-t): 0.61
+-- Grid size (-g): 100
+--   Grid offset: 3
+--   Shell: 0
+-- Autoclean: True
+--   Minimum diameter: 25%
+--   Smooth step: 5
+--   Fix self-intersect: False
+--   Quadric Simplification (-z): 0
+-- Analysis microstructure (-m): True
+--   Slice grid (k_slice): 100
+--   Nearest outer contours (k_polygon): 4
+--   Export microstructure: False
+--   Mean curvature: False
+-- Export JPEG: No
+--   Axis: X
+-- Build: Yes(Intersect)
+-- Bounding Box: [0, 0, 0] [20, 20, 20]
+-- Length: [20, 20, 20]
+-- Grid delta: 0.2
+[Generating grid] OK
+-- Grid size: 1191016 [106, 106, 106]
+[Calculating Winding number] OK
+-- Sign Distance: [ -1.03923, 9.99999]  Wind: [ -2.86488e-06, 1]
+[Generating isosurface Fxyz] OK
+[Marching Cube]
+[========================================] 100% 0.202s
+-- Info: 105896 vertices 211896 faces
+[libVCG Cleaning] OK
+[Laplacian smoothing] OK
+-- is_manifold: 1
+[Topology Measurement]
+-- Mesh is composed by 1 connected component(s)
+-- border edge: 0
+-- non-manifold edge: 0
+-- non-manifold vertex: 0
+-- self-intersect faces: 840
+-- Mesh is two-manifold
+-- Mesh has 0 holes
+-- Genus is 27
+[=======================================&gt;] 98% 1.939s
+<span class="hll">[Microstructure]
+</span>-- Avg Min Feret: 3.1344
+-- Avg Max Feret: 8.62469
+-- Min Feret: [1.05429 2.39338 3.18016 3.8397 9.99987]
+-- Max Feret: [3.52792 5.91049 7.67635 11.9059 14.8046]
+-- Square Similarity: [0 0 0 0 0]
+-- Circle Similarity: [0 0 0 0 0]
+-- Triangle Similarity: [0 0 0 0 0]
+-- Ellipse Similarity: [0 0 0 0 0]
+-- Elongation Similarity: [0 0 0 0 0]
+[Scaffold properties]
+-- Volume: 2267.63
+-- Surface Area: 2855.25
+-- Porosity: 0.716547
+-- Surface Area ratio: 1.18969
+[Writing file] OK
+[Finished]
+</code></pre></div></td></tr></table></div></p>
+<h3 id="feret-diameter">Feret Diameter</h3>
+<p><img alt="Feret" src="../images/feret.png" /></p>
+<p><a href="https://en.wikipedia.org/wiki/Feret_diameter">Feret diameter</a>, or caliper diameter, is a diameter of an object measured with a caliper.
+According to the above image, <span class="arithmatex">\(\upvarphi\)</span> and <span class="arithmatex">\(\Phi\)</span> are the minimum and maximum Feret diameter, respectively.</p>
+<p>The minimum and maximum of Feret diameters are collected.
+The interquartile ranges (IQR) reported in Line 50-51 are formatted as [Min, Q1, Median, Q3, Max].</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+        <div class="md-social">
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://github.com/nodtem66/Scaffolder" target="_blank" rel="noopener" title="github.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8M97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      <script id="__config" type="application/json">{"base": "..", "features": ["content.code.annotate", "navigation.top"], "search": "../assets/javascripts/workers/search.d50fe291.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.56ea9cef.min.js"></script>
+      
+        <script src="../javascripts/extra.js"></script>
+      
+        <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+      
+        <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+      
+    
+  </body>
+</html>
