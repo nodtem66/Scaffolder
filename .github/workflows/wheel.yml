@@ -43,12 +43,18 @@ jobs:
       with:
         submodules: true
 
-    - name: Turn off cmake option for building binary
+    - name: Turn off cmake option for building binary (GNU sed)
+      if: contains(matrix.os, 'macos') == false
       run: |
-        sed -i 's/"Build binary" ON/"Build binary" OFF/g' CMakeLists.txt
+        sed -i -e 's/"Build binary" ON/"Build binary" OFF/g' CMakeLists.txt
+
+    - name: Turn off cmake option for building binary (BSD sed)
+      if: contains(matrix.os, 'macos')
+      run: |
+        sed -i '' -e 's/"Build binary" ON/"Build binary" OFF/g' CMakeLists.txt
 
     - name: Install libomp and openblas for macos
-      if: matrix.os == 'macos-latest' || matrix.os == 'macos-14' || matrix.os == 'macos-15'
+      if: contains(matrix.os, 'macos')
       run: |
         brew install libomp
         brew install openblas
@@ -56,9 +62,7 @@ jobs:
     - name: Build wheel
       uses: pypa/cibuildwheel@v3.0.1
       env:
-        # Python 2.7 on Windows requires a workaround for C++11 support,
-        # built separately below
-        CIBW_SKIP: pp* *-win32 *_i686 *_aarch64 *_ppc64le *_s390x
+        CIBW_SKIP: ["*-win32", "*_i686", "*_aarch64", "*_ppc64le", "*_s390x"]
 
     - name: Show files
       run: ls -lh wheelhouse
