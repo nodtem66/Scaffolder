@@ -19,7 +19,7 @@ Transform a 3D model from STL/PLY/OFF/OBJ to a porous model with implicit functi
 
 > [!note]
 > 1. If you need only python library, you can install it from `pip` (see below)
-> 2. From v1.5.3, I decided to end the support for binary executables as no one uses it and . Only python library will be released.  
+> 2. From v1.5.3, I decided to end the support for binary executables as no one uses it. Only python library will be released.  
 
 ## Python supports
 ```bash
@@ -27,6 +27,38 @@ pip install PyScaffolder
 ```
 >  [!note]
 >  v1.5.3 support only Windows and Linux and Python [3.8 - 3.13](https://pypi.org/project/PyScaffolder/#files)
+
+## Binary building
+To build the binary executables, make sure you have installed the following softwares:
+- Visual Studio >=2022 (Windows)
+- GCC and Cmake (linux)
+  ```bash
+  sudo apt install cmake
+  sudo apt install build-essential checkinstall zlib1g-dev libssl-dev -y
+  ```
+- XCode (MacOS)
+
+### Steps
+- Download or clone the source code from github
+- Change current directory to the source code folder
+- Create `build` folder using CMAKE
+```bash
+cmake -E make_directory ./build
+cd ./build
+```
+- Configure Cmake variables
+```bash
+# Linux
+cmake .. -DCMAKE_CXX_COMPILER=g++ -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_STANDARD=11
+# Window
+cmake .. -DCMAKE_CXX_COMPILER=cl -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_STANDARD=11
+# MacOS
+cmake .. -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_STANDARD=11
+```
+- Start Building
+```bash
+cmake --build . --config Release
+```
 
 ## Blender addon
 - Install the `Scaffolder-blender.zip` downloaded from [Release](https://github.com/nodtem66/Scaffolder/releases/tag/v1.5.1)
