@@ -2,7 +2,8 @@
 
 namespace py = pybind11;
 
-PYBIND11_MODULE(PyScaffolder, m) {
+PYBIND11_MODULE(PyScaffolder, m)
+{
     m.doc() = "PyScaffolder generate isosurface from implicit function";
 
     m.attr("__version__") = VERSION;
@@ -38,30 +39,25 @@ PYBIND11_MODULE(PyScaffolder, m) {
         .def_readwrite("surface_name", &PyScaffolder::Parameter::surface_name);
 
     m.def("slice_test", &PyScaffolder::slice_test, py::call_guard<py::gil_scoped_release>(), "A function to slice input mesh into pore sizes",
-        py::arg("vertices"),
-        py::arg("faces"),
-        py::arg("k_slice") = 100,
-        py::arg("k_polygon") = 4,
-        py::arg("direction") = 0,
-        py::arg("callback") = py::none()
-    );
-
+          py::arg("vertices"),
+          py::arg("faces"),
+          py::arg("k_slice") = 100,
+          py::arg("k_polygon") = 4,
+          py::arg("direction") = 0,
+          py::arg("callback") = py::none());
 
     PyScaffolder::Parameter default_parameters;
-    
+
     m.def("generate_scaffold", &PyScaffolder::generate_scaffold, py::call_guard<py::gil_scoped_release>(), "A function to generate isosurface from input mesh and parameters",
-        py::arg("vertices"),
-        py::arg("faces"),
-        py::arg("params") = default_parameters,
-        py::arg("callback") = py::none()
-    );
+          py::arg("vertices"),
+          py::arg("faces"),
+          py::arg("params") = default_parameters,
+          py::arg("callback") = py::none());
 
     m.def("marching_cubes", &PyScaffolder::marching_cubes, py::call_guard<py::gil_scoped_release>(), "A function to generate a triangular mesh (v, f) from isovalues (f)",
-        py::arg("f"),
-        py::arg("grid_size") = std::tuple<int32_t, int32_t, int32_t>(100, 100, 100),
-        py::arg("delta") = 0.01,
-        py::arg("v_min") = std::tuple<double, double, double>(0, 0, 0),
-        py::arg("clean") = false,
-        py::arg("callback") = py::none()
-    );
+          py::arg("f"),
+          py::arg("grid_size") = std::tuple<int32_t, int32_t, int32_t>(100, 100, 100),
+          py::arg("delta") = 0.01,
+          py::arg("v_min") = std::tuple<double, double, double>(0, 0, 0),
+          py::arg("clean") = false);
 }

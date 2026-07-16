@@ -12,15 +12,18 @@
 
 namespace py = pybind11;
 
-namespace PyScaffolder {
+namespace PyScaffolder
+{
 
-	struct PoreSize {
+	struct PoreSize
+	{
 		PoreSize() {}
 		Eigen::RowVectorXd minFeret;
 		Eigen::RowVectorXd maxFeret;
 	};
 
-	struct MeshInfo {
+	struct MeshInfo
+	{
 		Eigen::MatrixXd v;
 		Eigen::MatrixXi f;
 		double porosity;
@@ -28,7 +31,8 @@ namespace PyScaffolder {
 		double surface_area_ratio;
 	};
 
-	struct Parameter {
+	struct Parameter
+	{
 		bool is_build_inverse = false;
 		bool is_intersect = true;
 		bool verbose = false;
@@ -47,28 +51,24 @@ namespace PyScaffolder {
 	};
 
 	PoreSize slice_test(
-		Eigen::MatrixXd v, 
-		Eigen::MatrixXi f, 
-		size_t k_slice = 100, 
-		size_t k_polygon = 4, 
-		int direction = 0, 
-		const std::function<void(int)>& callback = NULL
-	);
+		Eigen::MatrixXd v,
+		Eigen::MatrixXi f,
+		size_t k_slice = 100,
+		size_t k_polygon = 4,
+		int direction = 0,
+		const std::function<void(int)> &callback = NULL);
 
 	MeshInfo generate_scaffold(
 		Eigen::MatrixXd v,
 		Eigen::MatrixXi f,
 		Parameter params,
-		const std::function<void(int)>& callback = NULL
-	);
+		const std::function<void(int)> &callback = NULL);
 
 	std::tuple<Eigen::MatrixXd, Eigen::MatrixXi> marching_cubes(
-		Eigen::VectorXd& Fxyz,
-		py::object& grid_size,
-		py::object& delta,
-		const std::vector<double>& Vmin,
-		bool clean = false,
-		const std::function<void(int)>& callback = NULL
-	);
+		Eigen::VectorXd &Fxyz,
+		py::object &grid_size,
+		py::object &delta,
+		const std::vector<double> &Vmin,
+		bool clean = false);
 }
 #endif

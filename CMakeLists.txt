@@ -1,10 +1,24 @@
-﻿cmake_minimum_required (VERSION 3.18)
+﻿cmake_minimum_required(VERSION 3.18)
 cmake_policy(VERSION 3.18)
 cmake_policy(SET CMP0135 NEW)
 cmake_policy(SET CMP0169 OLD)
-project ("Scaffolder")
 
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
+project(Scaffolder
+  VERSION 1.5.4
+  DESCRIPTION "Scaffolder is a tool for generating scaffolds for 3D printing."
+  LANGUAGES C CXX
+)
+
+# -----------------------------------------------------------------------------
+# Project layout and options
+# -----------------------------------------------------------------------------
+set(SCAFFOLDER_ROOT "${CMAKE_CURRENT_SOURCE_DIR}")
+set(SCAFFOLDER_INCLUDE_DIR "${SCAFFOLDER_ROOT}/include")
+set(SCAFFOLDER_SRC_DIR "${SCAFFOLDER_ROOT}/src")
+set(SCAFFOLDER_CMAKE_DIR "${SCAFFOLDER_ROOT}/cmake")
+
+list(APPEND CMAKE_MODULE_PATH "${SCAFFOLDER_CMAKE_DIR}")
+
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
@@ -15,16 +29,20 @@ option(LIBIGL_WITH_OPENGL_GLFW   "Use GLFW"               OFF)
 option(LIBIGL_BUILD_TESTS        "Build libigl unit test" OFF)
 option(LIBIGL_BUILD_TUTORIALS    "Build libigl tutorial"  OFF)
 option(LIBIGL_USE_STATIC_LIBRARY "Use LibIGL as static library" ON)
-option(IGL_STATIC_RUNTIME	     "Use LibIGL as static library"	ON)
-option(BUILD_SCAFFOLDER          "Build binary"         ON)
-option(BUILD_PYSCAFFOLDER        "Build python library" ON)
-option(BUILD_WITH_OPENMP         "USE OpenMP"           ON)
-add_definitions(-DOPENCTM_STATIC)
+option(IGL_STATIC_RUNTIME "Use LibIGL as static library" ON)
+option(BUILD_SCAFFOLDER "Build binary" ON)
+option(BUILD_PYSCAFFOLDER "Build python library" OFF)
+option(BUILD_WITH_OPENMP "USE OpenMP" ON)
+
+add_compile_definitions(OPENCTM_STATIC)
+
+# -----------------------------------------------------------------------------
+# Compiler configuration
+# -----------------------------------------------------------------------------
 if(MSVC)
-  # Enable parallel compilation for Visual Studio
+  # Enable parallel compilation for Visual Studio.
   add_compile_options(/MP /bigobj /D_CRT_SECURE_NO_WARNINGS /Zc:__cplusplus)
-  add_definitions(-DNOMINMAX -D_USE_MATH_DEFINES -DWIN32_LEAN_AND_MEAN)
-  # Silencing some compile warnings
+  add_compile_definitions(NOMINMAX _USE_MATH_DEFINES WIN32_LEAN_AND_MEAN)
   add_compile_options(
     # Type conversion warnings. These can be fixed with some effort and possibly more verbose code.
     /wd4267 # conversion from 'size_t' to 'type', possible loss of data
@@ -40,125 +58,148 @@ if(MSVC)
   )
 endif()
 
-if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
   add_compile_options(-pedantic)
 endif()
 
 message(STATUS "CMAKE SYSTEM NAME: ${CMAKE_SYSTEM_NAME}")
 
-if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
-  message(STATUS "[OSX Detected]")	
-  add_definitions(-D_DARWIN_C_SOURCE -D_GNU_SOURCE -D_XOPEN_SOURCE=600)
+if(CMAKE_SYSTEM_NAME MATCHES "Darwin")
+  message(STATUS "[OSX Detected]")
+  add_compile_definitions(_DARWIN_C_SOURCE _GNU_SOURCE _XOPEN_SOURCE=600)
   add_compile_options(-faligned-allocation)
 endif()
 
-if(${CMAKE_CXX_COMPILER_ID} MATCHES "Clang")
+if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   message(STATUS "[CLANG Detected]")
 endif()
 
 message(STATUS "PROJECT_SOURCE_DIR=${PROJECT_SOURCE_DIR}")
-if(NOT EXISTS "${PROJECT_SOURCE_DIR}/external/libigl/CMakeLists.txt" OR
-   NOT EXISTS "${PROJECT_SOURCE_DIR}/external/tbb/CMakeLists.txt" OR
-   NOT EXISTS "${PROJECT_SOURCE_DIR}/external/sol2/CMakeLists.txt" OR
-   NOT EXISTS "${PROJECT_SOURCE_DIR}/external/pybind11/CMakeLists.txt" OR
-   NOT EXISTS "${PROJECT_SOURCE_DIR}/external/vcglib/wrap/" OR
-   NOT EXISTS "${PROJECT_SOURCE_DIR}/external/OpenCTM-1.0.3/lib/openctm.h")
+
+set(REQUIRED_EXTERNALS
+  "${SCAFFOLDER_ROOT}/external/libigl/CMakeLists.txt"
+  "${SCAFFOLDER_ROOT}/external/sol2/CMakeLists.txt"
+  "${SCAFFOLDER_ROOT}/external/pybind11/CMakeLists.txt"
+  "${SCAFFOLDER_ROOT}/external/vcglib/wrap/"
+  "${SCAFFOLDER_ROOT}/external/OpenCTM-1.0.3/lib/openctm.h"
+)
+set(MISSING_EXTERNALS)
+foreach(required_path IN LISTS REQUIRED_EXTERNALS)
+  if(NOT EXISTS "${required_path}")
+    list(APPEND MISSING_EXTERNALS "${required_path}")
+  endif()
+endforeach()
+
+if(MISSING_EXTERNALS)
+  set(SCAFFOLDER_EXTERNAL_URL
+    "https://github.com/nodtem66/Scaffolder/releases/download/v1.5.3/external-154.tar.gz"
+    CACHE STRING "Download URL for external dependencies archive")
+  set(SCAFFOLDER_EXTERNAL_ARCHIVE
+    "${SCAFFOLDER_ROOT}/scripts/external.tar.gz"
+    CACHE STRING "Local path to save the downloaded external archive")
+  set(SCAFFOLDER_EXTERNAL_HASH
+    "c30df13f296a8a1c421164d7c5c724ce4481fb318d863200190b5ca5c33f53b9"
+    CACHE STRING "SHA-256 hash of the external dependencies archive")
   include(download_external_files)
   download_external_files(
-  https://github.com/nodtem66/Scaffolder/releases/download/v1.5.3/external-154.tar.gz
-  "${PROJECT_SOURCE_DIR}/scripts/external.tar.gz"
-  b18e072f8024de1583bbd00a3a355d825c9f537963ca4e0e0e181ac998e40489
+    "${SCAFFOLDER_EXTERNAL_URL}"
+    "${SCAFFOLDER_EXTERNAL_ARCHIVE}"
+    "${SCAFFOLDER_EXTERNAL_HASH}"
   )
-  file(ARCHIVE_EXTRACT INPUT "${PROJECT_SOURCE_DIR}/scripts/external.tar.gz" DESTINATION ${PROJECT_SOURCE_DIR})
+  file(ARCHIVE_EXTRACT INPUT "${SCAFFOLDER_ROOT}/scripts/external.tar.gz" DESTINATION ${SCAFFOLDER_ROOT})
 endif()
 
 find_package(Threads REQUIRED)
-find_package(TBB REQUIRED)
 find_package(VCG REQUIRED)
 find_package(LIBIGL REQUIRED)
 find_package(Sol2 REQUIRED)
 find_package(OpenCTM REQUIRED)
 
+# -----------------------------------------------------------------------------
+# OpenMP configuration
+# -----------------------------------------------------------------------------
 if(BUILD_WITH_OPENMP)
-  if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin" AND ${CMAKE_CXX_COMPILER_ID} MATCHES "Clang")
-    
+  if(CMAKE_SYSTEM_NAME MATCHES "Darwin" AND CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     set(OpenMP_CXX "${CMAKE_CXX_COMPILER}" CACHE STRING "" FORCE)
-    # Manual patch for libomp
+    # Manual patch for libomp.
     # MacOS 13: -I/usr/local/opt/libomp/include -L/usr/local/opt/libomp/lib
     # MacOS 14: -I/opt/homebrew/opt/libomp/include -L/opt/homebrew/opt/libomp/lib/
     set(OpenMP_CXX_FLAGS "-Xpreprocessor -fopenmp -I/usr/local/opt/libomp/include -I/opt/homebrew/opt/libomp/include" CACHE INTERNAL "OpenMP flags for Xcode toolchain.")
     set(OpenMP_CXX_LIB_NAMES "omp" CACHE INTERNAL "OpenMP lib name for Xcode toolchain.")
     set(OpenMP_omp_LIBRARY "libomp.dylib" CACHE INTERNAL "OpenMP lib name for Xcode toolchain.")
-    set(OpenMP_EXE_LINKER_FLAGS "${OpenMP_EXE_LINKER_FLAGS} -L${PROJECT_SOURCE_DIR}" CACHE INTERNAL "OpenMP linker flags for Xcode toolchain.")
+    set(OpenMP_EXE_LINKER_FLAGS "${OpenMP_EXE_LINKER_FLAGS} -L${SCAFFOLDER_ROOT}" CACHE INTERNAL "OpenMP linker flags for Xcode toolchain.")
   endif()
-  if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin" AND ${CMAKE_C_COMPILER_ID} MATCHES "Clang")
+  if(CMAKE_SYSTEM_NAME MATCHES "Darwin" AND CMAKE_C_COMPILER_ID MATCHES "Clang")
     set(OpenMP_C "${CMAKE_C_COMPILER}" CACHE STRING "" FORCE)
     set(OpenMP_C_FLAGS "-Xpreprocessor -fopenmp -I/usr/local/opt/libomp/include -I/opt/homebrew/opt/libomp/include" CACHE INTERNAL "OpenMP flags for Xcode toolchain.")
     set(OpenMP_C_LIB_NAMES "omp" CACHE INTERNAL "OpenMP lib name for Xcode toolchain.")
-    set(OpenMP_EXE_LINKER_FLAGS "${OpenMP_EXE_LINKER_FLAGS} -L${PROJECT_SOURCE_DIR}" CACHE INTERNAL "OpenMP linker flags for Xcode toolchain.")
+    set(OpenMP_EXE_LINKER_FLAGS "${OpenMP_EXE_LINKER_FLAGS} -L${SCAFFOLDER_ROOT}" CACHE INTERNAL "OpenMP linker flags for Xcode toolchain.")
   endif()
-  find_package(OpenMP REQUIRED)	
+  find_package(OpenMP REQUIRED)
   message(STATUS "OpenMP: ${OpenMP_CXX_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
   set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
 endif()
-# Build for both x86_64 and arm64 architectures on macOS
-set(CMAKE_OSX_ARCHITECTURES "x86_64;arm64" CACHE STRING "Build for both x86_64 and arm64 architectures on macOS" FORCE)
+
+if(CMAKE_SYSTEM_NAME MATCHES "Darwin")
+  # Build for both x86_64 and arm64 architectures on macOS.
+  set(CMAKE_OSX_ARCHITECTURES "x86_64;arm64" CACHE STRING "Build for both x86_64 and arm64 architectures on macOS" FORCE)
+endif()
+
+# -----------------------------------------------------------------------------
+# Common target setup
+# -----------------------------------------------------------------------------
+set(SCAFFOLDER_COMMON_INCLUDE_DIRS
+  "${SCAFFOLDER_INCLUDE_DIR}"
+  "${VCG_INCLUDE_DIR}"
+  "${EIGEN3_INCLUDE_DIR}"
+  "${SOL2_INCLUDE_DIR}"
+  "${LUA_INCLUDE_DIR}"
+  "${OpenCTM_INCLUDE_DIR}"
+  "${LIBIGL_INCLUDE_DIR}"
+  "${OpenCTM_INCLUDE_DIR}/liblzma/"
+)
+
+set(SCAFFOLDER_COMMON_LINK_LIBS
+  igl::core
+  Threads::Threads
+  Eigen3::Eigen
+  ${LUA_LIBRARIES}
+)
+
+if(TARGET OpenMP::OpenMP_CXX)
+  list(APPEND SCAFFOLDER_COMMON_LINK_LIBS OpenMP::OpenMP_CXX)
+endif()
+
+function(scaffolder_configure_target target_name)
+  target_include_directories(${target_name} PRIVATE ${SCAFFOLDER_COMMON_INCLUDE_DIRS})
+  target_link_libraries(${target_name} PRIVATE ${SCAFFOLDER_COMMON_LINK_LIBS})
+endfunction()
 
 if(BUILD_SCAFFOLDER)
-  # Add your project files
   file(GLOB MAIN_SOURCES
-    "${PROJECT_SOURCE_DIR}/include/*/*.c"
-    "${PROJECT_SOURCE_DIR}/include/*/*.cpp"
-    "${PROJECT_SOURCE_DIR}/src/utils.cpp"
-    "${PROJECT_SOURCE_DIR}/src/Scaffolder.cpp"
+    "${SCAFFOLDER_ROOT}/include/*/*.c"
+    "${SCAFFOLDER_ROOT}/include/*/*.cpp"
+    "${SCAFFOLDER_SRC_DIR}/utils.cpp"
+    "${SCAFFOLDER_SRC_DIR}/Scaffolder.cpp"
     "${VCG_INCLUDE_DIR}/wrap/ply/plylib.cpp"
     "${OpenCTM_INCLUDE_DIR}/*.c"
     "${OpenCTM_INCLUDE_DIR}/liblzma/*.c"
   )
   include(update_deps_file)
   update_deps_file("main_sources" "${MAIN_SOURCES}")
-  
 
-  # Build binary
-  add_executable(${PROJECT_NAME} ${MAIN_SOURCES} ${PROJECT_SOURCE_DIR}/src/Main.cpp)
-  target_include_directories(${PROJECT_NAME} PRIVATE
-    "${PROJECT_SOURCE_DIR}/include"
-    ${TBB_INCLUDE_DIR}
-    ${VCG_INCLUDE_DIR}
-    ${EIGEN3_INCLUDE_DIR}
-    ${SOL2_INCLUDE_DIR}
-    ${LUA_INCLUDE_DIR}
-    ${OpenCTM_INCLUDE_DIR}
-    ${LIBIGL_INCLUDE_DIR}
-    "${OpenCTM_INCLUDE_DIR}/liblzma/"
-  )
-  target_link_libraries(${PROJECT_NAME} PRIVATE
-    igl::core
-    tbb
-    Threads::Threads
-    OpenMP::OpenMP_CXX
-    ${EIGEN3_INCLUDE_DIR}
-    ${LUA_LIBRARIES}
-  )
+  add_executable(${PROJECT_NAME} ${MAIN_SOURCES} "${SCAFFOLDER_SRC_DIR}/Main.cpp")
+  scaffolder_configure_target(${PROJECT_NAME})
 
-  add_executable("${PROJECT_NAME}.SliceTest" 
-    ${PROJECT_SOURCE_DIR}/src/SliceTest.cpp
-    ${PROJECT_SOURCE_DIR}/src/utils.cpp
-    ${VCG_INCLUDE_DIR}/wrap/ply/plylib.cpp
+  add_executable("${PROJECT_NAME}.SliceTest"
+    "${SCAFFOLDER_SRC_DIR}/SliceTest.cpp"
+    "${SCAFFOLDER_SRC_DIR}/utils.cpp"
+    "${VCG_INCLUDE_DIR}/wrap/ply/plylib.cpp"
   )
-  target_include_directories("${PROJECT_NAME}.SliceTest" PRIVATE
-    "${PROJECT_SOURCE_DIR}/include"
-    ${VCG_INCLUDE_DIR}
-    ${LIBIGL_INCLUDE_DIR}
-    ${EIGEN3_INCLUDE_DIR}
-    ${OpenCTM_INCLUDE_DIR}
-    "${OpenCTM_INCLUDE_DIR}/liblzma/"
-  )
-  target_link_libraries("${PROJECT_NAME}.SliceTest" PRIVATE tbb OpenMP::OpenMP_CXX)
+  scaffolder_configure_target("${PROJECT_NAME}.SliceTest")
 
-  # Install binary
   include(GNUInstallDirs)
   install(TARGETS "${PROJECT_NAME}" DESTINATION bin COMPONENT scaffolder)
   install(TARGETS "${PROJECT_NAME}.SliceTest" DESTINATION bin COMPONENT scaffolder)
@@ -170,35 +211,19 @@ if(BUILD_PYSCAFFOLDER)
   find_package(PyBind11 REQUIRED)
 
   file(GLOB PYTHON_SOURCES
-    "${PROJECT_SOURCE_DIR}/src/python/*.cpp"
-    ${PROJECT_SOURCE_DIR}/src/Scaffolder.cpp
-    ${PROJECT_SOURCE_DIR}/src/utils.cpp
+    "${SCAFFOLDER_ROOT}/src/python/*.cpp"
+    "${SCAFFOLDER_ROOT}/src/Scaffolder.cpp"
+    "${SCAFFOLDER_ROOT}/src/utils.cpp"
   )
   include(update_deps_file)
   update_deps_file("python_sources" "${PYTHON_SOURCES}")
 
   pybind11_add_module("Py${PROJECT_NAME}" ${PYTHON_SOURCES})
   target_include_directories("Py${PROJECT_NAME}" PRIVATE
-    "${PROJECT_SOURCE_DIR}/include"
-    "${PROJECT_SOURCE_DIR}/src/python/"
-    ${TBB_INCLUDE_DIR}
-    ${VCG_INCLUDE_DIR}
-    ${EIGEN3_INCLUDE_DIR}
-    ${SOL2_INCLUDE_DIR}
-    ${LIBIGL_INCLUDE_DIR}
-    ${LUA_INCLUDE_DIR}
-    ${PyBind11_INCLUDE_DIR}
-    ${OpenCTM_INCLUDE_DIR}
-    "${OpenCTM_INCLUDE_DIR}/liblzma/"
+    "${SCAFFOLDER_SRC_DIR}/python/"
+    "${PyBind11_INCLUDE_DIR}"
   )
-  target_link_libraries("Py${PROJECT_NAME}" PRIVATE
-    igl::core
-    tbb
-    Threads::Threads
-    OpenMP::OpenMP_CXX
-    ${EIGEN3_INCLUDE_DIR}
-    ${LUA_LIBRARIES}
-  )
+  scaffolder_configure_target("Py${PROJECT_NAME}")
   include(GNUInstallDirs)
   install(TARGETS "Py${PROJECT_NAME}"
     COMPONENT python
