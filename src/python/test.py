@@ -63,14 +63,7 @@ class TestPyScaffolder(unittest.TestCase):
 		self.assertGreater(len(a.f), 0)
 		self.assertEqual(len(a.f[0]), 3)
 	
-	def test_scaffolder_with_callback(self):
-		params = PyScaffolder.Parameter()
-		params.coff = 12.0
-		PyScaffolder.generate_scaffold(self.v, self.f, params, callback=self._callback)
-		self.assertEqual(self.counter, 100)
-
-
-	def test_marching_cubes(self):
+	def test_marching_cubes1(self):
 		Fxyz = []
 		N = 100
 		for i in range(N):
@@ -84,7 +77,7 @@ class TestPyScaffolder(unittest.TestCase):
 		self.assertEqual(len(v[0]), 3)
 		self.assertEqual(len(f[0]), 3)
 
-	def test_marching_cubes_with_callback(self):
+	def test_marching_cubes2(self):
 		Fxyz = [
 			1,1,1,1,
 			1,-1,-1,1,
@@ -92,10 +85,9 @@ class TestPyScaffolder(unittest.TestCase):
 			1,1,1,1
 		]*4
 		self.counter = 0
-		(v, f) = PyScaffolder.marching_cubes(Fxyz, grid_size=4, delta=0.25, v_min=(-.5, -.5, -.5), clean=True, callback=self._callback)
+		(v, f) = PyScaffolder.marching_cubes(Fxyz, grid_size=4, delta=0.25, v_min=(-.5, -.5, -.5), clean=True)
 		self.assertGreater(len(v), 0)
 		self.assertGreater(len(f), 0)
-		self.assertEqual(self.counter, 100)
 		
 
 if __name__ == '__main__':

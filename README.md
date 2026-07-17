@@ -18,15 +18,15 @@ Transform a 3D model from STL/PLY/OFF/OBJ to a porous model with implicit functi
   * Python library: `PyScaffold*.pyd`
 
 > [!note]
-> 1. If you need only python library, you can install it from `pip` (see below)
-> 2. From v1.5.3, I decided to end the support for binary executables as no one uses it. Only python library will be released.  
+> If you need only python library, you can install it from `pip` (see below).
+
 
 ## Python supports
 ```bash
 pip install PyScaffolder
 ```
 >  [!note]
->  v1.5.3 support only Windows and Linux and Python [3.8 - 3.13](https://pypi.org/project/PyScaffolder/#files)
+>  v1.5.4 support only Python [>=3.11](https://pypi.org/project/PyScaffolder/#files) on Windows (ARM64), Linux (x86_64/aarch64), and MacOS (universal2) 
 
 ## Binary building
 To build the binary executables, make sure you have installed the following softwares:
@@ -44,29 +44,14 @@ To build the binary executables, make sure you have installed the following soft
 - Create `build` folder using CMAKE
 ```bash
 cmake -E make_directory ./build
-cd ./build
-```
-- Configure Cmake variables
-```bash
-# Linux
-cmake .. -DCMAKE_CXX_COMPILER=g++ -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_STANDARD=11
-# Window
-cmake .. -DCMAKE_CXX_COMPILER=cl -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_STANDARD=11
-# MacOS
-cmake .. -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_STANDARD=11
-```
-- Start Building
-```bash
-cmake --build . --config Release
+cmake -B ./build -DCMAKE_BUILD_TYPE=Release
+cmake --build ./build --config Release
 ```
 
-## Blender addon (prototype)
+## Blender addon (obsoleted)
 - Install the `Scaffolder-blender.zip` downloaded from [Release](https://github.com/nodtem66/Scaffolder/releases/tag/v1.5.1)
 - The plugin will appear at `View > Sidebar` or `Press N`
-
-## Screenshots
-
-- **Blender plugin with PyScaffolder**
+- **Screenshots: Blender plugin with PyScaffolder**
 
 ![Blender plugin](https://github.com/nodtem66/Scaffolder/raw/main/docs/images/blender-plugin.gif)
 
@@ -83,7 +68,7 @@ cmake --build . --config Release
 - [libigl](https://libigl.github.io/) - The computational geometry library
 - [vcglib](https://github.com/cnr-isti-vclab/vcglib) - The mesh utility library
 - [sol2](https://github.com/ThePhD/sol2) - Lua script integration
-- [tbb](https://github.com/oneapi-src/oneTBB) - Threading library
+- [tbb](https://github.com/oneapi-src/oneTBB) - Threading library (Migrated to OpenMP since v1.5.4)
 
 ## How it works
 - Read STL file and find the boundary box of STL mesh
