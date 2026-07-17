@@ -404,15 +404,10 @@ PoreSize PyScaffolder::slice_test(Eigen::MatrixXd v, Eigen::MatrixXi f, size_t k
     PoreSize pore_size;
     TMesh mesh;
     eigen_vector_to_mesh(v, f, mesh);
-
+    mesh.face.EnableFFAdjacency();
     vcg::tri::UpdateBounding<TMesh>::Box(mesh);
-    vcg::tri::Clean<TMesh>::RemoveDuplicateVertex(mesh);
     vcg::tri::Allocator<TMesh>::CompactEveryVector(mesh);
-    vcg::tri::UpdateTopology<TMesh>::FaceFace(mesh);
-    vcg::tri::Clean<TMesh>::RemoveDuplicateFace(mesh);
-    vcg::tri::UpdateTopology<TMesh>::FaceFace(mesh);
     vcg::tri::Clean<TMesh>::RemoveZeroAreaFace(mesh);
-    vcg::tri::UpdateTopology<TMesh>::FaceFace(mesh);
     vcg::tri::Clean<TMesh>::MergeCloseVertex(mesh, SLICE_PRECISION * 10);
     vcg::tri::UpdateTopology<TMesh>::FaceFace(mesh);
     if (callback != NULL)

@@ -31,6 +31,7 @@ set(LIBIGL_SKIP_DOWNLOAD ON CACHE INTERNAL "Skip download libigl")
 # set(HUNTER_ENABLED ON CACHE INTERNAL "Enable Hunter package manager support")
 
 message(STATUS "USE IGL DIR: ${LIBIGL_INCLUDE_DIR}")
-# list(APPEND CMAKE_MODULE_PATH "${LIBIGL_INCLUDE_DIR}/../cmake")
+# Suppress Eigen install rules — we don't want Eigen headers/libs in our install tree.
+set(SCAFFOLDER_SKIP_EIGEN_INSTALL ON)
 add_subdirectory("${LIBIGL_INCLUDE_DIR}/../")
 message(STATUS "Eigen DIR: ${EIGEN3_INCLUDE_DIR}")

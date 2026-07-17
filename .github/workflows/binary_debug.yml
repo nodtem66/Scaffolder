@@ -29,32 +29,25 @@ jobs:
 
     - uses: actions/checkout@v7
       with:
-        submodules: true
+        persist-credentials: false
 
-    - name: Build universal libomp from source (macOS)
+    - name: Setup libomp (macOS)
       if: contains(github.event.inputs.os, 'macos')
       shell: bash
       run: |
-        git clone --depth 1 --branch llvmorg-22.1.8 https://github.com/llvm/llvm-project.git
-        cmake -S llvm-project/openmp -B openmp-build \
-          -DCMAKE_OSX_ARCHITECTURES="arm64;x86_64" \
-          -DCMAKE_C_COMPILER=clang \
-          -DCMAKE_CXX_COMPILER=clang++ \
-          -DCMAKE_INSTALL_PREFIX=/opt/libomp-universal
-        cmake --build openmp-build -j$(sysctl -n hw.logicalcpu)
-        sudo cmake --install openmp-build
-        lipo -archs /opt/libomp-universal/lib/libomp.dylib
-
-    - name: Create Build Environment
-      run: cmake -E make_directory ${{github.workspace}}/build
-
+        brew install libomp
+        BREW_PREFIX=$(brew --prefix libomp)
+        echo "LDFLAGS=-L${BREW_PREFIX}/lib" >> $GITHUB_ENV
+        echo "CPPFLAGS=-I${BREW_PREFIX}/include" >> $GITHUB_ENV
+        echo "OpenMP_ROOT=${BREW_PREFIX}" >> $GITHUB_ENV
+        
     - name: Configure CMake
-      shell: bash
-      working-directory: ${{github.workspace}}/build
       env:
         CXX: ${{ github.event.inputs.compiler }}
+      shell: bash
+      working-directory: ${{github.workspace}}
       run: |
-        cmake $GITHUB_WORKSPACE \
+        cmake -B ./build \
           -DCMAKE_CXX_COMPILER=${{ github.event.inputs.compiler }} \
           -DCMAKE_BUILD_TYPE=$BUILD_TYPE \
           -DBUILD_PYSCAFFOLDER=OFF \
@@ -65,17 +58,9 @@ jobs:
       shell: bash
       run: cmake --build . --config $BUILD_TYPE
 
-  test:
-    needs: build
-    runs-on: ${{ github.event.inputs.os }}
-    steps:
-    - uses: actions/checkout@v7
-      with:
-        submodules: true
-
     - name: Run Tests (Windows)
       shell: bash
-      working-directory: ${{github.workspace}}/build
+      working-directory: ${{github.workspace}}/build/${BUILD_TYPE}
       if: contains(github.event.inputs.os, 'windows')
       run: |
         ./Scaffolder.exe
@@ -83,7 +68,7 @@ jobs:
 
     - name: Run Tests (Linux/macOS)
       shell: bash
-      if: contains(github.event.inputs.os, 'linux') || contains(github.event.inputs.os, 'macos')
+      if: contains(github.event.inputs.os, 'ubuntu') || contains(github.event.inputs.os, 'macos')
       working-directory: ${{github.workspace}}/build
       run: |
         ./Scaffolder

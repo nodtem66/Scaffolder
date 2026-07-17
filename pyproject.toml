@@ -1,8 +1,38 @@
-[build-system]
-requires = [
-    "setuptools>=42",
-    "wheel",
-    "ninja; sys_platform != 'win32'",
-    "cmake>=3.12",
+[project]
+name = "PyScaffolder"
+version = "1.5.4"
+authors = [
+    { name = "Jirawat Iamsamang", email = "nodtem66@gmail.com" },
 ]
-build-backend = "setuptools.build_meta"
+description = "Generate 3D mesh from implicit surface and an input mesh"
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.11"
+urls = { "Bug Tracker" = "https://github.com/nodtem66/Scaffolder/issues" }
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: Implementation :: CPython",
+    "Topic :: Scientific/Engineering",
+    "Topic :: Software Development :: Libraries",
+]
+
+[build-system]
+requires = ["scikit-build-core"]
+build-backend = "scikit_build_core.build"
+
+[tool.scikit-build]
+minimum-version = "1.0"
+wheel.expand-macos-universal-tags = true
+wheel.packages = []
+sdist.exclude = ["include/**", "lib/**"]
+wheel.exclude = ["include/**", "lib/**"]
+
+[tool.scikit-build.cmake.define]
+BUILD_PYSCAFFOLDER = "ON"
+BUILD_SCAFFOLDER = "OFF"
+BUILD_WITH_OPENMP = "ON"
+VERSION = "1.5.4"
+
+[tool.flake8]
+ignore = ["E203", "E231", "E501", "W503", "B950"]
+select = ["C", "E", "F", "W", "B", "B9"]

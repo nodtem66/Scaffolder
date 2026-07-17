@@ -30,6 +30,19 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+# -----------------------------------------------------------------------------
+# External dependency
+# -----------------------------------------------------------------------------
+set(SCAFFOLDER_EXTERNAL_URL
+  "https://github.com/nodtem66/Scaffolder/releases/download/v1.5.3/external-154.tar.gz"
+  CACHE STRING "Download URL for external dependencies archive")
+set(SCAFFOLDER_EXTERNAL_ARCHIVE
+  "${SCAFFOLDER_ROOT}/scripts/external.tar.gz"
+  CACHE STRING "Local path to save the downloaded external archive")
+set(SCAFFOLDER_EXTERNAL_HASH
+  "da26b5473307a8f0d416e59cff3f98cfa1ac291d512d85a35d9eede0a8d57969"
+  CACHE STRING "SHA-256 hash of the external dependencies archive")
+
 option(LIBIGL_WITH_OPENGL        "Use OpenGL"             OFF)
 option(LIBIGL_WITH_OPENGL_GLFW   "Use GLFW"               OFF)
 option(LIBIGL_BUILD_TESTS        "Build libigl unit test" OFF)
@@ -96,15 +109,6 @@ foreach(required_path IN LISTS REQUIRED_EXTERNALS)
 endforeach()
 
 if(MISSING_EXTERNALS)
-  set(SCAFFOLDER_EXTERNAL_URL
-    "https://github.com/nodtem66/Scaffolder/releases/download/v1.5.3/external-154.tar.gz"
-    CACHE STRING "Download URL for external dependencies archive")
-  set(SCAFFOLDER_EXTERNAL_ARCHIVE
-    "${SCAFFOLDER_ROOT}/scripts/external.tar.gz"
-    CACHE STRING "Local path to save the downloaded external archive")
-  set(SCAFFOLDER_EXTERNAL_HASH
-    "55fd12d4cd419e28f7841c5d9bfca16157d6bef4b94e5d317b8042b2702493ce"
-    CACHE STRING "SHA-256 hash of the external dependencies archive")
   include(download_external_files)
   download_external_files(
     "${SCAFFOLDER_EXTERNAL_URL}"
@@ -114,13 +118,12 @@ if(MISSING_EXTERNALS)
   file(ARCHIVE_EXTRACT INPUT "${SCAFFOLDER_ROOT}/scripts/external.tar.gz" DESTINATION ${SCAFFOLDER_ROOT})
 endif()
 
-if(CMAKE_SYSTEM_NAME MATCHES "Darwin")
-  # Build for both x86_64 and arm64 architectures on macOS.
-  # This MUST be set before find_package(Sol2) so that the Lua library
-  # (liblua-5.3.5) is also compiled as a universal binary. Otherwise, Lua
-  # will be built for the host architecture only (arm64 on Apple Silicon CI
-  # runners) and linking the x86_64 slice of the final binary will fail.
-  set(CMAKE_OSX_ARCHITECTURES "arm64;x86_64" CACHE STRING "Build for both x86_64 and arm64 architectures on macOS" FORCE)
+# -----------------------------------------------------------------------------
+# OpenMP configuration
+# -----------------------------------------------------------------------------
+if(BUILD_WITH_OPENMP)
+  find_package(OpenMP REQUIRED)
+  message(STATUS "OpenMP: ${OpenMP_CXX_FLAGS}")
 endif()
 
 find_package(Threads REQUIRED)
@@ -128,21 +131,6 @@ find_package(VCG REQUIRED)
 find_package(LIBIGL REQUIRED)
 find_package(Sol2 REQUIRED)
 find_package(OpenCTM REQUIRED)
-
-# -----------------------------------------------------------------------------
-# OpenMP configuration
-# -----------------------------------------------------------------------------
-if(BUILD_WITH_OPENMP)
-  if(CMAKE_SYSTEM_NAME MATCHES "Darwin")
-    # CI will install a custom OpenMP library to /opt/libomp-universal, so we need to point CMake to it.
-    set(OpenMP_ROOT "/opt/libomp-universal" CACHE PATH "Path to custom OpenMP")
-    set(OpenMP_C_FLAGS "-Xpreprocessor -fopenmp -I${OpenMP_ROOT}/include" CACHE STRING "")
-    set(OpenMP_CXX_FLAGS "-Xpreprocessor -fopenmp -I${OpenMP_ROOT}/include" CACHE STRING "")
-    set(OpenMP_omp_LIBRARY "${OpenMP_ROOT}/lib/libomp.dylib" CACHE FILEPATH "")
-  endif()
-  find_package(OpenMP REQUIRED)
-  message(STATUS "OpenMP: ${OpenMP_CXX_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
-endif()
 
 # -----------------------------------------------------------------------------
 # Common target setup
@@ -232,8 +220,6 @@ if(BUILD_PYSCAFFOLDER)
   include(GNUInstallDirs)
   install(TARGETS "Py${PROJECT_NAME}"
     COMPONENT python
-    RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}"
-    LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}"
-    ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}"
+    DESTINATION "."
   )
 endif()

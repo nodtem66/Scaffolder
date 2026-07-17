@@ -1,8 +1,9 @@
 out/
-build/
+build*/
 .vs/
 .vscode/
 diplib/lib/
+dist/
 external/
 scripts/external.tar.gz
 CMakeSettings.json
