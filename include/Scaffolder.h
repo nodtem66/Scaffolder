@@ -23,7 +23,9 @@
 #include "sol/sol.hpp"
 #include "ProgressBar.hpp"
 
-#define VERSION "v1.5.4"
+#ifndef VERSION
+#define VERSION "dev"
+#endif
 #define PROGRESS_BAR_COLUMN 40
 
 #define SCAFFOLDER_FORMAT_DEFAULT 0

@@ -44,7 +44,11 @@ int main(int argc, char *argv[])
         cxxopts::ParseResult result = options.parse(argc, argv);
         if (isEmptyOption || result.count("help"))
         {
-            std::cout << options.help() << std::endl;
+            std::cout << options.help() << std::endl
+#ifdef USE_PARALLEL
+                      << "Built with OpenMP" << std::endl;
+#endif
+            ;
             return 0;
         }
         // Requirment

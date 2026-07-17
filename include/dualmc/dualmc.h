@@ -22,7 +22,6 @@
 #ifndef PROGRESS_BAR_COLUMN
 #define PROGRESS_BAR_COLUMN 40
 #endif
-#define USE_PARALLEL
 
 namespace dualmc
 {

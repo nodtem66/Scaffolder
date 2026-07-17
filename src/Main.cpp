@@ -96,7 +96,10 @@ int main(int argc, char *argv[])
                       << "  winding(x,y,z): function returning the winding number of position x,y,z" << std::endl
                       << "  signed_distance(x,y,z): function returning signed distance of position x,y,z" << std::endl
                       << "  and all functions from math module" << std::endl
-                      << std::endl;
+                      << std::endl
+#ifdef USE_PARALLEL
+                      << "Built with OpenMP" << std::endl;
+#endif
             return 0;
         }
         // Program requires at least one argument for specifying INPUT file

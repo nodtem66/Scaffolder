@@ -15,7 +15,6 @@
 #define DOUBLE_LT(x, y) ((y - x) > SLICE_PRECISION)
 #define DOUBLE_GT_EQ(x, y) (DOUBLE_EQ(x, y) || DOUBLE_GT(x, y))
 #define DOUBLE_LT_EQ(x, y) (DOUBLE_EQ(x, y) || DOUBLE_LT(x, y))
-#define USE_PARALLEL
 
 #include <iomanip>
 #include <omp.h>
@@ -79,8 +78,11 @@ namespace optimal_slice
         bool operator<(const Point3d &ls) const
         {
             if (x < ls.x)
+            {
                 return true;
+            }
             else if (DOUBLE_EQ(x, (ls.x)))
+            {
                 if (y < ls.y)
                 {
                     return true;
@@ -89,6 +91,7 @@ namespace optimal_slice
                 {
                     return (z < ls.z);
                 }
+            }
             return false;
         }
     };

@@ -1,13 +1,20 @@
-﻿cmake_minimum_required(VERSION 3.18)
-cmake_policy(VERSION 3.18)
+﻿cmake_minimum_required(VERSION 3.20)
+cmake_policy(VERSION 3.20)
 cmake_policy(SET CMP0135 NEW)
+cmake_policy(SET CMP0074 NEW)
 cmake_policy(SET CMP0169 OLD)
 
 project(Scaffolder
-  VERSION 1.5.4
   DESCRIPTION "Scaffolder is a tool for generating scaffolds for 3D printing."
   LANGUAGES C CXX
 )
+
+if(DEFINED VERSION)
+  message(STATUS "Scaffolder version: ${VERSION}")
+else()
+  set(VERSION "dev")
+  message(STATUS "Scaffolder version: ${VERSION} (development build)")
+endif()
 
 # -----------------------------------------------------------------------------
 # Project layout and options
@@ -23,7 +30,6 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-# libigl
 option(LIBIGL_WITH_OPENGL        "Use OpenGL"             OFF)
 option(LIBIGL_WITH_OPENGL_GLFW   "Use GLFW"               OFF)
 option(LIBIGL_BUILD_TESTS        "Build libigl unit test" OFF)
@@ -67,7 +73,6 @@ message(STATUS "CMAKE SYSTEM NAME: ${CMAKE_SYSTEM_NAME}")
 if(CMAKE_SYSTEM_NAME MATCHES "Darwin")
   message(STATUS "[OSX Detected]")
   add_compile_definitions(_DARWIN_C_SOURCE _GNU_SOURCE _XOPEN_SOURCE=600)
-  add_compile_options(-faligned-allocation)
 endif()
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
@@ -98,7 +103,7 @@ if(MISSING_EXTERNALS)
     "${SCAFFOLDER_ROOT}/scripts/external.tar.gz"
     CACHE STRING "Local path to save the downloaded external archive")
   set(SCAFFOLDER_EXTERNAL_HASH
-    "c30df13f296a8a1c421164d7c5c724ce4481fb318d863200190b5ca5c33f53b9"
+    "55fd12d4cd419e28f7841c5d9bfca16157d6bef4b94e5d317b8042b2702493ce"
     CACHE STRING "SHA-256 hash of the external dependencies archive")
   include(download_external_files)
   download_external_files(
@@ -107,6 +112,15 @@ if(MISSING_EXTERNALS)
     "${SCAFFOLDER_EXTERNAL_HASH}"
   )
   file(ARCHIVE_EXTRACT INPUT "${SCAFFOLDER_ROOT}/scripts/external.tar.gz" DESTINATION ${SCAFFOLDER_ROOT})
+endif()
+
+if(CMAKE_SYSTEM_NAME MATCHES "Darwin")
+  # Build for both x86_64 and arm64 architectures on macOS.
+  # This MUST be set before find_package(Sol2) so that the Lua library
+  # (liblua-5.3.5) is also compiled as a universal binary. Otherwise, Lua
+  # will be built for the host architecture only (arm64 on Apple Silicon CI
+  # runners) and linking the x86_64 slice of the final binary will fail.
+  set(CMAKE_OSX_ARCHITECTURES "arm64;x86_64" CACHE STRING "Build for both x86_64 and arm64 architectures on macOS" FORCE)
 endif()
 
 find_package(Threads REQUIRED)
@@ -119,32 +133,15 @@ find_package(OpenCTM REQUIRED)
 # OpenMP configuration
 # -----------------------------------------------------------------------------
 if(BUILD_WITH_OPENMP)
-  if(CMAKE_SYSTEM_NAME MATCHES "Darwin" AND CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-    set(OpenMP_CXX "${CMAKE_CXX_COMPILER}" CACHE STRING "" FORCE)
-    # Manual patch for libomp.
-    # MacOS 13: -I/usr/local/opt/libomp/include -L/usr/local/opt/libomp/lib
-    # MacOS 14: -I/opt/homebrew/opt/libomp/include -L/opt/homebrew/opt/libomp/lib/
-    set(OpenMP_CXX_FLAGS "-Xpreprocessor -fopenmp -I/usr/local/opt/libomp/include -I/opt/homebrew/opt/libomp/include" CACHE INTERNAL "OpenMP flags for Xcode toolchain.")
-    set(OpenMP_CXX_LIB_NAMES "omp" CACHE INTERNAL "OpenMP lib name for Xcode toolchain.")
-    set(OpenMP_omp_LIBRARY "libomp.dylib" CACHE INTERNAL "OpenMP lib name for Xcode toolchain.")
-    set(OpenMP_EXE_LINKER_FLAGS "${OpenMP_EXE_LINKER_FLAGS} -L${SCAFFOLDER_ROOT}" CACHE INTERNAL "OpenMP linker flags for Xcode toolchain.")
-  endif()
-  if(CMAKE_SYSTEM_NAME MATCHES "Darwin" AND CMAKE_C_COMPILER_ID MATCHES "Clang")
-    set(OpenMP_C "${CMAKE_C_COMPILER}" CACHE STRING "" FORCE)
-    set(OpenMP_C_FLAGS "-Xpreprocessor -fopenmp -I/usr/local/opt/libomp/include -I/opt/homebrew/opt/libomp/include" CACHE INTERNAL "OpenMP flags for Xcode toolchain.")
-    set(OpenMP_C_LIB_NAMES "omp" CACHE INTERNAL "OpenMP lib name for Xcode toolchain.")
-    set(OpenMP_EXE_LINKER_FLAGS "${OpenMP_EXE_LINKER_FLAGS} -L${SCAFFOLDER_ROOT}" CACHE INTERNAL "OpenMP linker flags for Xcode toolchain.")
+  if(CMAKE_SYSTEM_NAME MATCHES "Darwin")
+    # CI will install a custom OpenMP library to /opt/libomp-universal, so we need to point CMake to it.
+    set(OpenMP_ROOT "/opt/libomp-universal" CACHE PATH "Path to custom OpenMP")
+    set(OpenMP_C_FLAGS "-Xpreprocessor -fopenmp -I${OpenMP_ROOT}/include" CACHE STRING "")
+    set(OpenMP_CXX_FLAGS "-Xpreprocessor -fopenmp -I${OpenMP_ROOT}/include" CACHE STRING "")
+    set(OpenMP_omp_LIBRARY "${OpenMP_ROOT}/lib/libomp.dylib" CACHE FILEPATH "")
   endif()
   find_package(OpenMP REQUIRED)
   message(STATUS "OpenMP: ${OpenMP_CXX_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
-  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
-  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
-endif()
-
-if(CMAKE_SYSTEM_NAME MATCHES "Darwin")
-  # Build for both x86_64 and arm64 architectures on macOS.
-  set(CMAKE_OSX_ARCHITECTURES "x86_64;arm64" CACHE STRING "Build for both x86_64 and arm64 architectures on macOS" FORCE)
 endif()
 
 # -----------------------------------------------------------------------------
@@ -175,6 +172,14 @@ endif()
 function(scaffolder_configure_target target_name)
   target_include_directories(${target_name} PRIVATE ${SCAFFOLDER_COMMON_INCLUDE_DIRS})
   target_link_libraries(${target_name} PRIVATE ${SCAFFOLDER_COMMON_LINK_LIBS})
+  if (TARGET OpenMP::OpenMP_CXX)
+    target_compile_definitions(${target_name} PRIVATE USE_PARALLEL=1)
+  else()
+    target_compile_definitions(${target_name} PRIVATE USE_PARALLEL=0)
+  endif()
+  if(DEFINED VERSION)
+    target_compile_definitions(${target_name} PRIVATE SCAFFOLDER_VERSION="${VERSION}")
+  endif()
 endfunction()
 
 if(BUILD_SCAFFOLDER)

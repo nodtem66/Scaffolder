@@ -55,7 +55,7 @@ Scaffolder.SliceTest --help
 ```
 
 ## Python supports
-The current version of `Scaffolder` supports python `3.6`, `3.7`, `3.8`, and `3.9` with only `x86_64` platform on:
+The current version of `Scaffolder` supports python version 3.11 and above with only `x86_64` platform on:
 
 * Window 10 (didn't test with the older version)
 * Linux
@@ -118,6 +118,13 @@ print(len(a.v), len(a.f))
 ```
 
 See [Python API](python.md) for details.
+
+You can build PyScaffold for specific python using the following commands:
+
+```sh
+cmake -S . -B build_py -DBUILD_SCAFFOLDER=OFF -DBUILD_PYSCAFFOLDER=ON
+cmake --build build_py --config Release
+```
 
 ## Blender addon
 1. Download `Scaffolder-blender.zip` from [Github](https://github.com/nodtem66/Scaffolder/releases/tag/v1.5.1), which contains following files (see also [/blender](https://github.com/nodtem66/Scaffolder/tree/master/blender)):
