@@ -1,0 +1,36 @@
+name: Rattler-build
+
+on:
+  push:
+    branches:
+      - conda-2026
+  workflow_dispatch:
+    inputs:
+      os:
+        description: 'OS'
+        required: true
+        default: macos-latest
+
+env:
+  BUILD_TYPE: Release
+  CMAKE_BUILD_PARALLEL_LEVEL: 8
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target-platform: linux-64
+          - os: macos-latest
+            target-platform: osx-arm64
+          - os: windows-latest
+            target-platform: win-64
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build conda package
+        uses: prefix-dev/rattler-build-action@v0.2.34
+        with:
+          artifact-name: package-${{ matrix.target-platform }}
+          build-args: --target-platform ${{ matrix.target-platform }}

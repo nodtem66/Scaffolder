@@ -26,17 +26,20 @@ Transform a 3D model from STL/PLY/OFF/OBJ to a porous model with implicit functi
 pip install PyScaffolder
 ```
 >  [!note]
->  v1.5.4 support only Python [>=3.11](https://pypi.org/project/PyScaffolder/#files) on Windows (ARM64), Linux (x86_64/aarch64), and MacOS (universal2) 
+>  v1.5.4 support only Python [>=3.11](https://pypi.org/project/PyScaffolder/#files) on Windows (ARM64), Linux (x86_64/aarch64), and MacOS (arm64/x86_64) 
 
 ## Binary building
 To build the binary executables, make sure you have installed the following softwares:
 - Visual Studio >=2022 (Windows)
-- GCC and Cmake (linux)
+- GNU and Cmake (linux)
   ```bash
   sudo apt install cmake
-  sudo apt install build-essential checkinstall zlib1g-dev libssl-dev -y
+  sudo apt install build-essential libgomp -y
   ```
-- XCode (MacOS)
+- Apple clang (MacOS)
+  ```zsh
+  brew install libomp
+  ```
 
 ### Steps
 - Download or clone the source code from github
@@ -44,8 +47,9 @@ To build the binary executables, make sure you have installed the following soft
 - Create `build` folder using CMAKE
 ```bash
 cmake -E make_directory ./build
-cmake -B ./build -DCMAKE_BUILD_TYPE=Release
+cmake -B ./build -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=<path to install>
 cmake --build ./build --config Release
+cmake --install ./build
 ```
 
 ## Blender addon (obsoleted)
@@ -69,6 +73,10 @@ cmake --build ./build --config Release
 - [vcglib](https://github.com/cnr-isti-vclab/vcglib) - The mesh utility library
 - [sol2](https://github.com/ThePhD/sol2) - Lua script integration
 - [tbb](https://github.com/oneapi-src/oneTBB) - Threading library (Migrated to OpenMP since v1.5.4)
+
+## License
+
+The source code of Scaffolder is licensed under the MIT License. However, the pre-compiled binaries and wheels distributed on PyPI statically link vcglib and libigl, which are licensed under the GNU General Public License v3.0 (GPL-3.0). Consequently, the distributed PyPI wheels and pre-compiled binaries are subject to the terms of the GPL-3.0.
 
 ## How it works
 - Read STL file and find the boundary box of STL mesh
