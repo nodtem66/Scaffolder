@@ -34,13 +34,13 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 # External dependency
 # -----------------------------------------------------------------------------
 set(SCAFFOLDER_EXTERNAL_URL
-  "https://github.com/nodtem66/Scaffolder/releases/download/v1.5.3/external-154.tar.gz"
+  "https://github.com/nodtem66/Scaffolder/releases/download/v1.5.4/external.tar.gz"
   CACHE STRING "Download URL for external dependencies archive")
 set(SCAFFOLDER_EXTERNAL_ARCHIVE
   "${SCAFFOLDER_ROOT}/scripts/external.tar.gz"
   CACHE STRING "Local path to save the downloaded external archive")
 set(SCAFFOLDER_EXTERNAL_HASH
-  "da26b5473307a8f0d416e59cff3f98cfa1ac291d512d85a35d9eede0a8d57969"
+  "44dd7cc10af5aeae54f9b337231938ecd8ae196c8cb6728f20bb3ea5d45fbaa7"
   CACHE STRING "SHA-256 hash of the external dependencies archive")
 
 option(LIBIGL_WITH_OPENGL        "Use OpenGL"             OFF)
