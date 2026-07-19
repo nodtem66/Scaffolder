@@ -60,9 +60,8 @@ about:
 
     Transform a 3D model from STL/PLY/OFF/OBJ to a porous model with implicit function (e.g., Schwarz P/ Gyroid).
 
-    | [Documentation](https://nodtem66.github.io/Scaffolder) | [Command line options](https://github.com/nodtem66/Scaffolder/releases/tag/v1.5.2) | [Python API](https://nodtem66.github.io/Scaffolder/python/) | [Example: TPMS with Python](https://nodtem66.github.io/Scaffolder/tutorial_2/) |
-    | --- | ---- | ---- | ---- |
-
+    [Documentation](https://nodtem66.github.io/Scaffolder) | [Command line options](https://github.com/nodtem66/Scaffolder/releases/tag/v1.5.2) | [Python API](https://nodtem66.github.io/Scaffolder/python/) | [Example: TPMS with Python](https://nodtem66.github.io/Scaffolder/tutorial_2/)
+    
     Scaffolder is a computational geometry tool that transforms 3D models
     (STL/PLY/OFF/OBJ) into porous scaffolds using implicit surface functions
     such as Triply Periodic Minimal Surfaces (TPMS), including Schwarz P and
