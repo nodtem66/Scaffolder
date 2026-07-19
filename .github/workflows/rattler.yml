@@ -32,6 +32,8 @@ jobs:
             target-platform: linux-64
           - os: macos-latest
             target-platform: osx-arm64
+          - os: macos-15-intel
+            target-platform: osx-64
           - os: windows-latest
             target-platform: win-64
     steps:
@@ -50,7 +52,7 @@ jobs:
         env:
           ANACONDA_API_KEY: ${{ secrets.ANACONDA_API_KEY }}
         run: |
-          rattler-build upload anaconda -o nodtem66 -c scaffolder output/**/*.conda
+          rattler-build upload anaconda -o nodtem66 -c main output/**/*.conda
 
       - name: Unpack conda
         shell: bash
