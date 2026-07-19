@@ -50,7 +50,6 @@ jobs:
         env:
           ANACONDA_API_KEY: ${{ secrets.ANACONDA_API_KEY }}
         run: |
-          export ANACONDA_API_KEY=
           rattler-build upload anaconda -o nodtem66 -c scaffolder output/**/*.conda
 
       - name: Unpack conda
