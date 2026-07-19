@@ -8,8 +8,8 @@ package:
   version: ${{ version }}
 
 source:
-  url: https://github.com/nodtem66/Scaffolder/archive/3ffeaa8c431b4152b15f8940d175f0be7ed8d53e.tar.gz
-  sha256: 12b4667ce94fd5e1f617bf8c2d81fb304a2937c10691bfb4d1c673f0487b0aaf
+  url: https://github.com/nodtem66/Scaffolder/archive/v${{ version }}.tar.gz
+  sha256: 7912ce893dbf02aded3ffd5c7e4267bbbdbaa61513617db15c0cd9bbcdc2b515
 
 build:
   number: 0
@@ -25,9 +25,11 @@ requirements:
     - cmake
     - ninja
   host:
-    - ${{ openmp }}
+    - if: unix
+      then: ${{ openmp }}
   run:
-    - ${{ openmp }}
+    - if: unix
+      then: ${{ openmp }}
   
 tests:
   - script:
@@ -85,6 +87,5 @@ about:
     - Export to the target 3D format
 
 extra:
-  feedstock-name: scaffolder
   recipe-maintainers:
     - nodtem66
