@@ -4,12 +4,12 @@
 #include <ctime>
 
 #include "cxxopts.hpp"
-#include "ProgressBar.hpp"
+#include "MyProgressBar.hpp"
 #include "OptimalSlice.hpp"
 #include "utils.h"
 #include "MeshOperation.h"
 
-ProgressBar import_progress(100, 40);
+MyProgressBar import_progress(100);
 
 int _pos = 0;
 bool import_callback(int pos, const char *str)
@@ -89,7 +89,7 @@ int main(int argc, char *argv[])
         if (result.count("convexhull"))
             is_export_convexhull = result["convexhull"].as<bool>();
     }
-    catch (const cxxopts::OptionException &ex)
+    catch (const cxxopts::exceptions::exception &ex)
     {
         std::cout << "Error parsing options: " << ex.what() << std::endl;
         return 1;

@@ -1,15 +1,22 @@
 name: Rattler-build
 
 on:
-  push:
-    branches:
-      - conda-2026
   workflow_dispatch:
     inputs:
-      os:
-        description: 'OS'
+      release:
+        description: 'Publish binary to tag release page'
         required: true
-        default: macos-latest
+        type: boolean
+        default: false
+      tag_name:
+        description: 'Target tag'
+        required: false
+        default: dev
+      anaconda:
+        description: 'Upload to Anaconda'
+        required: true
+        type: boolean
+        default: false
 
 env:
   BUILD_TYPE: Release
@@ -25,12 +32,55 @@ jobs:
             target-platform: linux-64
           - os: macos-latest
             target-platform: osx-arm64
+          - os: macos-15-intel
+            target-platform: osx-64
           - os: windows-latest
             target-platform: win-64
     steps:
-      - uses: actions/checkout@v4
-      - name: Build conda package
-        uses: prefix-dev/rattler-build-action@v0.2.34
+      - uses: actions/checkout@v7
         with:
-          artifact-name: package-${{ matrix.target-platform }}
+          persist-credentials: false
+
+      - name: Build conda package
+        uses: prefix-dev/rattler-build-action@v0.2.39
+        with:
           build-args: --target-platform ${{ matrix.target-platform }}
+      
+      - name: Upload to Anaconda
+        if: github.event.inputs.anaconda == 'true'
+        shell: bash
+        env:
+          ANACONDA_API_KEY: ${{ secrets.ANACONDA_API_KEY }}
+        run: |
+          rattler-build upload anaconda -o nodtem66 -c main output/**/*.conda
+
+      - name: Unpack conda
+        shell: bash
+        if: github.event.inputs.release == 'true'
+        run: |
+          files=(./output/**/*.conda)
+          
+          [[ -z "${files[0]}" ]] && { echo "Error: Could not find conda packages"; exit 1; }
+          unzip "${files[0]}" -d ./unpack
+
+          files=(./unpack/pkg*)
+          [[ -z "${files[0]}" ]] && { echo "Error: Could not find pkg-* inside conda package"; exit 1; }
+           
+          mkdir -p pkg
+          tar -axvf "${files[0]}" -C ./pkg
+          rm -rf ./unpack
+
+          pkg_dir="./pkg/bin"
+          if [[ -d ./pkg/Library ]]; then
+            pkg_dir="./pkg/Library/bin"
+          fi
+          tar -czvf "Scaffolder-${{ github.event.inputs.tag_name }}-${{ matrix.target-platform }}.tar.gz" -C $pkg_dir .
+          rm -rf ./pkg
+
+      - name: Release artifacts
+        uses: softprops/action-gh-release@v3
+        if: github.event.inputs.release == 'true'
+        with:
+          tag_name: ${{ github.event.inputs.tag_name }}
+          files: "Scaffolder-${{ github.event.inputs.tag_name }}-${{ matrix.target-platform }}.tar.gz"
+ 

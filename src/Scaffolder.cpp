@@ -1,7 +1,7 @@
 #include "Scaffolder.h"
 #include "dualmc/dualmc.h"
 
-ProgressBar qsim_progress(100, 40);
+MyProgressBar qsim_progress(100);
 bool qsim_callback(int pos, const char *str)
 {
 	if (pos >= 0 && pos <= 100)
@@ -14,7 +14,7 @@ bool qsim_callback(int pos, const char *str)
 	return true;
 }
 
-ProgressBar marching_progress(100, 40);
+MyProgressBar marching_progress(100);
 void marching_callback(int pos)
 {
 	if (pos >= 0 && pos <= 100)

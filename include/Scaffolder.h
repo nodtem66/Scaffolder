@@ -21,7 +21,7 @@
 
 #include "Mesh.h"
 #include "sol/sol.hpp"
-#include "ProgressBar.hpp"
+#include "MyProgressBar.hpp"
 
 #ifndef VERSION
 #define VERSION "dev"
@@ -60,6 +60,6 @@ void marching_cube(
 bool null_callback(int pos, const char *str);
 
 bool qsim_callback(int pos, const char *str);
-extern ProgressBar qsim_progress;
+extern MyProgressBar qsim_progress;
 
 #endif

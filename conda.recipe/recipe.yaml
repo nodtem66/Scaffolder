@@ -1,70 +1,62 @@
 schema_version: 1
 
 context:
-  version: "1.5.4"
+  version: "dev"
 
 package:
   name: scaffolder
   version: ${{ version }}
 
 source:
-  url: https://github.com/nodtem66/Scaffolder/archive/3ffeaa8c431b4152b15f8940d175f0be7ed8d53e.tar.gz
-  sha256: 12b4667ce94fd5e1f617bf8c2d81fb304a2937c10691bfb4d1c673f0487b0aaf
+  path: ../
+  use_gitignore: true
 
 build:
   number: 0
   script:
     env:
       SCAFFOLDER_VERSION: ${{ version }}
-  
+
 requirements:
   build:
-    - ${{ compiler("c") }}
     - ${{ compiler("cxx") }}
+    - ${{ stdlib("c") }}
     - cmake
     - ninja
   host:
-    - if: osx
-      then: llvm-openmp
-    - if: linux
-      then: libgomp
+    - if: unix
+      then: ${{ openmp }}
   run:
-    - if: osx
-      then: llvm-openmp
-    - if: linux
-      then: libgomp
-  
+    - if: unix
+      then: ${{ openmp }}
+
 tests:
   - script:
     - if: unix
       then:
-        - test -f "${PREFIX}/bin/Scaffolder"
-        - test -f "${PREFIX}/bin/Scaffolder.SliceTest"
+        - Scaffolder --help
+        - Scaffolder.SliceTest --help
     - if: win
       then:
-        - if not exist "%LIBRARY_PREFIX%\bin\Scaffolder.exe" ( exit 1 )
-        - if not exist "%LIBRARY_PREFIX%\bin\Scaffolder.SliceTest.exe" ( exit 1 )
+        - Scaffolder.exe --help
+        - Scaffolder.SliceTest.exe --help
 
 about:
   homepage: https://nodtem66.github.io/Scaffolder
   license: GPL-3.0-only AND MIT AND MPL-2.0
   license_file:
-    - LICENSE.txt
+    - LICENSE
+    - include/dualmc/LICENSE
+    - build/third_party.txt
 
   summary: Generate 3D mesh from implicit surface and an input mesh
   documentation: https://nodtem66.github.io/Scaffolder
   repository: https://github.com/nodtem66/Scaffolder
   description: |
     # Scaffolder
-    
-    ![GitHub Release](https://img.shields.io/github/v/release/nodtem66/scaffolder) ![GitHub last commit](https://img.shields.io/github/last-commit/nodtem66/Scaffolder) 
-    [![PyPI - Version](https://img.shields.io/pypi/v/PyScaffolder)](https://pypi.org/project/PyScaffolder/) [![Socket Badge](https://socket.dev/api/badge/pypi/package/PyScaffolder/1.5.3?artifact_id=tar-gz)](https://socket.dev/pypi/package/PyScaffolder/overview/1.5.3/tar-gz)
-    ![Scaffolder Logo](https://github.com/nodtem66/Scaffolder/raw/main/docs/images/scaffolder_logo.jpg)
-
     Transform a 3D model from STL/PLY/OFF/OBJ to a porous model with implicit function (e.g., Schwarz P/ Gyroid).
 
-    | [Documentation](https://nodtem66.github.io/Scaffolder) | [Command line options](https://github.com/nodtem66/Scaffolder/releases/tag/v1.5.2) | [Python API](https://nodtem66.github.io/Scaffolder/python/) | [Example: TPMS with Python](https://nodtem66.github.io/Scaffolder/tutorial_2/) |
-    | --- | ---- | ---- | ---- |
+    [Documentation](https://nodtem66.github.io/Scaffolder) | [Command line options](https://github.com/nodtem66/Scaffolder/releases/tag/v1.5.2) | [Python API](https://nodtem66.github.io/Scaffolder/python/) | [Example: TPMS with Python](https://nodtem66.github.io/Scaffolder/tutorial_2/)
 
     Scaffolder is a computational geometry tool that transforms 3D models
     (STL/PLY/OFF/OBJ) into porous scaffolds using implicit surface functions
@@ -79,17 +71,6 @@ about:
     for porous scaffold design. It also provides a Python library
     (PyScaffolder) installable via pip. Dependencies include libigl, vcglib,
     sol2 (Lua scripting), and OpenMP for threading.
-
-    ## How it works
-    - Read STL file and find the boundary box of STL mesh
-    - Generate the grid and calculate the winding number with STL mesh
-    - Use winding number to determine the condition for [implicit isosurface function](https://wewanttolearn.wordpress.com/2019/02/03/triply-periodic-minimal-surfaces/)
-    - Generate the isosurface field in the grid
-    - Perform [Dual marching cube](https://github.com/dominikwodniok/dualmc) to construct the manifold
-    - Clean up the duplicated vertices or faces, and abandon the group of connected faces having the diameter below the setting
-    - Export to the target 3D format
-
 extra:
-  feedstock-name: scaffolder
   recipe-maintainers:
     - nodtem66

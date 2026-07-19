@@ -1,14 +1,14 @@
-#! /bin/bash
+#!/bin/bash
+set -euxo pipefail
 
-mkdir -p build && cd build
-
-cmake -B .\
+cmake ${CMAKE_ARGS} -GNinja \
   -DCMAKE_PREFIX_PATH=$PREFIX \
   -DCMAKE_INSTALL_PREFIX=$PREFIX \
   -DCMAKE_BUILD_TYPE=Release \
-  -DBUILD_PYSCAFFOLDER=OFF \
+  -DSCAFFOLDER_BUILD_PYTHON=OFF \
   -DVERSION=$SCAFFOLDER_VERSION \
-  ../
+  -S ${SRC_DIR} \
+  -B build
 
-cmake --build . --config Release
-cmake --install .
+cmake --build build --parallel ${CPU_COUNT}
+cmake --install build
