@@ -1,9 +1,6 @@
 name: Rattler-build
 
 on:
-  push:
-    branches: 
-      - conda-*
   workflow_dispatch:
     inputs:
       release:
@@ -59,11 +56,11 @@ jobs:
           if [[ -d ./pkg/Library ]]; then
             pkg_dir="./pkg/Library/bin"
           fi
-          tar -czvf "${{ matrix.target-platform }}_${{ github.event.inputs.tag_name }}.tar.gz" -C $pkg_dir .
+          tar -czvf "Scaffolder-${{ github.event.inputs.tag_name }}-${{ matrix.target-platform }}.tar.gz" -C $pkg_dir .
           rm -rf ./pkg
       - name: Release artifacts
         uses: softprops/action-gh-release@v3
         if: github.event.inputs.release
         with:
           tag_name: ${{ github.event.inputs.tag_name }}
-          files: "${{ matrix.target-platform }}_${{ github.event.inputs.tag_name }}.tar.gz"
+          files: "Scaffolder-${{ github.event.inputs.tag_name }}-${{ matrix.target-platform }}.tar.gz"
