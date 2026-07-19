@@ -55,7 +55,11 @@ jobs:
           tar -axvf "${files[0]}" -C ./pkg
           rm -rf ./unpack
 
-          tar -czvf "${{ matrix.target-platform }}_${{ github.event.inputs.tag_name }}.tar.gz" -C ./pkg/bin/ .
+          pkg_dir="./pkg/bin"
+          if [[ -d ./pkg/Library ]]; then
+            pkg_dir="./pkg/Library/bin"
+          fi
+          tar -czvf "${{ matrix.target-platform }}_${{ github.event.inputs.tag_name }}.tar.gz" -C $pkg_dir .
           rm -rf ./pkg
       - name: Release artifacts
         uses: softprops/action-gh-release@v3
