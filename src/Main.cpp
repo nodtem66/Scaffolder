@@ -60,7 +60,7 @@ int main(int argc, char *argv[])
         std::string description("Scaffolder (%VERSION%) - generate 3D scaffold from STL file based on implicit surface");
         cxxopts::Options options("Scaffolder", description.replace(description.find("%VERSION%"), sizeof("%VERSION%") - 1, VERSION));
         options.positional_help("INPUT OUTPUT PARAMETERS").show_positional_help();
-        options.add_options()("h,help", "Print help")("i,input", "Input file (STL/PLY/OBJ/VMI)", cxxopts::value<std::string>(), "INPUT")("o,output", "Output filename with extension stl,ply,obj,ctm", cxxopts::value<std::string>(), "OUTPUT")("params", "Combined parameters list: surface[,coff,isolevel,grid_size,k_slice,k_polygon]", cxxopts::value<std::vector<std::string>>(), "PARAMETERS")("q,quiet", "Disable verbose output [default: false]")("c,coff", "Angular frequency (pore size adjustment) default:PI", cxxopts::value<double>(), "DOUBLE")("t,isolevel", "isolevel (porosity adjustment) [default: 0]", cxxopts::value<double>(), "DOUBLE")("n,surface", "implicit surface: rectlinear, schwarzp, schwarzd, gyroid, double-p, double-d, double-gyroiod, lidinoid, schoen_iwp, neovius, bcc, tubular_g_ab, tubular_g_c (default: bcc)", cxxopts::value<std::string>(), "NAME")("g,grid_size", "Grid size [default: 100]", cxxopts::value<size_t>(), "INT (0..60000)")("s,shell", "Outer thickness (layers) [default:0]", cxxopts::value<uint16_t>(), "INT (0..60000)")("grid_offset", "[default:3]", cxxopts::value<uint16_t>(), "INT (0..60000)")("m,microstructure", "Analysis microstructure with Slice contour technique ( [default: false]")("export_microstructure", "Analysis microstructure and export the 2D contours (for debugging) [default: false]")("k_slice", "K_slice: the number of slicing layers in each direction (used in microstructure analysis) (default: 100)", cxxopts::value<uint16_t>(), "INT (0..60000)")("k_polygon", "K_polygon: the number of closest outer contour (used in microstructure analysis) (default: 4)", cxxopts::value<uint16_t>(), "INT (>0)")("z,size_optimize", "Experimental Quadric simplification (default: 0)", cxxopts::value<double>(), "DOUBLE (0..1)")("smooth_step", "Smooth with laplacian", cxxopts::value<uint16_t>()->default_value("0"), "INT (0..60000)")("dirty", "Disable autoclean", cxxopts::value<bool>()->default_value("false"), "")("minimum_diameter", "used for removing small orphaned (between 0-1)", cxxopts::value<double>()->default_value("0.25"), "DOUBLE (0..1)")("format", "Format of logging output", cxxopts::value<std::string>()->default_value("default"), "FORMAT (default, csv)")("output_inverse", "additional output inverse scaffold", cxxopts::value<bool>()->default_value("false"), "")("fix_self_intersect", "Experimental fix self-intersect faces", cxxopts::value<int>()->default_value("0"), "INT")("mean_curvature", "Size of mean curvature histogram", cxxopts::value<int>()->default_value("0"), "INT")("no_intersect", "Generate 3D mesh without intersect with original mesh (false)", cxxopts::value<bool>(), "");
+        options.add_options()("h,help", "Print help")("i,input", "Input file (STL/OBJ/CTM)", cxxopts::value<std::string>(), "INPUT")("o,output", "Output filename with extension stl,obj,ctm", cxxopts::value<std::string>(), "OUTPUT")("params", "Combined parameters list: surface[,coff,isolevel,grid_size,k_slice,k_polygon]", cxxopts::value<std::vector<std::string>>(), "PARAMETERS")("q,quiet", "Disable verbose output [default: false]")("c,coff", "Angular frequency (pore size adjustment) default:PI", cxxopts::value<double>(), "DOUBLE")("t,isolevel", "isolevel (porosity adjustment) [default: 0]", cxxopts::value<double>(), "DOUBLE")("n,surface", "implicit surface: rectlinear, schwarzp, schwarzd, gyroid, double-p, double-d, double-gyroiod, lidinoid, schoen_iwp, neovius, bcc, tubular_g_ab, tubular_g_c (default: bcc)", cxxopts::value<std::string>(), "NAME")("g,grid_size", "Grid size [default: 100]", cxxopts::value<size_t>(), "INT (0..60000)")("s,shell", "Outer thickness (layers) [default:0]", cxxopts::value<uint16_t>(), "INT (0..60000)")("grid_offset", "[default:3]", cxxopts::value<uint16_t>(), "INT (0..60000)")("m,microstructure", "Analysis microstructure with Slice contour technique ( [default: false]")("export_microstructure", "Analysis microstructure and export the 2D contours (for debugging) [default: false]")("k_slice", "K_slice: the number of slicing layers in each direction (used in microstructure analysis) (default: 100)", cxxopts::value<uint16_t>(), "INT (0..60000)")("k_polygon", "K_polygon: the number of closest outer contour (used in microstructure analysis) (default: 4)", cxxopts::value<uint16_t>(), "INT (>0)")("z,size_optimize", "Experimental Quadric simplification (default: 0)", cxxopts::value<double>(), "DOUBLE (0..1)")("smooth_step", "Smooth with laplacian", cxxopts::value<uint16_t>()->default_value("0"), "INT (0..60000)")("dirty", "Disable autoclean", cxxopts::value<bool>()->default_value("false"), "")("minimum_diameter", "used for removing small orphaned (between 0-1)", cxxopts::value<double>()->default_value("0.25"), "DOUBLE (0..1)")("format", "Format of logging output", cxxopts::value<std::string>()->default_value("default"), "FORMAT (default, csv)")("output_inverse", "additional output inverse scaffold", cxxopts::value<bool>()->default_value("false"), "")("fix_self_intersect", "Experimental fix self-intersect faces", cxxopts::value<int>()->default_value("0"), "INT")("mean_curvature", "Size of mean curvature histogram", cxxopts::value<int>()->default_value("0"), "INT")("no_intersect", "Generate 3D mesh without intersect with original mesh (false)", cxxopts::value<bool>(), "");
         options.parse_positional({"input", "output", "params"});
         bool isEmptyOption = (argc == 1);
         cxxopts::ParseResult result = options.parse(argc, argv);
@@ -151,7 +151,7 @@ int main(int argc, char *argv[])
             {
                 filename = filename.substr(0, filename.size() - ext.size());
                 output_format = ext.substr(1);
-                if (output_format != "ply" && output_format != "obj" && output_format != "stl" && output_format != "ctm")
+                if (output_format != "obj" && output_format != "stl" && output_format != "ctm")
                 {
                     std::cout << "Invalid format: " << output_format << std::endl;
                     return 1;
@@ -227,7 +227,7 @@ int main(int argc, char *argv[])
             util::make_dir(dir);
         }
     }
-    catch (const cxxopts::OptionException &ex)
+    catch (const cxxopts::exceptions::exception &ex)
     {
         std::cout << "Error parsing options: " << ex.what() << std::endl;
         return 1;
@@ -574,7 +574,7 @@ int main(int argc, char *argv[])
             std::vector<double> podczeckShapes[5];
 
             // init progress bar
-            ProgressBar progress(grid_size.sum(), PROGRESS_BAR_COLUMN);
+            MyProgressBar progress(grid_size.sum());
 
             // Start measure pore size by Slice contour technique
             vcg::tri::UpdateBounding<TMesh>::Box(mesh);
@@ -783,13 +783,7 @@ int main(int argc, char *argv[])
             std::string filename2 = filename;
             filename.append("." + output_format);
             filename2.append("_inverse." + output_format);
-            if (output_format == "ply")
-            {
-                vcg::tri::io::ExporterPLY<TMesh>::Save(mesh, filename.c_str(), false);
-                if (is_build_inverse)
-                    vcg::tri::io::ExporterPLY<TMesh>::Save(inverse_mesh, filename2.c_str(), false);
-            }
-            else if (output_format == "obj")
+            if (output_format == "obj")
             {
                 vcg::tri::io::ExporterOBJ<TMesh>::Save(mesh, filename.c_str(), 0);
                 if (is_build_inverse)

@@ -1,17 +1,13 @@
-@echo off
+@echo on
 
-set BUILD_DIR=build
-
-if not exist %BUILD_DIR% ( mkdir %BUILD_DIR% )
-cd %BUILD_DIR%
-
-cmake -GNinja ^
+cmake %CMAKE_ARGS% -GNinja ^
   -DCMAKE_PREFIX_PATH=%LIBRARY_PREFIX% ^
   -DCMAKE_INSTALL_PREFIX=%LIBRARY_PREFIX% ^
   -DCMAKE_BUILD_TYPE=Release ^
-  -DBUILD_PYSCAFFOLDER=OFF ^
+  -DSCAFFOLDER_BUILD_PYTHON=OFF ^
   -DVERSION=%SCAFFOLDER_VERSION% ^
-  ../
+  -S %SRC_DIR% ^
+  -B build
 
-cmake --build . --config Release
-cmake --install .
+cmake --build build --parallel %CPU_COUNT%
+cmake --install build

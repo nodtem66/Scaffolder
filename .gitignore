@@ -2,11 +2,9 @@ out/
 build*/
 .vs/
 .vscode/
-diplib/lib/
+.cpm_cache/
 dist/
 external/
 scripts/external.tar.gz
 CMakeSettings.json
-main_sources.cmake
-python_sources.cmake
 *.pyc

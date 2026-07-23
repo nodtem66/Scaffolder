@@ -1,0 +1,31 @@
+--- a/include/sol/function_types_stateless.hpp
++++ b/include/sol/function_types_stateless.hpp
+@@ -320,7 +320,13 @@ namespace sol { namespace function_detail {
+ 		}
+ 
+ 		template <bool is_yielding, bool no_trampoline>
+-		static int call(lua_State* L) noexcept(std::is_nothrow_copy_assignable_v<T>) {
++		static int call(lua_State* L)
++#if SOL_IS_ON(SOL_COMPILER_CLANG)
++		// apparent regression in clang 18 - llvm/llvm-project#91362
++#else
++			noexcept(std::is_nothrow_copy_assignable_v<T>)
++#endif
++		{
+ 			int nr;
+ 			if constexpr (no_trampoline) {
+ 				nr = real_call(L);
+diff --git a/include/sol/optional_implementation.hpp b/include/sol/optional_implementation.hpp
+index 26f41d0..e22226d 100644
+--- a/include/sol/optional_implementation.hpp
++++ b/include/sol/optional_implementation.hpp
+@@ -2191,7 +2191,8 @@ namespace sol {
+ 			static_assert(std::is_constructible<T, Args&&...>::value, "T must be constructible with Args");
+ 
+ 			*this = nullopt;
+-			this->construct(std::forward<Args>(args)...);
++			new (static_cast<void*>(this)) optional(std::in_place, std::forward<Args>(args)...);
++			return **this;
+ 		}
+ 
+ 		/// Swaps this optional with the other.
