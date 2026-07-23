@@ -57,8 +57,7 @@ CPMAddPackage(
 )
 CPMAddPackage("gh:pybind/pybind11@v2.13.6#a2e59f0e7065404b44dfe92a28aca47ba1378dc4")
 CPMAddPackage(
-  URI "gh:ThePhD/sol2@v3.3.0#eba86625b707e3c8c99bbfc4624e51f42dc9e561"
-  PATCHES "${SCAFFOLDER_CMAKE_DIR}/sol2_fix_for_clang.patch"
+  URI "gh:ThePhD/sol2@3.5.0#9190880c593dfb018ccf5cc9729ab87739709862"
 )
 CPMAddPackage("gh:cnr-isti-vclab/vcglib#c94ef4e12e9ea3ae986d9af91005be8328d13719") # tag 2025.07
 CPMAddPackage("gh:cpm-cmake/CPMLicenses.cmake@0.0.7#ca42334d561b83e499b11cf55fe05d97a0767fb9")
@@ -92,6 +91,7 @@ file(GLOB lua_sources_without_binary
 list(REMOVE_ITEM lua_sources_without_binary "${lua_SOURCE_DIR}/src/lua.c" "${lua_SOURCE_DIR}/src/luac.c")
 add_library(lua STATIC ${lua_sources_without_binary})
 target_include_directories(lua PRIVATE "${lua_SOURCE_DIR}/src")
+target_compile_definitions(lua PRIVATE $<$<CXX_COMPILER_ID:GNU,Clang,AppleClang>: LUA_USE_LINUX>)
 
 set(SCAFFOLDER_COMMON_LINK_LIBS Eigen3::Eigen lua sol2)
 
@@ -106,7 +106,7 @@ function(scaffolder_configure_target target_name)
   target_include_directories(${target_name} PRIVATE ${SCAFFOLDER_COMMON_INCLUDE_DIRS})
   target_link_libraries(${target_name} PRIVATE ${SCAFFOLDER_COMMON_LINK_LIBS} cxxopts)
   target_compile_options(${target_name} PRIVATE
-    $<$<CXX_COMPILER_ID:GNU,Clang,AppleClang>: -Wall -Wextra -pedantic>
+    $<$<CXX_COMPILER_ID:GNU,Clang,AppleClang>: -pedantic>
     $<$<CXX_COMPILER_ID:MSVC>: /MP /bigobj /D_CRT_SECURE_NO_WARNINGS /Zc:__cplusplus
     /wd4267 /wd4244 /wd4018 /wd4305 /wd4667 /wd4996 /wd4804>
   )
