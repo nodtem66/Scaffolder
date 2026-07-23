@@ -1,15 +1,15 @@
 schema_version: 1
 
 context:
-  version: "1.5.4"
+  version: "dev"
 
 package:
   name: scaffolder
   version: ${{ version }}
 
 source:
-  url: https://github.com/nodtem66/Scaffolder/archive/refs/tags/v${{ version }}.tar.gz
-  sha256: 7912ce893dbf02aded3ffd5c7e4267bbbdbaa61513617db15c0cd9bbcdc2b515
+  url: https://github.com/nodtem66/Scaffolder/archive/refs/tags/${{ version }}.tar.gz
+  sha256: b59c066bedb914207c539bce356ce1f3b851d69f22f43221c537bb3592e03668
 
 build:
   number: 0

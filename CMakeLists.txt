@@ -91,7 +91,9 @@ file(GLOB lua_sources_without_binary
 list(REMOVE_ITEM lua_sources_without_binary "${lua_SOURCE_DIR}/src/lua.c" "${lua_SOURCE_DIR}/src/luac.c")
 add_library(lua STATIC ${lua_sources_without_binary})
 target_include_directories(lua PRIVATE "${lua_SOURCE_DIR}/src")
-target_compile_definitions(lua PRIVATE $<$<CXX_COMPILER_ID:GNU,Clang,AppleClang>: LUA_USE_LINUX>)
+target_compile_definitions(lua PRIVATE LUA_COMPAT_ALL
+  $<$<CXX_COMPILER_ID:GNU,Clang,AppleClang>: LUA_USE_LINUX>
+)
 
 set(SCAFFOLDER_COMMON_LINK_LIBS Eigen3::Eigen lua sol2)
 
@@ -106,9 +108,9 @@ function(scaffolder_configure_target target_name)
   target_include_directories(${target_name} PRIVATE ${SCAFFOLDER_COMMON_INCLUDE_DIRS})
   target_link_libraries(${target_name} PRIVATE ${SCAFFOLDER_COMMON_LINK_LIBS} cxxopts)
   target_compile_options(${target_name} PRIVATE
-    $<$<CXX_COMPILER_ID:GNU,Clang,AppleClang>: -pedantic>
+    $<$<CXX_COMPILER_ID:GNU,Clang,AppleClang>: -w>
     $<$<CXX_COMPILER_ID:MSVC>: /MP /bigobj /D_CRT_SECURE_NO_WARNINGS /Zc:__cplusplus
-    /wd4267 /wd4244 /wd4018 /wd4305 /wd4667 /wd4996 /wd4804>
+    /wd4267 /wd4244 /wd4018 /wd4305 /wd4667 /wd4996 /wd4804 /W1>
   )
   target_compile_definitions(${target_name} PRIVATE
     OPENCTM_STATIC
