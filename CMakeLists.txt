@@ -93,19 +93,12 @@ set(SCAFFOLDER_COMMON_INCLUDE_DIRS
 
 message(STATUS "SCAFFOLDER_COMMON_INCLUDE_DIRS = ${SCAFFOLDER_COMMON_INCLUDE_DIRS}")
 
-if(TARGET OpenMP::OpenMP_CXX)
-  list(APPEND SCAFFOLDER_COMMON_LINK_LIBS OpenMP::OpenMP_CXX)
-endif()
-
 function(scaffolder_configure_target target_name)
   target_include_directories(${target_name} PRIVATE ${SCAFFOLDER_COMMON_INCLUDE_DIRS})
   target_compile_options(${target_name} PRIVATE
     $<$<CXX_COMPILER_ID:GNU,Clang,AppleClang>: -w>
     $<$<CXX_COMPILER_ID:MSVC>: /MP /MT /bigobj /D_CRT_SECURE_NO_WARNINGS /Zc:__cplusplus
     /wd4267 /wd4244 /wd4018 /wd4305 /wd4667 /wd4996 /wd4804 /W1>
-  )
-  target_link_options(${target_name} PRIVATE
-    $<$<CXX_COMPILER_ID:GNU,Clang,AppleClang>: -static -static-libgcc -static-libstdc++>
   )
   target_compile_definitions(${target_name} PRIVATE
     OPENCTM_STATIC
@@ -146,6 +139,9 @@ list(REMOVE_ITEM common_libs_source "${lua_SOURCE_DIR}/src/lua.c" "${lua_SOURCE_
 add_library(scaffolder_common_libs STATIC ${common_libs_source})
 scaffolder_configure_target(scaffolder_common_libs)
 target_link_libraries(scaffolder_common_libs PRIVATE Eigen3::Eigen sol2::sol2)
+if(TARGET OpenMP::OpenMP_CXX)
+  target_link_libraries(scaffolder_common_libs PRIVATE OpenMP::OpenMP_CXX)
+endif()
 target_compile_definitions(scaffolder_common_libs PRIVATE LUA_COMPAT_ALL
   $<$<CXX_COMPILER_ID:GNU,Clang,AppleClang>: LUA_USE_LINUX>
 )
