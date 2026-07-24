@@ -36,32 +36,37 @@ option(LIBIGL_BUILD_TUTORIALS    "Build libigl tutorial"  OFF)
 option(LIBIGL_USE_STATIC_LIBRARY "Use LibIGL as static library" ON)
 option(LIBIGL_SKIP_DOWNLOAD      "Skip download libigl"         ON)
 option(IGL_STATIC_RUNTIME        "Use LibIGL as static library" ON)
-option(SCAFFOLD_BUILD_BINARY     "Build binary"                 ON)
-option(SCAFFOLD_BUILD_PYTHON     "Build python library"         OFF)
+option(SCAFFOLDER_BUILD_BINARY     "Build binary"                 ON)
+option(SCAFFOLDER_BUILD_PYTHON     "Build python library"         OFF)
 option(SCAFFOLDER_BUILD_WITH_OPENMP "USE OpenMP"                ON)
-
+set(SOL2_BUILD_LUA TRUE CACHE BOOL "")
+set(BUILD_LUA_AS_DLL OFF CACHE BOOL "")
 # -----------------------------------------------------------------------------
 # External dependency
 # -----------------------------------------------------------------------------
 include("${SCAFFOLDER_CMAKE_DIR}/CPM.cmake")
 set(CPM_SOURCE_CACHE "${SCAFFOLDER_ROOT}/.cpm_cache/")
+CPMAddPackage("https://gitlab.com/libeigen/eigen/-/archive/5.0.0/eigen-5.0.0.tar.gz")
 CPMAddPackage("gh:jarro2783/cxxopts@3.3.1#44380e5a44706ab7347f400698c703eb2a196202")
-CPMAddPackage(
-  URI "https://www.lua.org/ftp/lua-5.4.8.tar.gz#SHA256=4f18ddae154e793e46eeab727c59ef1c0c0c2b744e7b94219710d76f530629ae"
-  DOWNLOAD_ONLY YES
-)
-CPMAddPackage("gh:libigl/libigl@v2.6.0#40e7900ccbd767f1f360e0eb10f0f1a6432e0993")
 CPMAddPackage(
   URI "gh:Danny02/OpenCTM#9021bc220f47693005699c1a69e7b404c0f39677"
   PATCHES "${SCAFFOLDER_CMAKE_DIR}/openctm_fix_min_version.patch"
 )
+CPMAddPackage(
+  URI "https://lua.org/ftp/lua-5.4.8.tar.gz"
+  DOWNLOAD_ONLY YES
+)
+CPMAddPackage("gh:libigl/libigl@v2.6.0#40e7900ccbd767f1f360e0eb10f0f1a6432e0993")
 CPMAddPackage("gh:pybind/pybind11@v2.13.6#a2e59f0e7065404b44dfe92a28aca47ba1378dc4")
 CPMAddPackage(
   URI "gh:ThePhD/sol2@3.5.0#9190880c593dfb018ccf5cc9729ab87739709862"
+  OPTIONS
+    "SOL2_BUILD_LUA ON"
+    "SOL2_LUA_VERSION 5.4.4"
+    "SOL2_ENABLE_INSTALL FALSE"
 )
 CPMAddPackage("gh:cnr-isti-vclab/vcglib#c94ef4e12e9ea3ae986d9af91005be8328d13719") # tag 2025.07
 CPMAddPackage("gh:cpm-cmake/CPMLicenses.cmake@0.0.7#ca42334d561b83e499b11cf55fe05d97a0767fb9")
-
 # -----------------------------------------------------------------------------
 # OpenMP configuration
 # -----------------------------------------------------------------------------
@@ -73,32 +78,20 @@ endif()
 # -----------------------------------------------------------------------------
 # Common target setup
 # -----------------------------------------------------------------------------
+# Include *_SOURCE_DIR from CPM.cmake
 set(SCAFFOLDER_COMMON_INCLUDE_DIRS
   "${SCAFFOLDER_INCLUDE_DIR}"
   "${cxxopts_SOURCE_DIR}/include/"
-  "${progress-cpp_SOURCE_DIR}/include/progresscpp/"
   "${lua_SOURCE_DIR}/src"
-  "${vcglib_SOURCE_DIR}"
-  "${libigl_SOURCE_DIR}/include/"
   "${OpenCTM_SOURCE_DIR}/lib/"
   "${OpenCTM_SOURCE_DIR}/lib/liblzma/"
-  "${sol2_SOURCE_DIR}"
+  "${sol2_SOURCE_DIR}/include"
+  "${Eigen3_SOURCE_DIR}"
+  "${libigl_SOURCE_DIR}/include/"
+  "${vcglib_SOURCE_DIR}"
 )
-
-file(GLOB lua_sources_without_binary
-  "${lua_SOURCE_DIR}/src/*.c"
-)
-list(REMOVE_ITEM lua_sources_without_binary "${lua_SOURCE_DIR}/src/lua.c" "${lua_SOURCE_DIR}/src/luac.c")
-add_library(lua STATIC ${lua_sources_without_binary})
-target_include_directories(lua PRIVATE "${lua_SOURCE_DIR}/src")
-target_compile_definitions(lua PRIVATE LUA_COMPAT_ALL
-  $<$<CXX_COMPILER_ID:GNU,Clang,AppleClang>: LUA_USE_LINUX>
-)
-
-set(SCAFFOLDER_COMMON_LINK_LIBS Eigen3::Eigen lua sol2)
 
 message(STATUS "SCAFFOLDER_COMMON_INCLUDE_DIRS = ${SCAFFOLDER_COMMON_INCLUDE_DIRS}")
-message(STATUS "SCAFFOLDER_COMMON_LINK_LIBS = ${SCAFFOLDER_COMMON_LINK_LIBS}")
 
 if(TARGET OpenMP::OpenMP_CXX)
   list(APPEND SCAFFOLDER_COMMON_LINK_LIBS OpenMP::OpenMP_CXX)
@@ -106,11 +99,13 @@ endif()
 
 function(scaffolder_configure_target target_name)
   target_include_directories(${target_name} PRIVATE ${SCAFFOLDER_COMMON_INCLUDE_DIRS})
-  target_link_libraries(${target_name} PRIVATE ${SCAFFOLDER_COMMON_LINK_LIBS} cxxopts)
   target_compile_options(${target_name} PRIVATE
     $<$<CXX_COMPILER_ID:GNU,Clang,AppleClang>: -w>
-    $<$<CXX_COMPILER_ID:MSVC>: /MP /bigobj /D_CRT_SECURE_NO_WARNINGS /Zc:__cplusplus
+    $<$<CXX_COMPILER_ID:MSVC>: /MP /MT /bigobj /D_CRT_SECURE_NO_WARNINGS /Zc:__cplusplus
     /wd4267 /wd4244 /wd4018 /wd4305 /wd4667 /wd4996 /wd4804 /W1>
+  )
+  target_link_options(${target_name} PRIVATE
+    $<$<CXX_COMPILER_ID:GNU,Clang,AppleClang>: -static -static-libgcc -static-libstdc++>
   )
   target_compile_definitions(${target_name} PRIVATE
     OPENCTM_STATIC
@@ -135,33 +130,52 @@ function(write_third_party_license file_name)
   )
 endfunction()
 
-if(SCAFFOLD_BUILD_BINARY)
+# Common libs
+file(GLOB common_libs_source
+  "${SCAFFOLDER_INCLUDE_DIR}/*/*.c"
+  "${SCAFFOLDER_INCLUDE_DIR}/*/*.cpp"
+  "${SCAFFOLDER_SOURCE_DIR}/utils.cpp"
+  "${SCAFFOLDER_SOURCE_DIR}/Scaffolder.cpp"
+  "${OpenCTM_SOURCE_DIR}/lib/*.c"
+  "${OpenCTM_SOURCE_DIR}/lib/liblzma/*.c"
+  "${vcglib_SOURCE_DIR}/wrap/ply/plylib.cpp"
+  "${lua_SOURCE_DIR}/src/*.c"
+  "${sol2_SOURCE_DIR}/include"
+)
+list(REMOVE_ITEM common_libs_source "${lua_SOURCE_DIR}/src/lua.c" "${lua_SOURCE_DIR}/src/luac.c")
+add_library(scaffolder_common_libs STATIC ${common_libs_source})
+scaffolder_configure_target(scaffolder_common_libs)
+target_link_libraries(scaffolder_common_libs PRIVATE Eigen3::Eigen sol2::sol2)
+target_compile_definitions(scaffolder_common_libs PRIVATE LUA_COMPAT_ALL
+  $<$<CXX_COMPILER_ID:GNU,Clang,AppleClang>: LUA_USE_LINUX>
+)
+
+if(SCAFFOLDER_BUILD_BINARY)
   message(STATUS "[Build Binary]")
-  file(GLOB MAIN_SOURCES
-    "${SCAFFOLDER_INCLUDE_DIR}/*/*.c"
-    "${SCAFFOLDER_INCLUDE_DIR}/*/*.cpp"
-    "${SCAFFOLDER_SOURCE_DIR}/utils.cpp"
-    "${SCAFFOLDER_SOURCE_DIR}/Scaffolder.cpp"
-    "${OpenCTM_SOURCE_DIR}/lib/*.c"
-    "${OpenCTM_SOURCE_DIR}/lib/liblzma/*.c"
-    "${vcglib_SOURCE_DIR}/wrap/ply/plylib.cpp"
-  )
+  #file(GLOB MAIN_SOURCES
+  #  "${SCAFFOLDER_INCLUDE_DIR}/*/*.c"
+  #  "${SCAFFOLDER_INCLUDE_DIR}/*/*.cpp"
+  #  "${SCAFFOLDER_SOURCE_DIR}/utils.cpp"
+  #  "${SCAFFOLDER_SOURCE_DIR}/Scaffolder.cpp"
+  #  "${OpenCTM_SOURCE_DIR}/lib/*.c"
+  #  "${OpenCTM_SOURCE_DIR}/lib/liblzma/*.c"
+  #  "${vcglib_SOURCE_DIR}/wrap/ply/plylib.cpp"
+  #)
 
-  add_executable(${PROJECT_NAME} ${MAIN_SOURCES} "${SCAFFOLDER_SOURCE_DIR}/Main.cpp")
+  add_executable(${PROJECT_NAME} "${SCAFFOLDER_SOURCE_DIR}/Main.cpp")
   scaffolder_configure_target(${PROJECT_NAME})
+  target_link_libraries(${PROJECT_NAME} scaffolder_common_libs)
 
-  add_executable("${PROJECT_NAME}.SliceTest"
-    ${MAIN_SOURCES}
-    "${SCAFFOLDER_SOURCE_DIR}/SliceTest.cpp"
-    "${SCAFFOLDER_SOURCE_DIR}/utils.cpp"
-  )
+  add_executable("${PROJECT_NAME}.SliceTest" "${SCAFFOLDER_SOURCE_DIR}/SliceTest.cpp")
   scaffolder_configure_target("${PROJECT_NAME}.SliceTest")
+  target_link_libraries(${PROJECT_NAME}.SliceTest scaffolder_common_libs)
+  
   include(GNUInstallDirs)
   install(TARGETS "${PROJECT_NAME}" DESTINATION bin COMPONENT scaffolder)
   install(TARGETS "${PROJECT_NAME}.SliceTest" DESTINATION bin COMPONENT scaffolder)
 endif()
 
-if(SCAFFOLD_BUILD_PYTHON)
+if(SCAFFOLDER_BUILD_PYTHON)
   message(STATUS "[Build PyScaffolder]")
   find_package(Python COMPONENTS Interpreter Development)
   find_package(PyBind11 REQUIRED)
