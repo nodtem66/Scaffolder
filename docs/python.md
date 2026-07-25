@@ -103,7 +103,7 @@ def marching_cubes(f, grid_size=(100,100,100), v_min=(0,0,0), delta=0.01, clean=
     * `delta`: *Optional* array, list, tuple or double representing the dimension of a voxel
     * `v_min`: *Optional* array, list, tuple the coordinate of the corner of grid
     * `clean` *Optional* boolean that enable mesh cleaning after marching cubes
-    * `callback`: *Optional* function with one `integer` parameter indicating the progression
+    
     ###Return
     `#!python (v, f)` representing vertices and faces in `np.array`
 
@@ -120,8 +120,7 @@ def marching_cubes(f, grid_size=(100,100,100), v_min=(0,0,0), delta=0.01, clean=
         Fxyz,
         grid_size=4,
         delta=0.25,
-        v_min=(-.5, -.5, -.5),
-        callback = lambda x: print(x)
+        v_min=(-.5, -.5, -.5)
     )
     ```
 

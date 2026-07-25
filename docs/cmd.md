@@ -5,7 +5,7 @@ Usage:
   Scaffolder [OPTION...] INPUT OUTPUT PARAMETERS
 
   -h, --help                    Print help
-  -i, --input INPUT             Input file (STL/PLY/OFF/OBJ/VMI)
+  -i, --input INPUT             Input file (STL/OFF/OBJ)
   -o, --output OUTPUT           Output filename with extension
                                 stl,ply,obj,off,ctm
       --params PARAMETERS       Combined parameters list:
