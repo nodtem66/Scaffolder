@@ -93,7 +93,7 @@ Then let's try `Pyscaffolder.marching_cubes` which implements `dual marching cub
 # Generate with PyScaffolder.marching_cubes
 
 def marching_cubes(f, step=0.01, bounds=None, verbose=True, clean=True):
-    from sdf.mesh import _estimate_bounds, _cartesian_product
+    from sdf.core import _estimate_bounds, _cartesian_product
     import time
 
     if not bounds:

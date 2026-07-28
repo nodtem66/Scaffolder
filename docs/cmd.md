@@ -24,7 +24,7 @@ Usage:
       --grid_offset INT (0..60000)
                                 [default:3]
   -m, --microstructure          Analysis microstructure with Slice contour
-                                technique ( [default: false]
+                                technique [default: false]
       --export_microstructure   Analysis microstructure and export the 2D
                                 contours (for debugging) [default: false]
       --export_jpeg [X|Y|Z],INT

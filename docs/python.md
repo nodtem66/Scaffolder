@@ -94,7 +94,7 @@ def slice_test(vertices, faces, k_slice=100, k_polygon=4, direction=0, callback=
 
 ## marching_cubes
 ```python
-def marching_cubes(f, grid_size=(100,100,100), v_min=(0,0,0), delta=0.01, clean=False, callback=None)
+def marching_cubes(f, grid_size=(100,100,100), v_min=(0,0,0), delta=0.01, clean=False)
 ```
 :   Slice input mesh into pore sizes
     ### Parameters
