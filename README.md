@@ -11,12 +11,32 @@ Transform a 3D model from STL/PLY/OFF/OBJ to a porous model with implicit functi
 | --- | ---- | ---- | ---- |
 
 ## Binary installation
-* Download from [Github Releases page](https://github.com/nodtem66/Scaffolder/releases)
-* Binary bundle consists of
-  * Main program: `Scaffolder`
-  * Pore analysis program: `Scaffold.SliceTest`
-  * Python library: `PyScaffold*.pyd`
+There are two ways:
+1. Download from [Github Releases page](https://github.com/nodtem66/Scaffolder/releases)
+   - Binary bundle consists of
+     * Main program: `Scaffolder`
+     * Pore analysis program: `Scaffold.SliceTest`
+     * Python library: `PyScaffold*.pyd`
 
+2. Use conda
+    - Install [conda](https://docs.conda.io/projects/conda/en/latest/user-guide/install/index.html) or [miniforge](https://conda-forge.org/download/)
+    - Create environment called `env_name`:
+      ```
+      conda create -n env_name
+      ```
+    - Activate environment
+      ```
+      conda activate env_name
+      ```
+    - Install scaffolder from the channel [nodtem66](https://anaconda.org/channels/nodtem66/packages/scaffolder/overview)
+      ```
+      conda install scaffolder -c nodtem66
+      ```
+    - Test the commandline
+      ```
+      scaffolder --help
+      ```
+      
 > [!note]
 > If you need only python library, you can install it from `pip` (see below).
 
