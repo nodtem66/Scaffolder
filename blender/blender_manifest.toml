@@ -1,0 +1,18 @@
+schema_version = "1.0.0"
+
+id = "nodtem66_pyscaffolder"
+version = "1.5.4"
+name = "PyScaffolder"
+tagline = "Generate TPMS mesh from the shape" 
+maintainer = "Jirawat Iamsamang <nodtem66@gmail.com>"
+type = "add-on"
+tags = ["Add Mesh", "Object"]
+website = "https://github.com/nodtem66/scaffolder"
+
+blender_version_min = "5.0.0"
+license = ["SPDX:GPL-3.0-or-later"]
+
+platforms = ["windows-x64", "macos-arm64", "linux-x64"]
+wheels = [
+    "./wheels/pyscaffolder-1.5.4-cp313-cp313-win_amd64.whl"
+]

@@ -1,7 +1,13 @@
+# Build
 out/
 build*/
+
+# Vscode
 .vs/
 .vscode/
+.pixi
+__pycache__
+blender/wheels/
 diplib/lib/
 dist/
 external/
@@ -10,3 +16,4 @@ CMakeSettings.json
 main_sources.cmake
 python_sources.cmake
 *.pyc
+
