@@ -72,13 +72,14 @@ cmake --build ./build --config Release
 cmake --install ./build
 ```
 
-## Blender addon (obsoleted)
-- Install the `Scaffolder-blender.zip` downloaded from [Release](https://github.com/nodtem66/Scaffolder/releases/tag/v1.5.1)
-- The plugin will appear at `View > Sidebar` or `Press N`
+## Blender 5 extension
+- Download `nodtem66_pyscaffolder-1.5.4.zip` from [Release](https://github.com/nodtem66/Scaffolder/releases/tag/v1.5.4). Only Win64, Linux64, MacOS 15 (Arm64 and Intel)
+- Open Blender > Edit > Preferences > Get Extensions > (Drop-down arrow at the top-right corner) > Install from Disk ... > Select the zip file
+- The plugin will appear at `View > Sidebar` or `Press N` > Scaffolder
 - **Screenshots: Blender plugin with PyScaffolder**
 
 ![Blender plugin](https://github.com/nodtem66/Scaffolder/raw/main/docs/images/blender-plugin.gif)
-
+- [Youtube](https://www.youtube.com/watch?v=ikIiC3XrBeM) (old version) 
 - **The figure of patterns implemented in this program**
 
 ![TPMS Patterns](https://github.com/nodtem66/Scaffolder/raw/main/docs/images/patterns.jpg)
